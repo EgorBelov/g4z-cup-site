@@ -181,12 +181,12 @@ export async function getAdminPlayoffMatches(tournamentId: number) {
     .from("matches_full")
     .select("*")
     .eq("tournament_id", tournamentId)
-    .eq("stage", "playoff")
+    .in("stage", ["play_in", "playoff"])
     .order("match_order", { ascending: true });
 
   if (error) {
     console.error("Error loading playoff matches for admin:", error);
-    throw new Error("Не удалось загрузить матчи плей-офф");
+    throw new Error("Не удалось загрузить матчи Play-In и плей-офф");
   }
 
   return data ?? [];

@@ -28,8 +28,8 @@ export async function getGroupMatches(tournamentId: number) {
     .eq("tournament_id", tournamentId)
     .eq("stage", "group")
     .order("group_id", { ascending: true })
-    .order("scheduled_at", { ascending: true })
-    .order("match_order", { ascending: true });
+    .order("match_order", { ascending: true })
+    .order("scheduled_at", { ascending: true });
 
   if (error) {
     console.error("Error loading group matches:", error);

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Container from "@/components/layout/Container";
 import PageHero from "@/components/ui/PageHero";
 import SectionCard from "@/components/ui/SectionCard";
@@ -20,6 +19,7 @@ function formatMatchTime(value: string | null) {
 
 type PlayoffMatch = {
   id: number;
+  stage: string;
   round_name: string;
   team1_name: string | null;
   team2_name: string | null;
@@ -30,6 +30,10 @@ type PlayoffMatch = {
   scheduled_at: string | null;
   stream_url: string | null;
 };
+
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
 
 function MatchCard({ match }: { match: PlayoffMatch }) {
   return (
@@ -78,19 +82,61 @@ function MatchCard({ match }: { match: PlayoffMatch }) {
   );
 }
 
+function StageColumn({
+  title,
+  badge,
+  matches,
+}: {
+  title: string;
+  badge: string;
+  matches: PlayoffMatch[];
+}) {
+  return (
+    <SectionCard className="p-5 md:p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">{title}</h2>
+        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/55">
+          {badge}
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        {matches.length > 0 ? (
+          matches.map((match) => <MatchCard key={match.id} match={match} />)
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-white/60">
+            Нет матчей.
+          </div>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
 export default async function PlayoffPage() {
   const tournament = await getTournamentBySlug("g4z-cup-10");
-  const matches = await getPlayoffMatches(tournament.id);
+  const matches = (await getPlayoffMatches(tournament.id)) as PlayoffMatch[];
 
-  const quarterfinals = matches.filter((m) =>
-    m.round_name.toLowerCase().includes("quarterfinal")
-  );
-  const semifinals = matches.filter((m) =>
-    m.round_name.toLowerCase().includes("semifinal")
-  );
+  const playInMatches = matches.filter((m) => m.stage === "play_in");
+
+  const quarterfinals = matches.filter((m) => {
+    const name = normalize(m.round_name);
+    return m.stage === "playoff" && name.includes("quarterfinal");
+  });
+
+  const semifinals = matches.filter((m) => {
+    const name = normalize(m.round_name);
+    return m.stage === "playoff" && name.includes("semifinal");
+  });
+
   const finals = matches.filter((m) => {
-    const name = m.round_name.toLowerCase();
-    return name.includes("final") && !name.includes("semi") && !name.includes("quarter");
+    const name = normalize(m.round_name);
+    return (
+      m.stage === "playoff" &&
+      name.includes("final") &&
+      !name.includes("semi") &&
+      !name.includes("quarter")
+    );
   });
 
   return (
@@ -100,7 +146,7 @@ export default async function PlayoffPage() {
           <PageHero
             eyebrow="G4Z CUP"
             title="Плей-офф"
-            description="Турнирная сетка решающей стадии: четвертьфиналы, полуфиналы и финал."
+            description="Решающая стадия турнира: Play-In, четвертьфиналы, полуфиналы и финал."
             actions={[
               { href: "/", label: "На главную" },
               { href: "/schedule", label: "Расписание" },
@@ -108,63 +154,30 @@ export default async function PlayoffPage() {
             ]}
           />
 
-          <section className="mt-8 grid gap-6 xl:grid-cols-3">
-            <SectionCard className="p-5 md:p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Quarterfinals</h2>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/55">
-                  round 1
-                </span>
-              </div>
+          <section className="mt-8 grid gap-6 xl:grid-cols-4">
+            <StageColumn
+              title="Play-In"
+              badge="entry round"
+              matches={playInMatches}
+            />
 
-              <div className="space-y-4">
-                {quarterfinals.length > 0 ? (
-                  quarterfinals.map((match) => <MatchCard key={match.id} match={match} />)
-                ) : (
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-white/60">
-                    Нет матчей.
-                  </div>
-                )}
-              </div>
-            </SectionCard>
+            <StageColumn
+              title="Quarterfinals"
+              badge="round 1"
+              matches={quarterfinals}
+            />
 
-            <SectionCard className="p-5 md:p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Semifinals</h2>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/55">
-                  round 2
-                </span>
-              </div>
+            <StageColumn
+              title="Semifinals"
+              badge="round 2"
+              matches={semifinals}
+            />
 
-              <div className="space-y-4">
-                {semifinals.length > 0 ? (
-                  semifinals.map((match) => <MatchCard key={match.id} match={match} />)
-                ) : (
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-white/60">
-                    Нет матчей.
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-
-            <SectionCard className="p-5 md:p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Final</h2>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/55">
-                  grand final
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                {finals.length > 0 ? (
-                  finals.map((match) => <MatchCard key={match.id} match={match} />)
-                ) : (
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-white/60">
-                    Нет матчей.
-                  </div>
-                )}
-              </div>
-            </SectionCard>
+            <StageColumn
+              title="Final"
+              badge="grand final"
+              matches={finals}
+            />
           </section>
         </div>
       </Container>

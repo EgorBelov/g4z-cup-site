@@ -299,12 +299,13 @@ export async function updatePlayoffMatchSlotsAction(formData: FormData) {
     })
     .eq("id", matchId);
 
-  if (error) {
-    console.error("Error updating playoff slots:", error);
-    throw new Error("Не удалось обновить матч плей-офф");
+    if (error) {
+    console.error("Error updating playoff/play-in slots:", error);
+    throw new Error("Не удалось обновить слот матча");
   }
 
   redirect("/admin/playoff");
+
 }
 
 export async function createTeamAction(formData: FormData) {

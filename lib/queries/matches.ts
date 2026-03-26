@@ -83,12 +83,12 @@ export async function getPlayoffMatches(tournamentId: number) {
     .from("matches_full")
     .select("*")
     .eq("tournament_id", tournamentId)
-    .eq("stage", "playoff")
+    .in("stage", ["play_in", "playoff"])
     .order("match_order", { ascending: true });
 
   if (error) {
     console.error("Error loading playoff matches:", error);
-    throw new Error("Не удалось загрузить плей-офф");
+    throw new Error("Не удалось загрузить Play-In и плей-офф");
   }
 
   return data ?? [];

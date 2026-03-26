@@ -5,6 +5,7 @@ import { getTournamentBySlug } from "@/lib/queries/tournaments";
 
 type PlayoffMatch = {
   id: number;
+  stage: string;
   round_name: string;
   match_order: number;
   team1_id: number | null;
@@ -35,6 +36,17 @@ function toDatetimeLocalValue(value: string | null) {
   )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function getStageLabel(stage: string) {
+  switch (stage) {
+    case "play_in":
+      return "Play-In";
+    case "playoff":
+      return "Плей-офф";
+    default:
+      return stage;
+  }
+}
+
 export default async function AdminPlayoffPage() {
   const tournament = await getTournamentBySlug("g4z-cup-10");
   const [matches, teams] = await Promise.all([
@@ -53,19 +65,19 @@ export default async function AdminPlayoffPage() {
             Admin Panel
           </p>
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight">
-            Посев в плей-офф
+            Play-In и плей-офф
           </h1>
           <p className="mt-3 text-white/65">
-            Здесь можно вручную расставить команды по слотам матчей плей-офф.
+            Здесь можно вручную расставить команды по слотам матчей Play-In и основной сетки.
           </p>
 
           <div className="mt-5 flex gap-3">
             <Link
-  href="/admin/matches"
-  className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
->
-  Матчи
-</Link>
+              href="/admin/matches"
+              className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
+            >
+              Матчи
+            </Link>
             <Link
               href="/playoff"
               className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
@@ -86,6 +98,9 @@ export default async function AdminPlayoffPage() {
 
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
+                  <div className="mb-2 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/60">
+                    {getStageLabel(match.stage)}
+                  </div>
                   <h2 className="text-2xl font-bold">{match.round_name}</h2>
                   <p className="mt-1 text-white/60">
                     Текущий счет: {match.score1} : {match.score2} · {match.status}
