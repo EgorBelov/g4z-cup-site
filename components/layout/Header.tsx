@@ -23,16 +23,19 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-xl">
       <Container>
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/15 text-sm font-extrabold text-emerald-300">
+        <div className="flex min-w-0 items-center justify-between py-3 md:h-16 md:py-0">
+          <Link href="/" className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-sm font-extrabold text-emerald-300 md:h-10 md:w-10">
               10
             </div>
-            <div>
-              <div className="text-sm uppercase tracking-[0.2em] text-white/45">
+
+            <div className="min-w-0">
+              <div className="truncate text-xs uppercase tracking-[0.2em] text-white/45 sm:text-sm">
                 G4Z CUP
               </div>
-              <div className="text-base font-bold text-white">Spring Dota 2</div>
+              <div className="truncate text-sm font-bold text-white sm:text-base">
+                Dota 2
+              </div>
             </div>
           </Link>
 
@@ -77,25 +80,27 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-4 lg:hidden">
-          {navItems.map((item) => {
-            const active = isActive(pathname, item.href);
+        <div className="w-full overflow-x-auto pb-4 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-max gap-2">
+            {navItems.map((item) => {
+              const active = isActive(pathname, item.href);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={[
-                  "whitespace-nowrap rounded-xl border px-3 py-2 text-sm font-medium transition",
-                  active
-                    ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-                    : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10",
-                ].join(" ")}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={[
+                    "whitespace-nowrap rounded-xl border px-3 py-2 text-sm font-medium transition",
+                    active
+                      ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
+                      : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10",
+                  ].join(" ")}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </Container>
     </header>

@@ -128,8 +128,8 @@ export default async function GroupsPage() {
                   </span>
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border border-white/10">
-                  <table className="w-full text-left">
+                <div className="overflow-x-auto rounded-2xl border border-white/10">
+  <table className="w-full min-w-[640px] text-left">
                     <thead className="bg-white/5 text-sm text-white/55">
                       <tr>
                         <th className="px-4 py-3">#</th>
