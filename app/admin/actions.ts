@@ -299,9 +299,10 @@ export async function updatePlayoffMatchSlotsAction(formData: FormData) {
     })
     .eq("id", matchId);
 
-    if (error) {
-    console.error("Error updating playoff/play-in slots:", error);
-    throw new Error("Не удалось обновить слот матча");
+   if (error) {
+  console.error("Error updating playoff/play-in slots:", error);
+  throw new Error("Не удалось обновить слот матча");
+
   }
 
   redirect("/admin/playoff");
