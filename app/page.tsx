@@ -15,7 +15,7 @@ function formatMatchTime(value: string | null) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Europe/Moscow"
+    timeZone: "Europe/Moscow",
   }).format(new Date(value));
 }
 
@@ -50,7 +50,7 @@ export default async function HomePage() {
                 расписанием, результатами и страницами матчей в одном месте.
               </p>
 
-              <div className="mt-7 flex flex-wrap gap-3">
+              {/* <div className="mt-7 flex flex-wrap gap-3">
                 <Link
                   href="/schedule"
                   className="rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-500"
@@ -69,7 +69,7 @@ export default async function HomePage() {
                 >
                   Группы
                 </Link>
-              </div>
+              </div> */}
 
               <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -82,7 +82,9 @@ export default async function HomePage() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="text-sm text-white/45">Статус</div>
-                  <div className="mt-1 font-semibold capitalize">{tournament.status}</div>
+                  <div className="mt-1 font-semibold capitalize">
+                    {tournament.status}
+                  </div>
                 </div>
               </div>
             </div>
@@ -101,12 +103,13 @@ export default async function HomePage() {
                 <div className="mt-5">
                   <div className="text-sm text-white/45">
                     {liveMatch.stage === "group"
-                      ? liveMatch.group_name ?? "Group Stage"
+                      ? (liveMatch.group_name ?? "Group Stage")
                       : liveMatch.round_name}
                   </div>
 
                   <div className="mt-3 text-2xl font-bold leading-tight">
-                    {liveMatch.team1_name ?? "TBD"} vs {liveMatch.team2_name ?? "TBD"}
+                    {liveMatch.team1_name ?? "TBD"} vs{" "}
+                    {liveMatch.team2_name ?? "TBD"}
                   </div>
 
                   <div className="mt-3 text-sm text-white/60">
@@ -115,7 +118,9 @@ export default async function HomePage() {
 
                   <div className="mt-6 flex flex-wrap gap-3">
                     <a
-                      href={liveMatch.stream_url || tournament.twitch_url || "#"}
+                      href={
+                        liveMatch.stream_url || tournament.twitch_url || "#"
+                      }
                       target="_blank"
                       rel="noreferrer"
                       className="rounded-2xl bg-red-600 px-4 py-3 font-medium text-white transition hover:bg-red-500"
@@ -132,7 +137,9 @@ export default async function HomePage() {
                   </div>
                 </div>
               ) : (
-                <p className="mt-5 text-white/60">Сейчас нет активного матча.</p>
+                <p className="mt-5 text-white/60">
+                  Сейчас нет активного матча.
+                </p>
               )}
             </div>
 
@@ -189,7 +196,10 @@ export default async function HomePage() {
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Ближайшие матчи</h2>
-                <Link href="/schedule" className="text-sm text-emerald-300 hover:text-emerald-200">
+                <Link
+                  href="/schedule"
+                  className="text-sm text-emerald-300 hover:text-emerald-200"
+                >
                   Все матчи
                 </Link>
               </div>
@@ -204,11 +214,12 @@ export default async function HomePage() {
                     >
                       <div className="text-sm text-white/45">
                         {match.stage === "group"
-                          ? match.group_name ?? match.round_name
+                          ? (match.group_name ?? match.round_name)
                           : match.round_name}
                       </div>
                       <div className="mt-1 text-lg font-semibold">
-                        {match.team1_name ?? "TBD"} vs {match.team2_name ?? "TBD"}
+                        {match.team1_name ?? "TBD"} vs{" "}
+                        {match.team2_name ?? "TBD"}
                       </div>
                       <div className="mt-2 text-sm text-white/60">
                         {formatMatchTime(match.scheduled_at)}
@@ -224,7 +235,10 @@ export default async function HomePage() {
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Последние результаты</h2>
-                <Link href="/schedule" className="text-sm text-emerald-300 hover:text-emerald-200">
+                <Link
+                  href="/schedule"
+                  className="text-sm text-emerald-300 hover:text-emerald-200"
+                >
                   Смотреть всё
                 </Link>
               </div>
@@ -239,7 +253,7 @@ export default async function HomePage() {
                     >
                       <div className="text-sm text-white/45">
                         {match.stage === "group"
-                          ? match.group_name ?? match.round_name
+                          ? (match.group_name ?? match.round_name)
                           : match.round_name}
                       </div>
                       <div className="mt-1 text-lg font-semibold">

@@ -5,6 +5,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 import { getGroupMatches, getGroupStandings } from "@/lib/queries/groups";
+import Link from "next/link";
 
 function formatMatchTime(value: string | null) {
   if (!value) return "TBD";
@@ -14,7 +15,7 @@ function formatMatchTime(value: string | null) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Europe/Moscow"
+    timeZone: "Europe/Moscow",
   }).format(new Date(value));
 }
 
@@ -33,6 +34,7 @@ type GroupMatch = {
   id: number;
   group_id: number | null;
   group_name: string | null;
+  round_name: string | null;
   team1_name: string | null;
   team2_name: string | null;
   score1: number;
@@ -78,7 +80,9 @@ function groupMatchesByGroup(matches: GroupMatch[]) {
       if (!a.scheduled_at) return 1;
       if (!b.scheduled_at) return -1;
 
-      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+      return (
+        new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+      );
     }),
   }));
 }
@@ -101,6 +105,10 @@ function getPlacementClass(position: number) {
   return "bg-white/10 text-white/65";
 }
 
+function getMatchLabel(match: GroupMatch) {
+  return match.round_name || match.group_name || "Матч";
+}
+
 export default async function GroupsPage() {
   const tournament = await getTournamentBySlug("g4z-cup-10");
   const [standings, matches] = await Promise.all([
@@ -119,11 +127,11 @@ export default async function GroupsPage() {
             eyebrow="G4Z CUP"
             title="Групповой этап"
             description="Одна группа из 7 команд. 1–2 места выходят в полуфинал, 3–6 места — в четвертьфинал."
-            actions={[
-              { href: "/", label: "На главную" },
-              { href: "/schedule", label: "Расписание" },
-              { href: "/playoff", label: "Плей-офф" },
-            ]}
+            // actions={[
+            //   { href: "/", label: "На главную" },
+            //   { href: "/schedule", label: "Расписание" },
+            //   { href: "/playoff", label: "Плей-офф" },
+            // ]}
           />
 
           <section className="mt-8 grid gap-6">
@@ -137,56 +145,58 @@ export default async function GroupsPage() {
                 </div>
 
                 <div className="w-full overflow-x-auto rounded-2xl border border-white/10">
-  <table className="w-full text-left text-sm md:text-base">
-    <thead className="bg-white/5 text-xs uppercase tracking-wide text-white/55 md:text-sm">
-      <tr>
-        <th className="px-3 py-3 md:px-4">#</th>
-        <th className="px-3 py-3 md:px-4">Команда</th>
-        <th className="px-3 py-3 text-center md:px-4">И</th>
-        <th className="px-3 py-3 text-center md:px-4">В</th>
-        <th className="px-3 py-3 text-center md:px-4">П</th>
-        <th className="hidden px-3 py-3 md:table-cell md:px-4">Выход</th>
-      </tr>
-    </thead>
-    <tbody>
-      {group.teams.map((team, index) => {
-        const position = index + 1;
+                  <table className="w-full text-left text-sm md:text-base">
+                    <thead className="bg-white/5 text-xs uppercase tracking-wide text-white/55 md:text-sm">
+                      <tr>
+                        <th className="px-3 py-3 md:px-4">#</th>
+                        <th className="px-3 py-3 md:px-4">Команда</th>
+                        <th className="px-3 py-3 text-center md:px-4">И</th>
+                        <th className="px-3 py-3 text-center md:px-4">В</th>
+                        <th className="px-3 py-3 text-center md:px-4">П</th>
+                        <th className="hidden px-3 py-3 md:table-cell md:px-4">
+                          Выход
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.teams.map((team, index) => {
+                        const position = index + 1;
 
-        return (
-          <tr
-            key={team.team_id}
-            className="border-t border-white/10 bg-black/20"
-          >
-            <td className="px-3 py-3 font-semibold text-white/90 md:px-4">
-              {position}
-            </td>
-            <td className="px-3 py-3 font-medium break-words md:px-4">
-              {team.team_name}
-            </td>
-            <td className="px-3 py-3 text-center text-white/75 md:px-4">
-              {team.played}
-            </td>
-            <td className="px-3 py-3 text-center text-emerald-300 md:px-4">
-              {team.wins}
-            </td>
-            <td className="px-3 py-3 text-center text-white/70 md:px-4">
-              {team.losses}
-            </td>
-            <td className="hidden px-3 py-3 md:table-cell md:px-4">
-              <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold md:px-3 md:text-xs ${getPlacementClass(
-                  position
-                )}`}
-              >
-                {getPlacementLabel(position)}
-              </span>
-            </td>
-          </tr>
-        );
-      })}
-    </tbody>
-  </table>
-</div>
+                        return (
+                          <tr
+                            key={team.team_id}
+                            className="border-t border-white/10 bg-black/20"
+                          >
+                            <td className="px-3 py-3 font-semibold text-white/90 md:px-4">
+                              {position}
+                            </td>
+                            <td className="px-3 py-3 font-medium break-words md:px-4">
+                              {team.team_name}
+                            </td>
+                            <td className="px-3 py-3 text-center text-white/75 md:px-4">
+                              {team.played}
+                            </td>
+                            <td className="px-3 py-3 text-center text-emerald-300 md:px-4">
+                              {team.wins}
+                            </td>
+                            <td className="px-3 py-3 text-center text-white/70 md:px-4">
+                              {team.losses}
+                            </td>
+                            <td className="hidden px-3 py-3 md:table-cell md:px-4">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold md:px-3 md:text-xs ${getPlacementClass(
+                                  position,
+                                )}`}
+                              >
+                                {getPlacementLabel(position)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </SectionCard>
             ))}
           </section>
@@ -195,7 +205,9 @@ export default async function GroupsPage() {
             {groupedMatches.map((group) => (
               <SectionCard key={group.groupName} className="p-5 md:p-6">
                 <div className="mb-5 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">{group.groupName} Matches</h2>
+                  <h2 className="text-2xl font-bold">
+                    {group.groupName} Matches
+                  </h2>
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/55">
                     group stage
                   </span>
@@ -203,50 +215,52 @@ export default async function GroupsPage() {
 
                 <div className="space-y-4">
                   {group.matches.map((match) => (
-                    <div
+                    <Link
                       key={match.id}
-                      className="rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5 transition hover:border-emerald-400/25 hover:bg-black/30"
+                      href={`/matches/${match.id}`}
+                      className="block focus:outline-none"
                     >
-                      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-3 flex flex-wrap items-center gap-2">
-                            <StatusBadge status={match.status} />
-                          </div>
-
-                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
-                            <div className="text-lg font-semibold md:text-xl">
-                              {match.team1_name ?? "TBD"}
-                            </div>
-
-                            <div className="text-sm text-white/35">vs</div>
-
-                            <div className="text-lg font-semibold md:text-xl">
-                              {match.team2_name ?? "TBD"}
-                            </div>
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/55">
-                            <span>{String(match.bo).toUpperCase()}</span>
-
-                            {match.status === "finished" && (
-                              <span className="rounded-full bg-emerald-500/10 px-3 py-1 font-medium text-emerald-300">
-                                {match.score1} : {match.score2}
+                      <div className="cursor-pointer rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5 transition hover:border-emerald-400/25 hover:bg-black/30 active:scale-[0.99]">
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/60">
+                                {getMatchLabel(match)}
                               </span>
-                            )}
-                          </div>
-                        </div>
+                              <StatusBadge status={match.status} />
+                            </div>
 
-                        <div className="flex flex-col gap-3 xl:items-end">
-                          <div className="text-sm text-white/60">
-                            {formatMatchTime(match.scheduled_at)}
+                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                              <div className="text-lg font-semibold md:text-xl">
+                                {match.team1_name ?? "TBD"}
+                              </div>
+
+                              <div className="text-sm text-white/35">vs</div>
+
+                              <div className="text-lg font-semibold md:text-xl">
+                                {match.team2_name ?? "TBD"}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/55">
+                              <span>{String(match.bo).toUpperCase()}</span>
+
+                              {match.status === "finished" && (
+                                <span className="rounded-full bg-emerald-500/10 px-3 py-1 font-medium text-emerald-300">
+                                  {match.score1} : {match.score2}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
-                          <PrimaryButton href={`/matches/${match.id}`}>
-                            Матч
-                          </PrimaryButton>
+                          <div className="flex flex-col gap-3 xl:items-end">
+                            <div className="text-sm text-white/60">
+                              {formatMatchTime(match.scheduled_at)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
 
                   {group.matches.length === 0 && (

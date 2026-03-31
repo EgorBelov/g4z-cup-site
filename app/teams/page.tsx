@@ -46,7 +46,7 @@ export default async function TeamsPage() {
               Все участники турнира, распределенные по группам.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            {/* <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/"
                 className="rounded-2xl bg-white/10 px-4 py-3 font-medium transition hover:bg-white/15"
@@ -65,7 +65,7 @@ export default async function TeamsPage() {
               >
                 Расписание
               </Link>
-            </div>
+            </div> */}
           </section>
 
           <div className="mt-8 space-y-8">

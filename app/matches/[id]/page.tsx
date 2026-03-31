@@ -71,7 +71,7 @@ function groupByGameId<T extends { match_game_id: number }>(rows: T[]) {
 function splitByTeam<T extends { team_id: number }>(
   rows: T[],
   team1Id: number | null,
-  team2Id: number | null
+  team2Id: number | null,
 ) {
   const team1: T[] = [];
   const team2: T[] = [];
@@ -120,7 +120,7 @@ export default async function MatchPage({
 
               <span
                 className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusClasses(
-                  match.status
+                  match.status,
                 )}`}
               >
                 {getStatusLabel(match.status)}
@@ -190,12 +190,12 @@ export default async function MatchPage({
                 const groupedPicks = splitByTeam(
                   gamePicks as PickRow[],
                   match.team1_id,
-                  match.team2_id
+                  match.team2_id,
                 );
                 const groupedBans = splitByTeam(
                   gameBans as BanRow[],
                   match.team1_id,
-                  match.team2_id
+                  match.team2_id,
                 );
 
                 return (
@@ -246,7 +246,9 @@ export default async function MatchPage({
                                   key={pick.id}
                                   className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
                                 >
-                                  <span className="font-medium">{pick.player_name}</span>{" "}
+                                  <span className="font-medium">
+                                    {pick.player_name}
+                                  </span>{" "}
                                   <span className="text-white/35">—</span>{" "}
                                   <span className="text-emerald-300">
                                     {pick.hero_name}
@@ -276,7 +278,9 @@ export default async function MatchPage({
                                 </span>
                               ))
                             ) : (
-                              <p className="text-white/50">Баны не добавлены.</p>
+                              <p className="text-white/50">
+                                Баны не добавлены.
+                              </p>
                             )}
                           </div>
                         </div>
@@ -305,7 +309,9 @@ export default async function MatchPage({
                                   key={pick.id}
                                   className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
                                 >
-                                  <span className="font-medium">{pick.player_name}</span>{" "}
+                                  <span className="font-medium">
+                                    {pick.player_name}
+                                  </span>{" "}
                                   <span className="text-white/35">—</span>{" "}
                                   <span className="text-emerald-300">
                                     {pick.hero_name}
@@ -335,7 +341,9 @@ export default async function MatchPage({
                                 </span>
                               ))
                             ) : (
-                              <p className="text-white/50">Баны не добавлены.</p>
+                              <p className="text-white/50">
+                                Баны не добавлены.
+                              </p>
                             )}
                           </div>
                         </div>

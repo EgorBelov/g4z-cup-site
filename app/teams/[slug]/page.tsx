@@ -8,6 +8,7 @@ import {
   getPlayersByTeamId,
   getTeamBySlug,
 } from "@/lib/queries/teams";
+import Link from "next/link";
 
 type TeamData = {
   id: number;
@@ -49,16 +50,12 @@ function formatMatchTime(value: string | null) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Europe/Moscow"
+    timeZone: "Europe/Moscow",
   }).format(new Date(value));
 }
 
-function getStageLabel(match: MatchRow) {
-  if (match.stage === "group") {
-    return match.group_name ?? match.round_name;
-  }
-
-  return match.round_name;
+function getMatchLabel(match: MatchRow) {
+  return match.round_name || match.group_name || "Матч";
 }
 
 export default async function TeamPage({
@@ -85,16 +82,16 @@ export default async function TeamPage({
               team.description ??
               `Команда турнира G4Z CUP 10. Группа: ${team.group_name ?? "без группы"}.`
             }
-            actions={[
-              { href: "/teams", label: "Все команды" },
-              { href: "/groups", label: "Группы" },
-              { href: "/schedule", label: "Расписание" },
-            ]}
+            // actions={[
+            //   { href: "/teams", label: "Все команды" },
+            //   { href: "/groups", label: "Группы" },
+            //   { href: "/schedule", label: "Расписание" },
+            // ]}
           />
 
-          <div className="mt-4 text-sm text-white/55">
+          {/* <div className="mt-4 text-sm text-white/55">
             Группа: <span className="text-white/80">{team.group_name ?? "Без группы"}</span>
-          </div>
+          </div> */}
 
           <section className="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.45fr]">
             <SectionCard className="p-5 md:p-6">
@@ -108,23 +105,23 @@ export default async function TeamPage({
               <div className="space-y-3">
                 {(players as PlayerRow[]).map((player) => (
                   <div
-  key={player.id}
-  className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4"
->
-  <div>
-    <div className="font-semibold">{player.nickname}</div>
-    <div className="mt-1 text-sm text-white/50">
-      {player.role ?? "player"}
-    </div>
-  </div>
+                    key={player.id}
+                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4"
+                  >
+                    <div>
+                      <div className="font-semibold">{player.nickname}</div>
+                      <div className="mt-1 text-sm text-white/50">
+                        {player.role ?? "player"}
+                      </div>
+                    </div>
 
-  <div className="text-right">
-    <div className="text-xs text-white/40">Rating</div>
-    <div className="text-lg font-semibold text-emerald-300">
-      {player.rating ?? "—"}
-    </div>
-  </div>
-</div>
+                    <div className="text-right">
+                      <div className="text-xs text-white/40">Rating</div>
+                      <div className="text-lg font-semibold text-emerald-300">
+                        {player.rating ?? "—"}
+                      </div>
+                    </div>
+                  </div>
                 ))}
 
                 {(players as PlayerRow[]).length === 0 && (
@@ -150,50 +147,56 @@ export default async function TeamPage({
                   const opponentName = isTeam1
                     ? match.team2_name
                     : isTeam2
-                    ? match.team1_name
-                    : "TBD";
+                      ? match.team1_name
+                      : "TBD";
 
                   return (
-                    <div
+                    <Link
                       key={match.id}
-                      className="rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5 transition hover:border-emerald-400/25 hover:bg-black/30"
+                      href={`/matches/${match.id}`}
+                      className="block focus:outline-none"
                     >
-                      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-3 flex flex-wrap items-center gap-2">
-                            <span className="text-sm text-white/45">
-                              {getStageLabel(match)}
-                            </span>
-
-                            <StatusBadge status={match.status} />
-                          </div>
-
-                          <div className="text-lg font-semibold md:text-xl">
-                            {team.name} vs {opponentName ?? "TBD"}
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/55">
-                            <span>{String(match.bo).toUpperCase()}</span>
-
-                            {match.status === "finished" && (
-                              <span className="rounded-full bg-emerald-500/10 px-3 py-1 font-medium text-emerald-300">
-                                {match.score1} : {match.score2}
+                      <div className="cursor-pointer rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5 transition hover:border-emerald-400/25 hover:bg-black/30 active:scale-[0.99]">
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/60">
+                                {getMatchLabel(match)}
                               </span>
-                            )}
-                          </div>
-                        </div>
+                              <StatusBadge status={match.status} />
+                            </div>
 
-                        <div className="flex flex-col gap-3 xl:items-end">
-                          <div className="text-sm text-white/60">
-                            {formatMatchTime(match.scheduled_at)}
+                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                              <div className="text-lg font-semibold md:text-xl">
+                                {match.team1_name ?? "TBD"}
+                              </div>
+
+                              <div className="text-sm text-white/35">vs</div>
+
+                              <div className="text-lg font-semibold md:text-xl">
+                                {match.team2_name ?? "TBD"}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/55">
+                              <span>{String(match.bo).toUpperCase()}</span>
+
+                              {match.status === "finished" && (
+                                <span className="rounded-full bg-emerald-500/10 px-3 py-1 font-medium text-emerald-300">
+                                  {match.score1} : {match.score2}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
-                          <PrimaryButton href={`/matches/${match.id}`}>
-                            Матч
-                          </PrimaryButton>
+                          <div className="flex flex-col gap-3 xl:items-end">
+                            <div className="text-sm text-white/60">
+                              {formatMatchTime(match.scheduled_at)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
 

@@ -14,7 +14,7 @@ function formatMatchTime(value: string | null) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Europe/Moscow"
+    timeZone: "Europe/Moscow",
   }).format(new Date(value));
 }
 
@@ -153,11 +153,11 @@ export default async function PlayoffPage() {
             eyebrow="G4Z CUP"
             title="Плей-офф"
             description="1–2 места группы выходят сразу в полуфинал, 3–6 места начинают с четвертьфиналов. Play-In остается как резервная стадия для переигровок."
-            actions={[
-              { href: "/", label: "На главную" },
-              { href: "/schedule", label: "Расписание" },
-              { href: "/groups", label: "Группы" },
-            ]}
+            // actions={[
+            //   { href: "/", label: "На главную" },
+            //   { href: "/schedule", label: "Расписание" },
+            //   { href: "/groups", label: "Группы" },
+            // ]}
           />
 
           <section className="mt-8 grid gap-6 xl:grid-cols-4">
@@ -179,11 +179,7 @@ export default async function PlayoffPage() {
               matches={semifinals}
             />
 
-            <StageColumn
-              title="Final"
-              badge="grand final"
-              matches={finals}
-            />
+            <StageColumn title="Final" badge="grand final" matches={finals} />
           </section>
         </div>
       </Container>
