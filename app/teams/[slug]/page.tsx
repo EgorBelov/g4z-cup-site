@@ -30,7 +30,7 @@ type MatchRow = {
   id: number;
   stage: string;
   group_name: string | null;
-  round_name: string;
+  round_name: string | null;
   team1_id: number | null;
   team1_name: string | null;
   team2_id: number | null;

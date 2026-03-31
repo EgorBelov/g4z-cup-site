@@ -18,22 +18,54 @@ export async function getTeams(tournamentId: number) {
   return data ?? [];
 }
 
+// export async function getTeamBySlug(slug: string) {
+//   const supabase = getSupabaseServerClient();
+
+//   const { data, error } = await supabase
+//     .from("teams_full")
+//     .select("*")
+//     .eq("slug", slug)
+//     .single();
+
+//   if (error) {
+//     console.error("Error loading team by slug:", error);
+//     throw new Error("Не удалось загрузить команду");
+//   }
+
+//   return data;
+// }
+
 export async function getTeamBySlug(slug: string) {
   const supabase = getSupabaseServerClient();
 
-  const { data, error } = await supabase
-    .from("teams_full")
+  let { data, error } = await supabase
+    .from("teams")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error loading team by slug:", error);
+  }
+
+  // if (!data && slug === "g4ziki") {
+  //   const fallback = await supabase
+  //     .from("teams_full")
+  //     .select("*")
+  //     .eq("slug", "team-g4ziki")
+  //     .maybeSingle();
+
+  //   data = fallback.data;
+  //   error = fallback.error;
+  // }
+
+  if (error || !data) {
     throw new Error("Не удалось загрузить команду");
   }
 
   return data;
 }
+
 
 export async function getPlayersByTeamId(teamId: number) {
   const supabase = getSupabaseServerClient();

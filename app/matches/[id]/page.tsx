@@ -149,7 +149,7 @@ export default async function MatchPage({
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link
+              {/* <Link
                 href="/schedule"
                 className="rounded-2xl bg-white/10 px-4 py-3 font-medium transition hover:bg-white/15"
               >
@@ -166,7 +166,7 @@ export default async function MatchPage({
                 className="rounded-2xl bg-white/10 px-4 py-3 font-medium transition hover:bg-white/15"
               >
                 Группы
-              </Link>
+              </Link> */}
 
               {match.stream_url && (
                 <a
