@@ -22,6 +22,7 @@ type PlayerRow = {
   nickname: string;
   role: string | null;
   real_name: string | null;
+  rating: number | null;
 };
 
 type MatchRow = {
@@ -106,14 +107,23 @@ export default async function TeamPage({
               <div className="space-y-3">
                 {(players as PlayerRow[]).map((player) => (
                   <div
-                    key={player.id}
-                    className="rounded-2xl border border-white/10 bg-black/20 p-4"
-                  >
-                    <div className="font-semibold">{player.nickname}</div>
-                    <div className="mt-1 text-sm text-white/50">
-                      {player.role ?? "player"}
-                    </div>
-                  </div>
+  key={player.id}
+  className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4"
+>
+  <div>
+    <div className="font-semibold">{player.nickname}</div>
+    <div className="mt-1 text-sm text-white/50">
+      {player.role ?? "player"}
+    </div>
+  </div>
+
+  <div className="text-right">
+    <div className="text-xs text-white/40">Rating</div>
+    <div className="text-lg font-semibold text-emerald-300">
+      {player.rating ?? "—"}
+    </div>
+  </div>
+</div>
                 ))}
 
                 {(players as PlayerRow[]).length === 0 && (

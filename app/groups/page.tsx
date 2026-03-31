@@ -71,7 +71,14 @@ function groupMatchesByGroup(matches: GroupMatch[]) {
 
   return Array.from(grouped.entries()).map(([groupName, items]) => ({
     groupName,
-    matches: items,
+    matches: items.sort((a, b) => {
+      // null (TBD) отправляем в конец
+      if (!a.scheduled_at && !b.scheduled_at) return 0;
+      if (!a.scheduled_at) return 1;
+      if (!b.scheduled_at) return -1;
+
+      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+    }),
   }));
 }
 
@@ -128,57 +135,57 @@ export default async function GroupsPage() {
                   </span>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-white/10 w-full">
-  <table className="w-full min-w-[640px] text-left">
-                    <thead className="bg-white/5 text-sm text-white/55">
-                      <tr>
-                        <th className="px-4 py-3">#</th>
-                        <th className="px-4 py-3">Команда</th>
-                        <th className="px-4 py-3 text-center">И</th>
-                        <th className="px-4 py-3 text-center">В</th>
-                        <th className="px-4 py-3 text-center">П</th>
-                        <th className="px-4 py-3">Выход</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.teams.map((team, index) => {
-                        const position = index + 1;
+                <div className="w-full overflow-x-auto rounded-2xl border border-white/10">
+  <table className="w-full text-left text-sm md:text-base">
+    <thead className="bg-white/5 text-xs uppercase tracking-wide text-white/55 md:text-sm">
+      <tr>
+        <th className="px-3 py-3 md:px-4">#</th>
+        <th className="px-3 py-3 md:px-4">Команда</th>
+        <th className="px-3 py-3 text-center md:px-4">И</th>
+        <th className="px-3 py-3 text-center md:px-4">В</th>
+        <th className="px-3 py-3 text-center md:px-4">П</th>
+        <th className="hidden px-3 py-3 md:table-cell md:px-4">Выход</th>
+      </tr>
+    </thead>
+    <tbody>
+      {group.teams.map((team, index) => {
+        const position = index + 1;
 
-                        return (
-                          <tr
-                            key={team.team_id}
-                            className="border-t border-white/10 bg-black/20"
-                          >
-                            <td className="px-4 py-3 font-semibold text-white/90">
-                              {position}
-                            </td>
-                            <td className="px-4 py-3 font-medium">
-                              {team.team_name}
-                            </td>
-                            <td className="px-4 py-3 text-center text-white/75">
-                              {team.played}
-                            </td>
-                            <td className="px-4 py-3 text-center text-emerald-300">
-                              {team.wins}
-                            </td>
-                            <td className="px-4 py-3 text-center text-white/70">
-                              {team.losses}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`rounded-full px-3 py-1 text-xs font-semibold ${getPlacementClass(
-                                  position
-                                )}`}
-                              >
-                                {getPlacementLabel(position)}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+        return (
+          <tr
+            key={team.team_id}
+            className="border-t border-white/10 bg-black/20"
+          >
+            <td className="px-3 py-3 font-semibold text-white/90 md:px-4">
+              {position}
+            </td>
+            <td className="px-3 py-3 font-medium break-words md:px-4">
+              {team.team_name}
+            </td>
+            <td className="px-3 py-3 text-center text-white/75 md:px-4">
+              {team.played}
+            </td>
+            <td className="px-3 py-3 text-center text-emerald-300 md:px-4">
+              {team.wins}
+            </td>
+            <td className="px-3 py-3 text-center text-white/70 md:px-4">
+              {team.losses}
+            </td>
+            <td className="hidden px-3 py-3 md:table-cell md:px-4">
+              <span
+                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold md:px-3 md:text-xs ${getPlacementClass(
+                  position
+                )}`}
+              >
+                {getPlacementLabel(position)}
+              </span>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
               </SectionCard>
             ))}
           </section>
