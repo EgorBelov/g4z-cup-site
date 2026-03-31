@@ -89,9 +89,14 @@ export default async function AdminMatchesPage() {
           </thead>
           <tbody>
             {matches.map((match) => (
-              <tr key={match.id} className="border-t border-white/10 bg-black/20">
+              <tr
+                key={match.id}
+                className="border-t border-white/10 bg-black/20"
+              >
                 <td className="px-4 py-3 font-mono text-sm">{match.id}</td>
-                <td className="px-4 py-3 text-white/75">{getStageLabel(match)}</td>
+                <td className="px-4 py-3 text-white/75">
+                  {getStageLabel(match)}
+                </td>
                 <td className="px-4 py-3 font-medium">
                   {match.team1_name ?? "TBD"} vs {match.team2_name ?? "TBD"}
                 </td>
@@ -104,7 +109,7 @@ export default async function AdminMatchesPage() {
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusClasses(
-                      match.status
+                      match.status,
                     )}`}
                   >
                     {match.status}

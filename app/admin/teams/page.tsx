@@ -38,11 +38,11 @@ export default async function AdminTeamsPage() {
               Публичные команды
             </Link>
             <Link
-  href="/admin/teams/new"
-  className="rounded-xl bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500"
->
-  Новая команда
-</Link>
+              href="/admin/teams/new"
+              className="rounded-xl bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500"
+            >
+              Новая команда
+            </Link>
           </div>
         </div>
 
@@ -59,11 +59,16 @@ export default async function AdminTeamsPage() {
             </thead>
             <tbody>
               {teams.map((team) => (
-                <tr key={team.id} className="border-t border-white/10 bg-black/20">
+                <tr
+                  key={team.id}
+                  className="border-t border-white/10 bg-black/20"
+                >
                   <td className="px-4 py-3 font-mono text-sm">{team.id}</td>
                   <td className="px-4 py-3 font-medium">{team.name}</td>
                   <td className="px-4 py-3 text-white/70">{team.slug}</td>
-                  <td className="px-4 py-3 text-white/70">{team.group_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-white/70">
+                    {team.group_name ?? "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/admin/teams/${team.id}`}
@@ -77,7 +82,10 @@ export default async function AdminTeamsPage() {
 
               {teams.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-white/60">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-6 text-center text-white/60"
+                  >
                     Команд пока нет.
                   </td>
                 </tr>

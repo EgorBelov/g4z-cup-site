@@ -197,14 +197,16 @@ export async function getAdminGroupsWithTeams(tournamentId: number) {
 
   const { data, error } = await supabase
     .from("groups")
-    .select(`
+    .select(
+      `
       *,
       teams (
         id,
         name,
         slug
       )
-    `)
+    `,
+    )
     .eq("tournament_id", tournamentId)
     .order("sort_order", { ascending: true });
 
@@ -219,25 +221,43 @@ export async function getAdminGroupsWithTeams(tournamentId: number) {
 export async function getAdminDashboardStats(tournamentId: number) {
   const supabase = getSupabaseServerClient();
 
-  const [teamsRes, matchesRes, liveRes, finishedRes, upcomingRes] = await Promise.all([
-    supabase.from("teams").select("*", { count: "exact", head: true }).eq("tournament_id", tournamentId),
-    supabase.from("matches").select("*", { count: "exact", head: true }).eq("tournament_id", tournamentId),
-    supabase.from("matches").select("*", { count: "exact", head: true }).eq("tournament_id", tournamentId).eq("status", "live"),
-    supabase.from("matches").select("*", { count: "exact", head: true }).eq("tournament_id", tournamentId).eq("status", "finished"),
-    supabase
-      .from("matches_full")
-      .select("*")
-      .eq("tournament_id", tournamentId)
-      .eq("status", "upcoming")
-      .order("scheduled_at", { ascending: true })
-      .limit(5),
-  ]);
+  const [teamsRes, matchesRes, liveRes, finishedRes, upcomingRes] =
+    await Promise.all([
+      supabase
+        .from("teams")
+        .select("*", { count: "exact", head: true })
+        .eq("tournament_id", tournamentId),
+      supabase
+        .from("matches")
+        .select("*", { count: "exact", head: true })
+        .eq("tournament_id", tournamentId),
+      supabase
+        .from("matches")
+        .select("*", { count: "exact", head: true })
+        .eq("tournament_id", tournamentId)
+        .eq("status", "live"),
+      supabase
+        .from("matches")
+        .select("*", { count: "exact", head: true })
+        .eq("tournament_id", tournamentId)
+        .eq("status", "finished"),
+      supabase
+        .from("matches_full")
+        .select("*")
+        .eq("tournament_id", tournamentId)
+        .eq("status", "upcoming")
+        .order("scheduled_at", { ascending: true })
+        .limit(5),
+    ]);
 
   if (teamsRes.error) throw new Error("Не удалось загрузить количество команд");
-  if (matchesRes.error) throw new Error("Не удалось загрузить количество матчей");
+  if (matchesRes.error)
+    throw new Error("Не удалось загрузить количество матчей");
   if (liveRes.error) throw new Error("Не удалось загрузить live матчи");
-  if (finishedRes.error) throw new Error("Не удалось загрузить завершенные матчи");
-  if (upcomingRes.error) throw new Error("Не удалось загрузить ближайшие матчи");
+  if (finishedRes.error)
+    throw new Error("Не удалось загрузить завершенные матчи");
+  if (upcomingRes.error)
+    throw new Error("Не удалось загрузить ближайшие матчи");
 
   return {
     teamsCount: teamsRes.count ?? 0,

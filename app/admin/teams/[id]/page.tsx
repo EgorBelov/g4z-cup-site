@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { replaceTeamPlayersAction, updateTeamAction } from "@/app/admin/actions";
+import {
+  replaceTeamPlayersAction,
+  updateTeamAction,
+} from "@/app/admin/actions";
 import {
   getAdminGroups,
   getAdminPlayersByTeamId,

@@ -32,7 +32,7 @@ function toDatetimeLocalValue(value: string | null) {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
+    date.getDate(),
   )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
@@ -68,7 +68,8 @@ export default async function AdminPlayoffPage() {
             Play-In и плей-офф
           </h1>
           <p className="mt-3 text-white/65">
-            Здесь можно вручную расставить команды по слотам матчей Play-In и основной сетки.
+            Здесь можно вручную расставить команды по слотам матчей Play-In и
+            основной сетки.
           </p>
 
           <div className="mt-5 flex gap-3">
@@ -103,7 +104,8 @@ export default async function AdminPlayoffPage() {
                   </div>
                   <h2 className="text-2xl font-bold">{match.round_name}</h2>
                   <p className="mt-1 text-white/60">
-                    Текущий счет: {match.score1} : {match.score2} · {match.status}
+                    Текущий счет: {match.score1} : {match.score2} ·{" "}
+                    {match.status}
                   </p>
                 </div>
 

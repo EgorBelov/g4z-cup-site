@@ -42,7 +42,7 @@ type BanRow = {
 function getPickValue(
   picks: PickRow[],
   teamId: number | null,
-  order: number
+  order: number,
 ): { player_name: string; hero_name: string } {
   const row = picks.find((p) => p.team_id === teamId && p.pick_order === order);
   return {
@@ -51,8 +51,15 @@ function getPickValue(
   };
 }
 
-function getBanValue(bans: BanRow[], teamId: number | null, order: number): string {
-  return bans.find((b) => b.team_id === teamId && b.ban_order === order)?.hero_name ?? "";
+function getBanValue(
+  bans: BanRow[],
+  teamId: number | null,
+  order: number,
+): string {
+  return (
+    bans.find((b) => b.team_id === teamId && b.ban_order === order)
+      ?.hero_name ?? ""
+  );
 }
 
 export default async function AdminMatchGamePage({
@@ -113,8 +120,16 @@ export default async function AdminMatchGamePage({
         >
           <input type="hidden" name="match_id" value={matchId} />
           <input type="hidden" name="game_id" value={parsedGameId} />
-          <input type="hidden" name="team1_id" value={typedMatch.team1_id ?? ""} />
-          <input type="hidden" name="team2_id" value={typedMatch.team2_id ?? ""} />
+          <input
+            type="hidden"
+            name="team1_id"
+            value={typedMatch.team1_id ?? ""}
+          />
+          <input
+            type="hidden"
+            name="team2_id"
+            value={typedMatch.team2_id ?? ""}
+          />
 
           <div className="grid gap-8 lg:grid-cols-2">
             <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
@@ -130,7 +145,11 @@ export default async function AdminMatchGamePage({
                 <div className="space-y-3">
                   {Array.from({ length: 5 }, (_, i) => {
                     const order = i + 1;
-                    const value = getPickValue(typedPicks, typedMatch.team1_id, order);
+                    const value = getPickValue(
+                      typedPicks,
+                      typedMatch.team1_id,
+                      order,
+                    );
 
                     return (
                       <div key={order} className="grid gap-3 md:grid-cols-2">
@@ -164,7 +183,11 @@ export default async function AdminMatchGamePage({
                       <input
                         key={order}
                         name={`team1_ban_${order}`}
-                        defaultValue={getBanValue(typedBans, typedMatch.team1_id, order)}
+                        defaultValue={getBanValue(
+                          typedBans,
+                          typedMatch.team1_id,
+                          order,
+                        )}
                         placeholder={`Ban ${order}`}
                         className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
                       />
@@ -187,7 +210,11 @@ export default async function AdminMatchGamePage({
                 <div className="space-y-3">
                   {Array.from({ length: 5 }, (_, i) => {
                     const order = i + 1;
-                    const value = getPickValue(typedPicks, typedMatch.team2_id, order);
+                    const value = getPickValue(
+                      typedPicks,
+                      typedMatch.team2_id,
+                      order,
+                    );
 
                     return (
                       <div key={order} className="grid gap-3 md:grid-cols-2">
@@ -221,7 +248,11 @@ export default async function AdminMatchGamePage({
                       <input
                         key={order}
                         name={`team2_ban_${order}`}
-                        defaultValue={getBanValue(typedBans, typedMatch.team2_id, order)}
+                        defaultValue={getBanValue(
+                          typedBans,
+                          typedMatch.team2_id,
+                          order,
+                        )}
                         placeholder={`Ban ${order}`}
                         className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
                       />

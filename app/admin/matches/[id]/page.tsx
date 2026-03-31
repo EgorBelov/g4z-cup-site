@@ -85,11 +85,11 @@ export default async function AdminMatchEditPage({
 
           <div className="mt-5 flex gap-3">
             <Link
-  href="/admin/matches"
-  className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
->
-  Назад к матчам
-</Link>
+              href="/admin/matches"
+              className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
+            >
+              Назад к матчам
+            </Link>
             <Link
               href={`/matches/${match.id}`}
               className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
@@ -160,18 +160,19 @@ export default async function AdminMatchEditPage({
             </div>
 
             <div className="md:col-span-2">
-  <label className="mb-2 block text-sm font-medium text-white/70">
-    Текущий счет матча
-  </label>
-  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-    <span className="text-lg font-semibold text-white">
-      {match.score1} : {match.score2}
-    </span>
-    <p className="mt-2 text-sm text-white/50">
-      Счет рассчитывается автоматически по победителям игр матча ниже.
-    </p>
-  </div>
-</div>
+              <label className="mb-2 block text-sm font-medium text-white/70">
+                Текущий счет матча
+              </label>
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                <span className="text-lg font-semibold text-white">
+                  {match.score1} : {match.score2}
+                </span>
+                <p className="mt-2 text-sm text-white/50">
+                  Счет рассчитывается автоматически по победителям игр матча
+                  ниже.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="mt-6">
@@ -228,7 +229,10 @@ export default async function AdminMatchEditPage({
           <div className="mb-6 flex items-center justify-between gap-4">
             <h2 className="text-2xl font-bold">Игры матча</h2>
 
-            <form action={createMatchGameAction} className="flex items-center gap-3">
+            <form
+              action={createMatchGameAction}
+              className="flex items-center gap-3"
+            >
               <input type="hidden" name="match_id" value={match.id} />
               <input
                 type="number"
@@ -267,7 +271,10 @@ export default async function AdminMatchEditPage({
                     </Link>
                   </div>
 
-                  <form action={updateMatchGameAction} className="grid gap-4 md:grid-cols-3">
+                  <form
+                    action={updateMatchGameAction}
+                    className="grid gap-4 md:grid-cols-3"
+                  >
                     <input type="hidden" name="game_id" value={game.id} />
                     <input type="hidden" name="match_id" value={match.id} />
 
@@ -282,10 +289,14 @@ export default async function AdminMatchEditPage({
                       >
                         <option value="">Не выбран</option>
                         {match.team1_id && (
-                          <option value={match.team1_id}>{match.team1_name}</option>
+                          <option value={match.team1_id}>
+                            {match.team1_name}
+                          </option>
                         )}
                         {match.team2_id && (
-                          <option value={match.team2_id}>{match.team2_name}</option>
+                          <option value={match.team2_id}>
+                            {match.team2_name}
+                          </option>
                         )}
                       </select>
                     </div>
@@ -338,7 +349,9 @@ export default async function AdminMatchEditPage({
                 </div>
               ))
             ) : (
-              <p className="text-white/60">Для матча пока нет добавленных игр.</p>
+              <p className="text-white/60">
+                Для матча пока нет добавленных игр.
+              </p>
             )}
           </div>
         </section>

@@ -12,7 +12,9 @@ export async function updateMatchAction(formData: FormData) {
   const streamUrlRaw = String(formData.get("stream_url") || "").trim();
   const notesRaw = String(formData.get("notes") || "").trim();
 
-  const scheduled_at = scheduledAtRaw ? new Date(scheduledAtRaw).toISOString() : null;
+  const scheduled_at = scheduledAtRaw
+    ? new Date(scheduledAtRaw).toISOString()
+    : null;
   const stream_url = streamUrlRaw || null;
   const notes = notesRaw || null;
 
@@ -111,13 +113,17 @@ export async function updateMatchGameDraftAction(formData: FormData) {
   const team2Id = Number(formData.get("team2_id"));
 
   const team1Picks = Array.from({ length: 5 }, (_, i) => ({
-    player_name: String(formData.get(`team1_pick_player_${i + 1}`) || "").trim(),
+    player_name: String(
+      formData.get(`team1_pick_player_${i + 1}`) || "",
+    ).trim(),
     hero_name: String(formData.get(`team1_pick_hero_${i + 1}`) || "").trim(),
     pick_order: i + 1,
   })).filter((row) => row.player_name || row.hero_name);
 
   const team2Picks = Array.from({ length: 5 }, (_, i) => ({
-    player_name: String(formData.get(`team2_pick_player_${i + 1}`) || "").trim(),
+    player_name: String(
+      formData.get(`team2_pick_player_${i + 1}`) || "",
+    ).trim(),
     hero_name: String(formData.get(`team2_pick_hero_${i + 1}`) || "").trim(),
     pick_order: i + 1,
   })).filter((row) => row.player_name || row.hero_name);
@@ -185,7 +191,9 @@ export async function updateMatchGameDraftAction(formData: FormData) {
   ];
 
   if (picksToInsert.length > 0) {
-    const insertPicks = await supabase.from("match_game_picks").insert(picksToInsert);
+    const insertPicks = await supabase
+      .from("match_game_picks")
+      .insert(picksToInsert);
 
     if (insertPicks.error) {
       console.error("Error inserting picks:", insertPicks.error);
@@ -194,7 +202,9 @@ export async function updateMatchGameDraftAction(formData: FormData) {
   }
 
   if (bansToInsert.length > 0) {
-    const insertBans = await supabase.from("match_game_bans").insert(bansToInsert);
+    const insertBans = await supabase
+      .from("match_game_bans")
+      .insert(bansToInsert);
 
     if (insertBans.error) {
       console.error("Error inserting bans:", insertBans.error);
@@ -263,7 +273,7 @@ export async function replaceTeamPlayersAction(formData: FormData) {
         nickname: p.nickname,
         role: p.role || null,
         sort_order: p.sort_order,
-      }))
+      })),
     );
 
     if (insertResult.error) {
@@ -286,7 +296,9 @@ export async function updatePlayoffMatchSlotsAction(formData: FormData) {
 
   const team1_id = team1Raw ? Number(team1Raw) : null;
   const team2_id = team2Raw ? Number(team2Raw) : null;
-  const scheduled_at = scheduledAtRaw ? new Date(scheduledAtRaw).toISOString() : null;
+  const scheduled_at = scheduledAtRaw
+    ? new Date(scheduledAtRaw).toISOString()
+    : null;
   const stream_url = streamUrlRaw || null;
 
   const { error } = await supabase
@@ -299,14 +311,12 @@ export async function updatePlayoffMatchSlotsAction(formData: FormData) {
     })
     .eq("id", matchId);
 
-   if (error) {
-  console.error("Error updating playoff/play-in slots:", error);
-  throw new Error("Не удалось обновить слот матча");
-
+  if (error) {
+    console.error("Error updating playoff/play-in slots:", error);
+    throw new Error("Не удалось обновить слот матча");
   }
 
   redirect("/admin/playoff");
-
 }
 
 export async function createTeamAction(formData: FormData) {
@@ -354,7 +364,9 @@ export async function createMatchAction(formData: FormData) {
   const group_id = groupIdRaw ? Number(groupIdRaw) : null;
   const team1_id = team1Raw ? Number(team1Raw) : null;
   const team2_id = team2Raw ? Number(team2Raw) : null;
-  const scheduled_at = scheduledAtRaw ? new Date(scheduledAtRaw).toISOString() : null;
+  const scheduled_at = scheduledAtRaw
+    ? new Date(scheduledAtRaw).toISOString()
+    : null;
   const stream_url = streamUrlRaw || null;
   const match_order = matchOrderRaw ? Number(matchOrderRaw) : 0;
 
@@ -443,10 +455,7 @@ export async function deleteGroupAction(formData: FormData) {
     throw new Error("Не удалось отвязать команды от группы");
   }
 
-  const deleteResult = await supabase
-    .from("groups")
-    .delete()
-    .eq("id", groupId);
+  const deleteResult = await supabase.from("groups").delete().eq("id", groupId);
 
   if (deleteResult.error) {
     console.error("Error deleting group:", deleteResult.error);

@@ -32,7 +32,7 @@ export default async function HomePage() {
     <main className="bg-slate-950 text-white">
       <Container>
         <div className="py-8 md:py-12">
-          <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-emerald-500/12 via-white/6 to-sky-500/10 p-6 md:p-10">
+          {/* <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-emerald-500/12 via-white/6 to-sky-500/10 p-6 md:p-10">
             <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" />
             <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-sky-400/10 blur-3xl" />
 
@@ -50,7 +50,7 @@ export default async function HomePage() {
                 расписанием, результатами и страницами матчей в одном месте.
               </p>
 
-              {/* <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-7 flex flex-wrap gap-3">
                 <Link
                   href="/schedule"
                   className="rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-500"
@@ -69,7 +69,7 @@ export default async function HomePage() {
                 >
                   Группы
                 </Link>
-              </div> */}
+              </div>
 
               <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -88,8 +88,61 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
-          </section>
+          </section> */}
+          <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-emerald-500/12 via-white/6 to-sky-500/10 p-6 md:p-10">
+            <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" />
+            <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-sky-400/10 blur-3xl" />
 
+            <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:gap-10">
+              <div className="min-w-0">
+                <div className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-1 text-sm font-medium text-emerald-300">
+                  Юбилейный турнир
+                </div>
+
+                <h1 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+                  {tournament.title}
+                </h1>
+
+                <p className="mt-5 max-w-2xl text-base leading-7 text-white/70 sm:text-lg">
+                  Весенний турнир по Dota 2 с группами, плей-офф сеткой,
+                  расписанием, результатами и страницами матчей в одном месте.
+                </p>
+
+                <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
+                    <div className="text-sm text-white/45">Формат</div>
+                    <div className="mt-1 font-semibold">
+                      {tournament.format}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
+                    <div className="text-sm text-white/45">Игра</div>
+                    <div className="mt-1 font-semibold">Dota 2</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
+                    <div className="text-sm text-white/45">Статус</div>
+                    <div className="mt-1 font-semibold capitalize">
+                      {tournament.status}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative flex items-center justify-center lg:justify-end">
+                <div className="absolute h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl md:h-72 md:w-72" />
+                <div className="absolute h-40 w-40 rounded-full bg-sky-400/10 blur-2xl md:h-52 md:w-52" />
+
+                {/* 👇 РАМКА */}
+                <div className="relative z-10 rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-md shadow-[0_0_40px_rgba(16,185,129,0.15)]">
+                  <img
+                    src="/image.png"
+                    alt="G4Z CUP"
+                    className="h-32 w-32 object-contain sm:h-40 sm:w-40 md:h-48 md:w-48 lg:h-56 lg:w-56"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
           <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_1.4fr]">
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
               <div className="flex items-center justify-between">

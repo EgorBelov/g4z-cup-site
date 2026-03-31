@@ -63,12 +63,16 @@ export default async function AdminDashboardPage() {
 
         <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
           <div className="text-sm text-white/55">Матчи</div>
-          <div className="mt-2 text-3xl font-extrabold">{stats.matchesCount}</div>
+          <div className="mt-2 text-3xl font-extrabold">
+            {stats.matchesCount}
+          </div>
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
           <div className="text-sm text-white/55">Live</div>
-          <div className="mt-2 text-3xl font-extrabold text-red-300">{stats.liveCount}</div>
+          <div className="mt-2 text-3xl font-extrabold text-red-300">
+            {stats.liveCount}
+          </div>
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
@@ -127,7 +131,7 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="text-sm text-white/50">
                     {match.stage === "group"
-                      ? match.group_name ?? match.round_name
+                      ? (match.group_name ?? match.round_name)
                       : match.round_name}
                   </div>
 

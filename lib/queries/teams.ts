@@ -66,7 +66,6 @@ export async function getTeamBySlug(slug: string) {
   return data;
 }
 
-
 export async function getPlayersByTeamId(teamId: number) {
   const supabase = getSupabaseServerClient();
 

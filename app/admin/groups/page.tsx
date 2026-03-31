@@ -21,7 +21,7 @@ type GroupWithTeams = {
 export default async function AdminGroupsPage() {
   const tournament = await getTournamentBySlug("g4z-cup-10");
   const groups = (await getAdminGroupsWithTeams(
-    tournament.id
+    tournament.id,
   )) as GroupWithTeams[];
 
   return (
@@ -40,11 +40,11 @@ export default async function AdminGroupsPage() {
 
           <div className="mt-5 flex gap-3">
             <Link
-  href="/admin/matches"
-  className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
->
-  Матчи
-</Link>
+              href="/admin/matches"
+              className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
+            >
+              Матчи
+            </Link>
             <Link
               href="/groups"
               className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
@@ -57,7 +57,10 @@ export default async function AdminGroupsPage() {
         <section className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
           <h2 className="mb-5 text-2xl font-bold">Новая группа</h2>
 
-          <form action={createGroupAction} className="grid gap-4 md:grid-cols-3">
+          <form
+            action={createGroupAction}
+            className="grid gap-4 md:grid-cols-3"
+          >
             <input type="hidden" name="tournament_id" value={tournament.id} />
 
             <div>
@@ -155,7 +158,9 @@ export default async function AdminGroupsPage() {
                 </div>
 
                 <div>
-                  <h3 className="mb-4 text-xl font-semibold">Команды в группе</h3>
+                  <h3 className="mb-4 text-xl font-semibold">
+                    Команды в группе
+                  </h3>
 
                   <div className="space-y-3">
                     {group.teams && group.teams.length > 0 ? (
@@ -172,7 +177,9 @@ export default async function AdminGroupsPage() {
                         </Link>
                       ))
                     ) : (
-                      <p className="text-white/60">В этой группе пока нет команд.</p>
+                      <p className="text-white/60">
+                        В этой группе пока нет команд.
+                      </p>
                     )}
                   </div>
                 </div>

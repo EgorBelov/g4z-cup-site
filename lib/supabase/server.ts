@@ -7,7 +7,6 @@
 //   return createClient(supabaseUrl, supabaseAnonKey);
 // }
 
-
 import { createClient } from "@supabase/supabase-js";
 
 export function getSupabaseServerClient() {
@@ -25,9 +24,7 @@ export function getSupabaseServerClient() {
   try {
     new URL(supabaseUrl);
   } catch {
-    throw new Error(
-      `NEXT_PUBLIC_SUPABASE_URL is invalid: "${supabaseUrl}"`
-    );
+    throw new Error(`NEXT_PUBLIC_SUPABASE_URL is invalid: "${supabaseUrl}"`);
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);

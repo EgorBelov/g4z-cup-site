@@ -94,7 +94,7 @@ export type MatchPageData = {
 };
 
 export async function getMatchPageData(
-  matchId: number
+  matchId: number,
 ): Promise<MatchPageData> {
   const supabase = getSupabaseServerClient();
 

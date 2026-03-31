@@ -37,11 +37,11 @@ export default async function AdminNewMatchPage() {
 
           <div className="mt-5">
             <Link
-  href="/admin/matches"
-  className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
->
-  Назад к матчам
-</Link>
+              href="/admin/matches"
+              className="rounded-xl bg-white/10 px-4 py-2 font-medium hover:bg-white/15"
+            >
+              Назад к матчам
+            </Link>
           </div>
         </div>
 
@@ -70,12 +70,32 @@ export default async function AdminNewMatchPage() {
               <label className="mb-2 block text-sm font-medium text-white/70">
                 Round name
               </label>
-              <input
+
+              <select
                 name="round_name"
                 required
-                placeholder="Round 1 / Quarterfinal 1 / Final"
                 className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
-              />
+              >
+                <option value="">Выбери раунд</option>
+
+                <optgroup label="Group Stage">
+                  <option value="Round 1">Round 1</option>
+                  <option value="Round 2">Round 2</option>
+                  <option value="Round 3">Round 3</option>
+                  <option value="Round 4">Round 4</option>
+                  <option value="Round 5">Round 5</option>
+                  <option value="Round 6">Round 6</option>
+                  <option value="Round 7">Round 7</option>
+                </optgroup>
+
+                <optgroup label="Playoffs">
+                  <option value="Quarterfinal 1">Quarterfinal 1</option>
+                  <option value="Quarterfinal 2">Quarterfinal 2</option>
+                  <option value="Semifinal 1">Semifinal 1</option>
+                  <option value="Semifinal 2">Semifinal 2</option>
+                  <option value="Grand Final">Grand Final</option>
+                </optgroup>
+              </select>
             </div>
 
             <div>
