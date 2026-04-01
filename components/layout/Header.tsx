@@ -62,7 +62,7 @@ export default function Header() {
 
           <div className="hidden items-center gap-2 lg:flex">
             <a
-              href="https://twitch.tv/g4z"
+              href="https://www.twitch.tv/g4zcup_ru"
               target="_blank"
               rel="noreferrer"
               className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-500"
@@ -70,7 +70,7 @@ export default function Header() {
               Twitch
             </a>
             <a
-              href="https://t.me/g4z"
+              href="t.me/g4zagzes"
               target="_blank"
               rel="noreferrer"
               className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500"
