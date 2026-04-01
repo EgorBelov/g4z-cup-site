@@ -10,6 +10,8 @@ import {
 } from "@/lib/queries/teams";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 type TeamData = {
   id: number;
   name: string;

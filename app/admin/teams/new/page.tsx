@@ -3,6 +3,8 @@ import { createTeamAction } from "@/app/admin/actions";
 import { getAdminGroups } from "@/lib/queries/admin";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 
+export const dynamic = "force-dynamic";
+
 type GroupRow = {
   id: number;
   name: string;

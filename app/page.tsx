@@ -7,6 +7,8 @@ import {
   getUpcomingMatches,
 } from "@/lib/queries/matches";
 
+export const dynamic = "force-dynamic";
+
 function formatMatchTime(value: string | null) {
   if (!value) return "TBD";
 

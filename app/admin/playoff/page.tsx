@@ -3,6 +3,8 @@ import { updatePlayoffMatchSlotsAction } from "@/app/admin/actions";
 import { getAdminPlayoffMatches, getAdminTeams } from "@/lib/queries/admin";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 
+export const dynamic = "force-dynamic";
+
 type PlayoffMatch = {
   id: number;
   stage: string;

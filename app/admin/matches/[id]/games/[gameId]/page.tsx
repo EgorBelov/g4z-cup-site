@@ -7,6 +7,8 @@ import {
   getAdminMatchGamePicks,
 } from "@/lib/queries/admin";
 
+export const dynamic = "force-dynamic";
+
 type AdminMatch = {
   id: number;
   round_name: string;

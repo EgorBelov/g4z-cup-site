@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 import { getAdminMatches } from "@/lib/queries/admin";
 
+export const dynamic = "force-dynamic";
+
 type AdminMatchRow = {
   id: number;
   stage: string;

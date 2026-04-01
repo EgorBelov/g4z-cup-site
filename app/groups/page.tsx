@@ -7,6 +7,8 @@ import { getTournamentBySlug } from "@/lib/queries/tournaments";
 import { getGroupMatches, getGroupStandings } from "@/lib/queries/groups";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 function formatMatchTime(value: string | null) {
   if (!value) return "TBD";
 

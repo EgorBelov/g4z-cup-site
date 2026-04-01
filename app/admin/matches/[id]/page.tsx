@@ -7,6 +7,8 @@ import {
 } from "@/app/admin/actions";
 import { getAdminMatchById, getAdminMatchGames } from "@/lib/queries/admin";
 
+export const dynamic = "force-dynamic";
+
 type AdminMatch = {
   id: number;
   stage: string;

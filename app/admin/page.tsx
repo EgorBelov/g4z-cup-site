@@ -3,6 +3,8 @@ import { getAdminDashboardStats } from "@/lib/queries/admin";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 import { adminLogoutAction } from "@/app/admin/login/actions";
 
+export const dynamic = "force-dynamic";
+
 function formatMatchTime(value: string | null) {
   if (!value) return "TBD";
 

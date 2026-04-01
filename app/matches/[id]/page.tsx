@@ -9,7 +9,7 @@ import {
   type BanRow,
 } from "@/lib/queries/match-games";
 
-export const revalidate = 15;
+export const dynamic = "force-dynamic";
 
 function formatMatchTime(value: string | null) {
   if (!value) return "TBD";

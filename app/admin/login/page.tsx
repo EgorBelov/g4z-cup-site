@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { adminLoginAction } from "@/app/admin/login/actions";
 
+
 export default async function AdminLoginPage({
   searchParams,
 }: {

@@ -3,6 +3,8 @@ import Container from "@/components/layout/Container";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 import { getTeams } from "@/lib/queries/teams";
 
+export const dynamic = "force-dynamic";
+
 type TeamRow = {
   id: number;
   name: string;
