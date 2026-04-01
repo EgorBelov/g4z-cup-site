@@ -7,6 +7,8 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import { getScheduleMatches } from "@/lib/queries/matches";
 import { getTournamentBySlug } from "@/lib/queries/tournaments";
 
+export const dynamic = "force-dynamic";
+
 function formatMatchTime(value: string | null) {
   if (!value) return "TBD";
 
