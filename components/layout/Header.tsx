@@ -70,7 +70,7 @@ export default function Header() {
               Twitch
             </a>
             <a
-              href="t.me/g4zagzes"
+              href="https://t.me/g4zagzes"
               target="_blank"
               rel="noreferrer"
               className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-500"
