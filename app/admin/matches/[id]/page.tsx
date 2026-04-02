@@ -142,7 +142,7 @@ export default async function AdminMatchEditPage({
               />
             </div>
 
-            <div>
+            {/* <div>
               <label
                 htmlFor="status"
                 className="mb-2 block text-sm font-medium text-white/70"
@@ -159,8 +159,18 @@ export default async function AdminMatchEditPage({
                 <option value="live">live</option>
                 <option value="finished">finished</option>
               </select>
-            </div>
-
+            </div> */}
+<div>
+  <label className="mb-2 block text-sm font-medium text-white/70">
+    Статус матча
+  </label>
+  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+    <span className="text-lg font-semibold text-white">{match.status}</span>
+    <p className="mt-2 text-sm text-white/50">
+      Статус рассчитывается автоматически по играм матча.
+    </p>
+  </div>
+</div>
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-medium text-white/70">
                 Текущий счет матча
@@ -231,26 +241,15 @@ export default async function AdminMatchEditPage({
           <div className="mb-6 flex items-center justify-between gap-4">
             <h2 className="text-2xl font-bold">Игры матча</h2>
 
-            <form
-              action={createMatchGameAction}
-              className="flex items-center gap-3"
-            >
-              <input type="hidden" name="match_id" value={match.id} />
-              <input
-                type="number"
-                name="game_number"
-                min="1"
-                placeholder="№ игры"
-                className="w-28 rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-white outline-none"
-                required
-              />
-              <button
-                type="submit"
-                className="rounded-xl bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500"
-              >
-                Добавить игру
-              </button>
-            </form>
+           <form action={createMatchGameAction}>
+  <input type="hidden" name="match_id" value={match.id} />
+  <button
+    type="submit"
+    className="rounded-xl bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500"
+  >
+    Добавить игру
+  </button>
+</form>
           </div>
 
           <div className="space-y-5">

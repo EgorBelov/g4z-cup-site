@@ -69,36 +69,21 @@ export default async function AdminNewMatchPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/70">
-                Round name
-              </label>
+  <label className="mb-2 block text-sm font-medium text-white/70">
+    Round name
+  </label>
 
-              <select
-                name="round_name"
-                required
-                className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
-              >
-                <option value="">Выбери раунд</option>
+  <input
+    name="round_name"
+    required
+    placeholder="Например: Round 1, Quarterfinal 1, Play-In 3, Replay 5"
+    className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-white/35"
+  />
 
-                <optgroup label="Group Stage">
-                  <option value="Round 1">Round 1</option>
-                  <option value="Round 2">Round 2</option>
-                  <option value="Round 3">Round 3</option>
-                  <option value="Round 4">Round 4</option>
-                  <option value="Round 5">Round 5</option>
-                  <option value="Round 6">Round 6</option>
-                  <option value="Round 7">Round 7</option>
-                </optgroup>
-
-                <optgroup label="Playoffs">
-                  <option value="Quarterfinal 1">Quarterfinal 1</option>
-                  <option value="Quarterfinal 2">Quarterfinal 2</option>
-                  <option value="Semifinal 1">Semifinal 1</option>
-                  <option value="Semifinal 2">Semifinal 2</option>
-                  <option value="Grand Final">Grand Final</option>
-                </optgroup>
-              </select>
-            </div>
+  <p className="mt-2 text-sm text-white/45">
+    Примеры: Round 1, Quarterfinal 1, Semifinal 2, Grand Final, Play-In 3, Replay 5
+  </p>
+</div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-white/70">

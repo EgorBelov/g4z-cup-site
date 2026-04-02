@@ -5,6 +5,7 @@ import {
   getAdminMatchGameBans,
   getAdminMatchGameById,
   getAdminMatchGamePicks,
+  getAdminPlayersByTeamId
 } from "@/lib/queries/admin";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,13 @@ type BanRow = {
   ban_order: number;
 };
 
+type PlayerRow = {
+  id: number;
+  nickname: string;
+  role: string | null;
+  sort_order: number;
+};
+
 function getPickValue(
   picks: PickRow[],
   teamId: number | null,
@@ -75,16 +83,24 @@ export default async function AdminMatchGamePage({
   const parsedGameId = Number(gameId);
 
   const [match, game, picks, bans] = await Promise.all([
-    getAdminMatchById(matchId),
-    getAdminMatchGameById(parsedGameId),
-    getAdminMatchGamePicks(parsedGameId),
-    getAdminMatchGameBans(parsedGameId),
-  ]);
+  getAdminMatchById(matchId),
+  getAdminMatchGameById(parsedGameId),
+  getAdminMatchGamePicks(parsedGameId),
+  getAdminMatchGameBans(parsedGameId),
+]);
 
-  const typedMatch = match as AdminMatch;
-  const typedGame = game as AdminGame;
-  const typedPicks = picks as PickRow[];
-  const typedBans = bans as BanRow[];
+const typedMatch = match as AdminMatch;
+const typedGame = game as AdminGame;
+const typedPicks = picks as PickRow[];
+const typedBans = bans as BanRow[];
+
+const [team1Players, team2Players] = await Promise.all([
+  typedMatch.team1_id ? getAdminPlayersByTeamId(typedMatch.team1_id) : [],
+  typedMatch.team2_id ? getAdminPlayersByTeamId(typedMatch.team2_id) : [],
+]);
+
+const typedTeam1Players = team1Players as PlayerRow[];
+const typedTeam2Players = team2Players as PlayerRow[];
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -138,7 +154,11 @@ export default async function AdminMatchGamePage({
               <h2 className="mb-4 text-2xl font-bold">
                 {typedMatch.team1_name ?? "Team 1"}
               </h2>
-
+{typedTeam1Players.length > 0 && (
+  <p className="mb-4 text-sm text-white/45">
+    Состав: {typedTeam1Players.map((p) => p.nickname).join(", ")}
+  </p>
+)}
               <div>
                 <div className="mb-3 text-sm uppercase tracking-wide text-white/50">
                   Picks
@@ -156,11 +176,12 @@ export default async function AdminMatchGamePage({
                     return (
                       <div key={order} className="grid gap-3 md:grid-cols-2">
                         <input
-                          name={`team1_pick_player_${order}`}
-                          defaultValue={value.player_name}
-                          placeholder={`Игрок ${order}`}
-                          className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
-                        />
+  name={`team1_pick_player_${order}`}
+  list="team1-players-list"
+  defaultValue={value.player_name}
+  placeholder={`Игрок ${order}`}
+  className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+/>
                         <input
                           name={`team1_pick_hero_${order}`}
                           defaultValue={value.hero_name}
@@ -170,6 +191,11 @@ export default async function AdminMatchGamePage({
                       </div>
                     );
                   })}
+                  <datalist id="team1-players-list">
+  {typedTeam1Players.map((player) => (
+    <option key={player.id} value={player.nickname} />
+  ))}
+</datalist>
                 </div>
               </div>
 
@@ -203,7 +229,11 @@ export default async function AdminMatchGamePage({
               <h2 className="mb-4 text-2xl font-bold">
                 {typedMatch.team2_name ?? "Team 2"}
               </h2>
-
+{typedTeam2Players.length > 0 && (
+  <p className="mb-4 text-sm text-white/45">
+    Состав: {typedTeam2Players.map((p) => p.nickname).join(", ")}
+  </p>
+)}
               <div>
                 <div className="mb-3 text-sm uppercase tracking-wide text-white/50">
                   Picks
@@ -221,11 +251,12 @@ export default async function AdminMatchGamePage({
                     return (
                       <div key={order} className="grid gap-3 md:grid-cols-2">
                         <input
-                          name={`team2_pick_player_${order}`}
-                          defaultValue={value.player_name}
-                          placeholder={`Игрок ${order}`}
-                          className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
-                        />
+  name={`team2_pick_player_${order}`}
+  list="team2-players-list"
+  defaultValue={value.player_name}
+  placeholder={`Игрок ${order}`}
+  className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none"
+/>
                         <input
                           name={`team2_pick_hero_${order}`}
                           defaultValue={value.hero_name}
@@ -235,6 +266,11 @@ export default async function AdminMatchGamePage({
                       </div>
                     );
                   })}
+                  <datalist id="team2-players-list">
+  {typedTeam2Players.map((player) => (
+    <option key={player.id} value={player.nickname} />
+  ))}
+</datalist>
                 </div>
               </div>
 

@@ -8,7 +8,6 @@ export async function updateMatchAction(formData: FormData) {
 
   const id = Number(formData.get("id"));
   const scheduledAtRaw = String(formData.get("scheduled_at") || "").trim();
-  const status = String(formData.get("status") || "upcoming");
   const streamUrlRaw = String(formData.get("stream_url") || "").trim();
   const notesRaw = String(formData.get("notes") || "").trim();
 
@@ -22,7 +21,6 @@ export async function updateMatchAction(formData: FormData) {
     .from("matches")
     .update({
       scheduled_at,
-      status,
       stream_url,
       notes,
     })
@@ -40,11 +38,25 @@ export async function createMatchGameAction(formData: FormData) {
   const supabase = getSupabaseServerClient();
 
   const matchId = Number(formData.get("match_id"));
-  const gameNumber = Number(formData.get("game_number"));
+
+  const { data: lastGame, error: fetchError } = await supabase
+    .from("match_games")
+    .select("game_number")
+    .eq("match_id", matchId)
+    .order("game_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error("Error loading last game number:", fetchError);
+    throw new Error("Не удалось определить номер следующей игры");
+  }
+
+  const nextGameNumber = (lastGame?.game_number ?? 0) + 1;
 
   const { error } = await supabase.from("match_games").insert({
     match_id: matchId,
-    game_number: gameNumber,
+    game_number: nextGameNumber,
   });
 
   if (error) {

@@ -24,13 +24,16 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-xl">
       <Container>
         <div className="flex min-w-0 items-center justify-between py-3 md:h-16 md:py-0">
-          <Link href="/" className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-sm font-extrabold text-emerald-300 md:h-10 md:w-10">
+          <Link
+            href="/"
+            className="flex min-w-0 items-center gap-3 transition hover:opacity-90"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-500/15 text-sm font-extrabold text-emerald-300 md:h-10 md:w-10">
               10
             </div>
 
             <div className="min-w-0">
-              <div className="truncate text-xs uppercase tracking-[0.2em] text-white/45 sm:text-sm">
+              <div className="truncate text-[11px] uppercase tracking-[0.2em] text-white/45 sm:text-sm">
                 G4Z CUP
               </div>
               <div className="truncate text-sm font-bold text-white sm:text-base">
@@ -80,27 +83,49 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="w-full overflow-x-auto pb-4 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex min-w-max gap-2">
-            {navItems.map((item) => {
-              const active = isActive(pathname, item.href);
+        <div className="relative lg:hidden">
+          <div className="w-full overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-max gap-2 pr-8">
+              {navItems.map((item) => {
+                const active = isActive(pathname, item.href);
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={[
-                    "whitespace-nowrap rounded-xl border px-3 py-2 text-sm font-medium transition",
-                    active
-                      ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-                      : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10",
-                  ].join(" ")}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={[
+                      "whitespace-nowrap rounded-xl border px-3 py-2 text-sm font-medium transition",
+                      active
+                        ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
+                        : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10",
+                    ].join(" ")}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+
+              <a
+                href="https://www.twitch.tv/g4zcup_ru"
+                target="_blank"
+                rel="noreferrer"
+                className="whitespace-nowrap rounded-xl border border-purple-400/30 bg-purple-500/10 px-3 py-2 text-sm font-medium text-purple-200 transition hover:bg-purple-500/20"
+              >
+                Twitch
+              </a>
+
+              <a
+                href="https://t.me/g4zagzes"
+                target="_blank"
+                rel="noreferrer"
+                className="whitespace-nowrap rounded-xl border border-sky-400/30 bg-sky-500/10 px-3 py-2 text-sm font-medium text-sky-200 transition hover:bg-sky-500/20"
+              >
+                Telegram
+              </a>
+            </div>
           </div>
+
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-slate-950/95 via-slate-950/70 to-transparent" />
         </div>
       </Container>
     </header>
