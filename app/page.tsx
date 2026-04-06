@@ -6,6 +6,7 @@ import {
   getLiveMatch,
   getUpcomingMatches,
 } from "@/lib/queries/matches";
+import { finalStandings, tournamentMvp } from "@/lib/constants/final-standings";
 
 export const dynamic = "force-dynamic";
 
@@ -145,6 +146,69 @@ export default async function HomePage() {
               </div>
             </div>
           </section>
+          <section className="mt-8">
+  <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
+    <div className="mb-5 flex items-center justify-between">
+      <h2 className="text-2xl font-bold">Top 3</h2>
+      <a
+        href="/results"
+        className="text-sm text-emerald-300 transition hover:text-emerald-200"
+      >
+        Все результаты
+      </a>
+    </div>
+
+    <div className="grid gap-4 md:grid-cols-3">
+      {finalStandings.slice(0, 3).map((item, index) => {
+        const styles =
+          index === 0
+            ? "border-yellow-400/30 bg-yellow-500/10"
+            : index === 1
+              ? "border-slate-300/20 bg-slate-300/10"
+              : "border-amber-700/30 bg-amber-700/10";
+
+        return (
+          <div
+            key={item.place}
+            className={`rounded-2xl border p-5 ${styles}`}
+          >
+            <div className="text-sm uppercase tracking-[0.2em] text-white/55">
+              {item.place} место
+            </div>
+            <div className="mt-3 text-2xl font-bold">{item.teamName}</div>
+            {item.note && (
+              <div className="mt-2 text-sm text-white/65">{item.note}</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
+<section className="mt-8">
+  <div className="rounded-[28px] border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 via-white/5 to-sky-500/10 p-6">
+    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <div className="text-sm uppercase tracking-[0.2em] text-emerald-300">
+          Tournament MVP
+        </div>
+        <div className="mt-3 text-3xl font-extrabold tracking-tight">
+          {tournamentMvp.nickname}
+        </div>
+        <div className="mt-2 text-white/70">
+          Команда: <span className="font-medium text-white">{tournamentMvp.teamName}</span>
+        </div>
+        {tournamentMvp.note && (
+          <div className="mt-2 text-sm text-white/60">{tournamentMvp.note}</div>
+        )}
+      </div>
+
+      <div className="flex h-20 w-20 items-center justify-center rounded-[24px]    text-3xl">
+        🏆
+      </div>
+    </div>
+  </div>
+</section>
           <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_1.4fr]">
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
               <div className="flex items-center justify-between">

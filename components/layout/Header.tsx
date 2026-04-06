@@ -10,6 +10,7 @@ const navItems = [
   { href: "/groups", label: "Группы" },
   { href: "/playoff", label: "Плей-офф" },
   { href: "/teams", label: "Команды" },
+  { href: "/results", label: "Итоги" },
 ];
 
 function isActive(pathname: string, href: string) {

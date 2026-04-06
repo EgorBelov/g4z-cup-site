@@ -68,8 +68,8 @@ values
   (18, 1, 'group', 1, 'Round 6', 3, 5, 6, 0, 0, null, '2026-04-04 16:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage'),
 
   -- Round 7 — 20:00 (Rehub отдыхает)
-  (19, 1, 'group', 1, 'Round 7', 1, 1, 2, 0, 0, null, '2026-04-04 19:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage'),
-  (20, 1, 'group', 1, 'Round 7', 2, 4, 7, 0, 0, null, '2026-04-04 19:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage'),
-  (21, 1, 'group', 1, 'Round 7', 3, 3, 5, 0, 0, null, '2026-04-04 19:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage');
+  (19, 1, 'group', 1, 'Round 7', 1, 1, 2, 0, 0, null, '2026-04-04 17:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage'),
+  (20, 1, 'group', 1, 'Round 7', 2, 4, 7, 0, 0, null, '2026-04-04 17:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage'),
+  (21, 1, 'group', 1, 'Round 7', 3, 3, 5, 0, 0, null, '2026-04-04 17:00:00+03', 'upcoming', null, false, 'bo1', null, null, 'Group stage');
 
 commit;
