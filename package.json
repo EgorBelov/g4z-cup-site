@@ -16,7 +16,8 @@
     "hash-password": "node scripts/hash-password.mjs",
     "secret": "node scripts/generate-secret.mjs",
     "db:reset": "supabase db reset",
-    "db:push": "supabase db push"
+    "db:push": "supabase db push",
+    "db:check": "node scripts/check-db.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",

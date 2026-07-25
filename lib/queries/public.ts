@@ -1,5 +1,10 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { isSupabaseConfigured, readClient, unwrap } from "@/lib/supabase/read";
+import {
+  describeError,
+  isSupabaseConfigured,
+  readClient,
+  unwrap,
+} from "@/lib/supabase/read";
 import { tags } from "@/lib/cache/tags";
 import type {
   Award,
@@ -41,7 +46,7 @@ export async function getCurrentTournament(): Promise<Tournament | null> {
     .eq("is_current", true)
     .maybeSingle();
 
-  if (error) throw new Error(`getCurrentTournament: ${error.message}`);
+  if (error) throw new Error(`getCurrentTournament: ${describeError(error.message)}`);
   return (data as Tournament | null) ?? null;
 }
 
@@ -58,7 +63,7 @@ export async function getTournament(slug: string): Promise<Tournament | null> {
     .eq("slug", slug)
     .maybeSingle();
 
-  if (error) throw new Error(`getTournament(${slug}): ${error.message}`);
+  if (error) throw new Error(`getTournament(${slug}): ${describeError(error.message)}`);
   return (data as Tournament | null) ?? null;
 }
 
@@ -172,7 +177,7 @@ export async function getTeamPage(
     .eq("slug", teamSlug)
     .maybeSingle();
 
-  if (error) throw new Error(`getTeamPage: ${error.message}`);
+  if (error) throw new Error(`getTeamPage: ${describeError(error.message)}`);
   if (!team) return null;
 
   const typedTeam = team as Team;
@@ -279,7 +284,7 @@ export async function getMatchPage(matchId: number): Promise<MatchPage | null> {
     .eq("id", matchId)
     .maybeSingle();
 
-  if (error) throw new Error(`getMatchPage: ${error.message}`);
+  if (error) throw new Error(`getMatchPage: ${describeError(error.message)}`);
   if (!match) return null;
 
   const typed = match as MatchDetails;

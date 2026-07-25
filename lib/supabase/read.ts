@@ -28,13 +28,34 @@ export function readClient(): SupabaseClient {
   return cached;
 }
 
+/**
+ * Turns a Supabase error into something actionable.
+ *
+ * A missing relation almost always means the migrations have not been applied to
+ * this project — the message says so instead of leaving a bare PostgREST error
+ * in the build log.
+ */
+export function describeError(message: string): string {
+  if (
+    /could not find the (table|relation)|does not exist|schema cache/i.test(message)
+  ) {
+    return `${message} — похоже, миграции не применены к этому проекту Supabase. Примените supabase/migrations/*.sql (см. README, раздел «Деплой») и повторите.`;
+  }
+
+  if (/permission denied/i.test(message)) {
+    return `${message} — роли anon не выданы права на чтение. Примените supabase/migrations/0006_grants.sql.`;
+  }
+
+  return message;
+}
+
 /** Throws with the query name attached, so failures are traceable in logs. */
 export function unwrap<T>(
   result: { data: T | null; error: { message: string } | null },
   what: string,
 ): T {
   if (result.error) {
-    throw new Error(`${what}: ${result.error.message}`);
+    throw new Error(`${what}: ${describeError(result.error.message)}`);
   }
   if (result.data === null) {
     throw new Error(`${what}: no data returned`);
