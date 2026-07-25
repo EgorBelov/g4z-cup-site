@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="G4Z CUP">
+  <rect width="64" height="64" rx="14" fill="#05070f" />
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="none" stroke="#10b981" stroke-opacity="0.35" stroke-width="2" />
+  <path
+    d="M41 22.5c-2.3-2.8-5.6-4.5-9.4-4.5-7 0-12.6 5.9-12.6 14s5.6 14 12.6 14c6.2 0 11-3.8 11.9-9.6h-12.1v-6.3H50v3.2C50 44.9 42 52 31.6 52 19.7 52 11 43.3 11 32S19.7 12 31.6 12c5.9 0 11.2 2.4 14.8 6.4z"
+    fill="#10b981"
+  />
+</svg>

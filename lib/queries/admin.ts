@@ -1,269 +1,272 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import "server-only";
 
-export async function getAdminMatches(tournamentId: number) {
-  const supabase = getSupabaseServerClient();
+import { writeClient } from "@/lib/supabase/write";
+import { unwrap } from "@/lib/supabase/read";
+import type {
+  AuditEntry,
+  Game,
+  GameBan,
+  GamePick,
+  Group,
+  Hero,
+  MatchDetails,
+  Placement,
+  Award,
+  Player,
+  StandingRow,
+  Stage,
+  Team,
+  Tournament,
+} from "@/lib/types/database";
 
-  const { data, error } = await supabase
-    .from("matches_full")
+/**
+ * Admin reads. Uncached and via the service role, so organisers always see the
+ * true state — including draft tournaments that RLS hides from the public.
+ */
+
+export async function adminTournaments(): Promise<Tournament[]> {
+  const result = await writeClient()
+    .from("tournaments")
+    .select("*")
+    .order("edition", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  return unwrap(result, "adminTournaments") as Tournament[];
+}
+
+export async function adminTournament(slug: string): Promise<Tournament | null> {
+  const { data, error } = await writeClient()
+    .from("tournaments")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) throw new Error(`adminTournament: ${error.message}`);
+  return (data as Tournament | null) ?? null;
+}
+
+export async function adminStages(tournamentId: number): Promise<Stage[]> {
+  const result = await writeClient()
+    .from("stages")
     .select("*")
     .eq("tournament_id", tournamentId)
-    .order("scheduled_at", { ascending: true })
-    .order("match_order", { ascending: true });
+    .order("sort_order");
 
-  if (error) {
-    console.error("Error loading admin matches:", error);
-    throw new Error("Не удалось загрузить матчи для админки");
-  }
-
-  return data ?? [];
+  return unwrap(result, "adminStages") as Stage[];
 }
 
-export async function getAdminMatchById(matchId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("matches_full")
-    .select("*")
-    .eq("id", matchId)
-    .single();
-
-  if (error) {
-    console.error("Error loading admin match by id:", error);
-    throw new Error("Не удалось загрузить матч");
-  }
-
-  return data;
-}
-
-export async function getAdminMatchGames(matchId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("match_games")
-    .select("*")
-    .eq("match_id", matchId)
-    .order("game_number", { ascending: true });
-
-  if (error) {
-    console.error("Error loading admin match games:", error);
-    throw new Error("Не удалось загрузить игры матча");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminMatchGameById(gameId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("match_games")
-    .select("*")
-    .eq("id", gameId)
-    .single();
-
-  if (error) {
-    console.error("Error loading admin match game by id:", error);
-    throw new Error("Не удалось загрузить игру матча");
-  }
-
-  return data;
-}
-
-export async function getAdminMatchGamePicks(gameId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("match_game_picks")
-    .select("*")
-    .eq("match_game_id", gameId)
-    .order("team_id", { ascending: true })
-    .order("pick_order", { ascending: true });
-
-  if (error) {
-    console.error("Error loading admin match game picks:", error);
-    throw new Error("Не удалось загрузить пики");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminMatchGameBans(gameId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("match_game_bans")
-    .select("*")
-    .eq("match_game_id", gameId)
-    .order("team_id", { ascending: true })
-    .order("ban_order", { ascending: true });
-
-  if (error) {
-    console.error("Error loading admin match game bans:", error);
-    throw new Error("Не удалось загрузить баны");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminTeams(tournamentId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("teams_full")
+export async function adminGroups(tournamentId: number): Promise<Group[]> {
+  const result = await writeClient()
+    .from("groups")
     .select("*")
     .eq("tournament_id", tournamentId)
-    .order("group_name", { ascending: true })
-    .order("name", { ascending: true });
+    .order("sort_order");
 
-  if (error) {
-    console.error("Error loading admin teams:", error);
-    throw new Error("Не удалось загрузить команды");
-  }
-
-  return data ?? [];
+  return unwrap(result, "adminGroups") as Group[];
 }
 
-export async function getAdminTeamById(teamId: number) {
-  const supabase = getSupabaseServerClient();
+export async function adminTeams(tournamentId: number): Promise<Team[]> {
+  const result = await writeClient()
+    .from("teams")
+    .select("*")
+    .eq("tournament_id", tournamentId)
+    .order("seed", { ascending: true, nullsFirst: false })
+    .order("name");
 
-  const { data, error } = await supabase
+  return unwrap(result, "adminTeams") as Team[];
+}
+
+export async function adminTeamWithPlayers(
+  teamId: number,
+): Promise<{ team: Team; players: Player[] } | null> {
+  const client = writeClient();
+
+  const { data: team, error } = await client
     .from("teams")
     .select("*")
     .eq("id", teamId)
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    console.error("Error loading admin team by id:", error);
-    throw new Error("Не удалось загрузить команду");
-  }
+  if (error) throw new Error(`adminTeamWithPlayers: ${error.message}`);
+  if (!team) return null;
 
-  return data;
-}
-
-export async function getAdminGroups(tournamentId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("tournament_id", tournamentId)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("Error loading admin groups:", error);
-    throw new Error("Не удалось загрузить группы");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminPlayersByTeamId(teamId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
+  const players = await client
     .from("players")
     .select("*")
     .eq("team_id", teamId)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("Error loading admin players by team id:", error);
-    throw new Error("Не удалось загрузить игроков");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminPlayoffMatches(tournamentId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("matches_full")
-    .select("*")
-    .eq("tournament_id", tournamentId)
-    .in("stage", ["play_in", "playoff"])
-    .order("match_order", { ascending: true });
-
-  if (error) {
-    console.error("Error loading playoff matches for admin:", error);
-    throw new Error("Не удалось загрузить матчи Play-In и плей-офф");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminGroupsWithTeams(tournamentId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("groups")
-    .select(
-      `
-      *,
-      teams (
-        id,
-        name,
-        slug
-      )
-    `,
-    )
-    .eq("tournament_id", tournamentId)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("Error loading groups with teams:", error);
-    throw new Error("Не удалось загрузить группы");
-  }
-
-  return data ?? [];
-}
-
-export async function getAdminDashboardStats(tournamentId: number) {
-  const supabase = getSupabaseServerClient();
-
-  const [teamsRes, matchesRes, liveRes, finishedRes, upcomingRes] =
-    await Promise.all([
-      supabase
-        .from("teams")
-        .select("*", { count: "exact", head: true })
-        .eq("tournament_id", tournamentId),
-      supabase
-        .from("matches")
-        .select("*", { count: "exact", head: true })
-        .eq("tournament_id", tournamentId),
-      supabase
-        .from("matches")
-        .select("*", { count: "exact", head: true })
-        .eq("tournament_id", tournamentId)
-        .eq("status", "live"),
-      supabase
-        .from("matches")
-        .select("*", { count: "exact", head: true })
-        .eq("tournament_id", tournamentId)
-        .eq("status", "finished"),
-      supabase
-        .from("matches_full")
-        .select("*")
-        .eq("tournament_id", tournamentId)
-        .eq("status", "upcoming")
-        .order("scheduled_at", { ascending: true })
-        .limit(5),
-    ]);
-
-  if (teamsRes.error) throw new Error("Не удалось загрузить количество команд");
-  if (matchesRes.error)
-    throw new Error("Не удалось загрузить количество матчей");
-  if (liveRes.error) throw new Error("Не удалось загрузить live матчи");
-  if (finishedRes.error)
-    throw new Error("Не удалось загрузить завершенные матчи");
-  if (upcomingRes.error)
-    throw new Error("Не удалось загрузить ближайшие матчи");
+    .order("sort_order");
 
   return {
-    teamsCount: teamsRes.count ?? 0,
-    matchesCount: matchesRes.count ?? 0,
-    liveCount: liveRes.count ?? 0,
-    finishedCount: finishedRes.count ?? 0,
-    upcomingMatches: upcomingRes.data ?? [],
+    team: team as Team,
+    players: unwrap(players, "adminTeamWithPlayers.players") as Player[],
   };
+}
+
+export async function adminMatches(
+  tournamentId: number,
+  filters: { stageId?: number; status?: string } = {},
+): Promise<MatchDetails[]> {
+  let query = writeClient()
+    .from("match_details")
+    .select("*")
+    .eq("tournament_id", tournamentId);
+
+  if (filters.stageId) query = query.eq("stage_id", filters.stageId);
+  if (filters.status) query = query.eq("status", filters.status);
+
+  const result = await query
+    .order("scheduled_at", { ascending: true, nullsFirst: false })
+    .order("stage_order")
+    .order("round")
+    .order("position");
+
+  return unwrap(result, "adminMatches") as MatchDetails[];
+}
+
+export type AdminMatch = {
+  match: MatchDetails;
+  games: Game[];
+  picks: GamePick[];
+  bans: GameBan[];
+  rosters: { team1: Player[]; team2: Player[] };
+};
+
+export async function adminMatch(matchId: number): Promise<AdminMatch | null> {
+  const client = writeClient();
+
+  const { data: match, error } = await client
+    .from("match_details")
+    .select("*")
+    .eq("id", matchId)
+    .maybeSingle();
+
+  if (error) throw new Error(`adminMatch: ${error.message}`);
+  if (!match) return null;
+
+  const typed = match as MatchDetails;
+
+  const gamesResult = await client
+    .from("games")
+    .select("*")
+    .eq("match_id", matchId)
+    .order("game_number");
+
+  const games = unwrap(gamesResult, "adminMatch.games") as Game[];
+  const gameIds = games.map((game) => game.id);
+
+  const [picks, bans, roster1, roster2] = await Promise.all([
+    gameIds.length
+      ? client.from("game_picks").select("*").in("game_id", gameIds).order("order_no")
+      : Promise.resolve({ data: [] as GamePick[], error: null }),
+    gameIds.length
+      ? client.from("game_bans").select("*").in("game_id", gameIds).order("order_no")
+      : Promise.resolve({ data: [] as GameBan[], error: null }),
+    typed.team1_id
+      ? client
+          .from("players")
+          .select("*")
+          .eq("team_id", typed.team1_id)
+          .order("sort_order")
+      : Promise.resolve({ data: [] as Player[], error: null }),
+    typed.team2_id
+      ? client
+          .from("players")
+          .select("*")
+          .eq("team_id", typed.team2_id)
+          .order("sort_order")
+      : Promise.resolve({ data: [] as Player[], error: null }),
+  ]);
+
+  return {
+    match: typed,
+    games,
+    picks: unwrap(picks, "adminMatch.picks") as GamePick[],
+    bans: unwrap(bans, "adminMatch.bans") as GameBan[],
+    rosters: {
+      team1: unwrap(roster1, "adminMatch.roster1") as Player[],
+      team2: unwrap(roster2, "adminMatch.roster2") as Player[],
+    },
+  };
+}
+
+/** Matches for the live control screen: in progress first, then what's next. */
+export async function adminLiveBoard(tournamentId: number): Promise<{
+  live: MatchDetails[];
+  next: MatchDetails[];
+}> {
+  const client = writeClient();
+
+  const [live, next] = await Promise.all([
+    client
+      .from("match_details")
+      .select("*")
+      .eq("tournament_id", tournamentId)
+      .eq("status", "live")
+      .order("scheduled_at", { nullsFirst: false }),
+    client
+      .from("match_details")
+      .select("*")
+      .eq("tournament_id", tournamentId)
+      .eq("status", "scheduled")
+      .order("scheduled_at", { ascending: true, nullsFirst: false })
+      .limit(8),
+  ]);
+
+  return {
+    live: unwrap(live, "adminLiveBoard.live") as MatchDetails[],
+    next: unwrap(next, "adminLiveBoard.next") as MatchDetails[],
+  };
+}
+
+export async function adminStandings(tournamentId: number): Promise<StandingRow[]> {
+  const result = await writeClient()
+    .from("standings")
+    .select("*")
+    .eq("tournament_id", tournamentId)
+    .order("group_order")
+    .order("wins", { ascending: false })
+    .order("map_diff", { ascending: false })
+    .order("team_name");
+
+  return unwrap(result, "adminStandings") as StandingRow[];
+}
+
+export async function adminResults(tournamentId: number): Promise<{
+  placements: Placement[];
+  awards: Award[];
+}> {
+  const client = writeClient();
+
+  const [placements, awards] = await Promise.all([
+    client
+      .from("placements")
+      .select("*")
+      .eq("tournament_id", tournamentId)
+      .order("place"),
+    client
+      .from("awards")
+      .select("*")
+      .eq("tournament_id", tournamentId)
+      .order("sort_order"),
+  ]);
+
+  return {
+    placements: unwrap(placements, "adminResults.placements") as Placement[],
+    awards: unwrap(awards, "adminResults.awards") as Award[],
+  };
+}
+
+export async function heroes(): Promise<Hero[]> {
+  const result = await writeClient().from("heroes").select("*").order("name");
+  return unwrap(result, "heroes") as Hero[];
+}
+
+export async function adminAudit(limit = 100): Promise<AuditEntry[]> {
+  const result = await writeClient()
+    .from("audit_log")
+    .select("*")
+    .order("at", { ascending: false })
+    .limit(limit);
+
+  return unwrap(result, "adminAudit") as AuditEntry[];
 }

@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, types, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run format:check
+
+  database:
+    name: Migrations and database logic
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: g4z
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create database and Supabase roles
+        run: |
+          psql -d postgres -c 'create database g4z;'
+          psql -c 'create role anon; create role authenticated;'
+
+      - name: Apply migrations
+        run: |
+          for file in supabase/migrations/*.sql; do
+            echo "applying $file"
+            psql -v ON_ERROR_STOP=1 -q -f "$file"
+          done
+
+      - name: Apply seed and archive data
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/seed.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/data/g4z-cup-10.sql
+
+      - name: Assert database logic
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/logic.sql
+
+  e2e:
+    name: Build and end-to-end tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      # No Supabase credentials in CI: the app degrades to empty content, which
+      # is exactly what the smoke tests assert against.
+      - name: Build
+        env:
+          AUTH_SECRET: "ci-only-secret-0123456789abcdef0123456789abcdef"
+          ADMIN_PASSWORD_HASH: "scrypt$32768$00112233445566778899aabbccddeeff$deadbeef"
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+        run: npm run build
+
+      - name: Run Playwright
+        env:
+          AUTH_SECRET: "ci-only-secret-0123456789abcdef0123456789abcdef"
+          ADMIN_PASSWORD_HASH: "scrypt$32768$00112233445566778899aabbccddeeff$deadbeef"
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

@@ -1,36 +1,206 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# G4Z CUP
 
-## Getting Started
+Сайт турниров по Dota 2: расписание, группы, плей-офф, составы, итоги — и админка,
+из которой турнир реально ведут во время игр.
 
-First, run the development server:
+Ключевое отличие от первой версии: **сайт мультитурнирный с первой миграции**.
+Новый кубок не затирает предыдущий, каждый сезон навсегда остаётся доступен по
+адресу `/t/<slug>`, а главная показывает тот турнир, который отмечен текущим.
+
+---
+
+## Стек
+
+| Что        | Чем                                                     | Почему                                                          |
+| ---------- | ------------------------------------------------------- | --------------------------------------------------------------- |
+| Приложение | Next.js 16 (App Router) + React 19                      | серверные компоненты, server actions                            |
+| Кэш        | Cache Components (`use cache`, `cacheTag`, `updateTag`) | страницы отдаются из предрендера, а не из базы на каждый запрос |
+| База       | Supabase (Postgres)                                     | схема, вьюхи, триггеры и RLS — в миграциях репозитория          |
+| Стили      | Tailwind 4                                              | токены темы в `app/globals.css`                                 |
+| Тесты      | Vitest + Playwright + SQL-ассерты                       | логика сеток, авторизация, смоук страниц, триггеры БД           |
+| Хостинг    | Vercel                                                  | preview-деплой на каждый PR                                     |
+
+## Быстрый старт
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local     # заполнить значения, см. ниже
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Переменные окружения
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run secret                 # выведет строку AUTH_SECRET
+npm run hash-password          # спросит пароль и выведет ADMIN_PASSWORD_HASH
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Переменная                      | Обязательна | Назначение                                                               |
+| ------------------------------- | ----------- | ------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`      | да          | адрес проекта Supabase                                                   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | да          | публичный ключ, RLS даёт ему только чтение                               |
+| `SUPABASE_SERVICE_ROLE_KEY`     | да          | ключ записи, **только серверный**, никогда не с префиксом `NEXT_PUBLIC_` |
+| `ADMIN_PASSWORD_HASH`           | да          | scrypt-хэш пароля организаторов                                          |
+| `AUTH_SECRET`                   | да          | подпись cookie сессии (HMAC-SHA256), минимум 32 символа                  |
+| `NEXT_PUBLIC_SITE_URL`          | нет         | канонический адрес для метаданных и sitemap                              |
 
-## Learn More
+Без ключей Supabase сайт собирается и запускается — просто без данных. Это нужно,
+чтобы CI мог собрать приложение без секретов.
 
-To learn more about Next.js, take a look at the following resources:
+### База данных
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+supabase db reset              # применит миграции и supabase/seed.sql
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Содержимое `supabase/`:
 
-## Deploy on Vercel
+- `migrations/0001_schema.sql` — таблицы и индексы
+- `migrations/0002_logic.sql` — триггеры: счёт, статус, продвижение по сетке
+- `migrations/0003_views.sql` — `match_details`, `standings`, `tournament_summaries`
+- `migrations/0004_rls.sql` — RLS и realtime-публикация
+- `migrations/0005_heroes.sql` — список героев для автокомплита драфта
+- `seed.sql` — демо-турнир для локальной разработки
+- `data/g4z-cup-10.sql` — архивная запись десятого кубка
+- `tests/logic.sql` — ассерты на триггеры и вьюхи
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Как это работает
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Кэш вместо запросов на каждый заход
+
+Все публичные чтения в `lib/queries/public.ts` — это `use cache`-функции с
+тегами (`lib/cache/tags.ts`). Страницы попадают в предрендер, Supabase к ним не
+привлекается. Любая правка в админке вызывает `updateTag` (`lib/actions/*`), и
+затронутые страницы пересобираются: организатор видит свой счёт сразу, зритель
+получает статику.
+
+Первая версия сайта стояла на `export const dynamic = "force-dynamic"` на всех
+страницах; в Next 16 с Cache Components этой опции больше нет.
+
+### Счёт и сетку считает база
+
+`matches.score1/score2/status/winner_id` **никем не записываются вручную** —
+триггер `recalc_match` пересчитывает их по победителям карт, а `advance_bracket`
+переносит победителя и проигравшего в следующий матч по `winner_to_match_id` /
+`loser_to_match_id`. Удалили карту по ошибке — серия открывается заново, а слот
+в следующем матче очищается. Ручную правку слота триггер при этом не перетирает.
+
+Отсюда же следует, что сетка на сайте рисуется по связям матчей, а не парсингом
+названий раундов.
+
+### Генератор сеток
+
+`lib/brackets/` — чистые функции без обращений к базе, покрытые юнит-тестами:
+
+- круговая система (метод круга, при нечётном числе команд одна отдыхает);
+- швейцарка: первый тур по посеву, дальше пары по результатам с избеганием
+  повторов (с откатом при тупике);
+- single elimination с корректными байями и матчем за 3 место;
+- double elimination: верхняя и нижняя сетки, гранд-финал, `2n − 2` матчей.
+
+Из админки (`/admin/t/<slug>/structure`) весь этап создаётся одной кнопкой:
+матчи, время туров и связи продвижения.
+
+### Ведение матча
+
+`/admin/t/<slug>/live` — экран под телефон: по одному тапу на карту, «отменить
+карту» рядом, старт матча из очереди. Всё остальное (счёт серии, статус,
+продвижение) считает база. Зрительские страницы обновляются через Supabase
+Realtime (`components/live/LiveRefresher.tsx`), с медленным поллингом как
+резервом.
+
+### Авторизация
+
+Один общий пароль организаторов, но:
+
+- пароль хранится scrypt-хэшем в переменной окружения;
+- сессия — cookie, подписанная HMAC-SHA256, с истечением через 12 часов
+  (`lib/auth/session.ts`), а не строка вида `authorized`;
+- перебор ограничен: 8 неудачных попыток с одного IP за 15 минут
+  (таблица `login_attempts`);
+- каждая правка пишется в `audit_log` и видна на `/admin/audit`.
+
+`proxy.ts` (в Next 16 это бывший middleware) — оптимистичный шлюз, который не
+пускает браузер в админку. Настоящая проверка — `assertAdmin()` внутри **каждого**
+server action, потому что action доступен прямым POST-запросом.
+
+### Права в базе
+
+RLS включена на всех таблицах. Публичной роли выдан только `select`, и только по
+опубликованным турнирам — черновик следующего сезона можно готовить на живом
+сайте. Политик на запись нет вообще: писать может лишь service-role ключ, который
+живёт в серверных переменных окружения. `login_attempts` и `audit_log`
+недоступны публичной роли даже на чтение.
+
+## Структура
+
+```
+app/
+  page.tsx                    редирект на текущий турнир
+  archive/                    список всех сезонов
+  t/[slug]/                   турнир: обзор, расписание, группы, сетка, команды, итоги
+  admin/                      логин, дашборд, настройки турнира, этапы, команды,
+                              матчи, ведение матча, итоги, журнал
+components/                   ui/ + предметные (match, bracket, standings, admin)
+lib/
+  actions/                    server actions (валидация zod → запись → аудит → updateTag)
+  auth/                       пароль, сессия, гварды, троттлинг
+  brackets/                   генерация сеток и расписаний
+  cache/tags.ts               теги кэша
+  format/date.ts              работа с часовым поясом турнира
+  queries/                    публичные (кэшируемые) и админские запросы
+  validation/schemas.ts       схемы всех форм
+supabase/                     миграции, seed, архив, SQL-тесты
+tests/                        unit (vitest) и e2e (playwright)
+```
+
+## Скрипты
+
+```bash
+npm run dev            # разработка
+npm run build          # прод-сборка
+npm run lint           # eslint
+npm run typecheck      # tsc --noEmit
+npm test               # юнит-тесты (сетки, сессии, часовые пояса)
+npm run test:e2e       # playwright по локальной сборке
+npm run format         # prettier
+```
+
+Playwright по умолчанию поднимает локальную сборку. Чтобы прогнать по
+preview-деплою: `PLAYWRIGHT_BASE_URL=https://... npm run test:e2e`. Если в
+окружении уже есть Chromium — `CHROMIUM_PATH=/path/to/chrome`.
+
+Проверить SQL-логику локально:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/logic.sql
+```
+
+## Перенос истории G4Z CUP 10
+
+1. Применить архивную запись: `psql "$DATABASE_URL" -f supabase/data/g4z-cup-10.sql`
+   (турнир, семь команд, итоговые места и MVP).
+2. Перенести матчи, карты, драфты и составы из старого проекта Supabase:
+
+```bash
+OLD_SUPABASE_URL=... OLD_SUPABASE_KEY=... \
+NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
+node scripts/import-legacy.mjs --dry-run
+```
+
+Скрипт читает схему первой версии (`matches`, `match_games`,
+`match_game_picks`, `match_game_bans`), сопоставляет команды по названию и
+переносит всё в новую структуру. Счёт и статусы пересчитает база. Без
+`--dry-run` матчи турнира заменяются целиком, так что скрипт можно запускать
+повторно.
+
+## Что пока не сделано
+
+- `unstable_instant` (валидация мгновенных клиентских переходов) требует явных
+  `samples` с конкретными слагами в коде — хардкодить их не стали. Структура
+  страниц под это уже готова (Suspense + кэшированные части), включается
+  добавлением сэмплов.
+- OG-картинки не генерируются: метаданные и заголовки есть у всех страниц, но
+  картинок на матч/команду пока нет.
+- Регистрация команд капитанами и кросс-турнирная статистика игроков — следующий
+  шаг; схема к этому готова.
