@@ -65,6 +65,14 @@ jobs:
           psql -v ON_ERROR_STOP=1 -q -f supabase/seed.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/data/g4z-cup-10.sql
 
+      # supabase/setup.sql is what gets pasted into a fresh project, so it must
+      # stay identical to the migrations and apply cleanly on its own.
+      - name: Check the bundled setup.sql
+        run: |
+          node scripts/build-setup-sql.mjs --check
+          psql -d postgres -c 'create database bundle_check;'
+          psql -d bundle_check -v ON_ERROR_STOP=1 -q -f supabase/setup.sql
+
       - name: Assert database logic
         run: psql -v ON_ERROR_STOP=1 -f supabase/tests/logic.sql
 

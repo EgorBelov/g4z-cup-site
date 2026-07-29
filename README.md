@@ -61,6 +61,8 @@ supabase db reset              # применит миграции и supabase/s
 - `migrations/0004_rls.sql` — RLS и realtime-публикация
 - `migrations/0005_heroes.sql` — список героев для автокомплита драфта
 - `migrations/0006_grants.sql` — права на чтение для публичных ролей
+- `setup.sql` — все миграции одним файлом для вставки в SQL Editor
+  (генерируется `npm run db:bundle`, CI следит, чтобы не разъезжался)
 - `seed.sql` — демо-турнир для локальной разработки
 - `data/g4z-cup-10.sql` — архивная запись десятого кубка
 - `tests/logic.sql` — ассерты на триггеры и вьюхи
@@ -72,9 +74,10 @@ supabase db reset              # применит миграции и supabase/s
 вьюх, билд упадёт на пререндере `/archive` с сообщением вида
 `Could not find the table 'public.tournament_summaries'`.
 
-1. **Применить миграции** к проекту Supabase — либо `supabase db push` через CLI,
-   либо вручную: SQL Editor → содержимое `supabase/migrations/*.sql` по порядку
-   от `0001` до `0006`.
+1. **Применить миграции** к проекту Supabase. Проще всего — открыть
+   `supabase/setup.sql` (это все шесть миграций одним файлом), вставить целиком
+   в Supabase → SQL Editor и выполнить. Через CLI то же самое делает
+   `supabase db push`.
 2. **Залить архив** (по желанию, но иначе сайт будет пустым):
    `supabase/data/g4z-cup-10.sql`.
 3. **Проверить готовность** перед деплоем:
