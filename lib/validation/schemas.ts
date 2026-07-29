@@ -173,6 +173,30 @@ export const swissRoundSchema = z.object({
   start_at: optionalText,
 });
 
+// ─── manual history entry ────────────────────────────────────────────────────
+
+export const bulkTeamsSchema = z.object({
+  tournament_id: z.coerce.number().int().positive(),
+  group_id: optionalId,
+  names: trimmed.min(1, { error: "Введите хотя бы одну команду" }),
+});
+
+/**
+ * A series that was already played: the score is entered directly and the maps
+ * behind it are generated, because the database derives the score from maps.
+ */
+export const finishedMatchSchema = z.object({
+  tournament_id: z.coerce.number().int().positive(),
+  stage_id: optionalId,
+  round_label: trimmed.min(1, { error: "Укажите название матча" }),
+  team1_id: z.coerce.number().int().positive(),
+  team2_id: z.coerce.number().int().positive(),
+  score1: z.coerce.number().int().min(0).max(4),
+  score2: z.coerce.number().int().min(0).max(4),
+  played_at: optionalText,
+  vod_url: optionalUrl,
+});
+
 // ─── matches ─────────────────────────────────────────────────────────────────
 
 export const matchSchema = z.object({
