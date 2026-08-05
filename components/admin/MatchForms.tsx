@@ -110,7 +110,7 @@ export function MatchForm({
 
         <Field label="Формат серии" error={state.fieldErrors?.best_of}>
           <Select name="best_of" defaultValue={String(match?.best_of ?? 1)}>
-            {[1, 3, 5, 7].map((value) => (
+            {[1, 2, 3, 5, 7].map((value) => (
               <option key={value} value={value}>
                 bo{value}
               </option>

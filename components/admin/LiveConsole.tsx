@@ -53,7 +53,13 @@ export function LiveMatchCard({
   timeZone: string;
   adminHref: string;
 }) {
+  // A bo2 is played out in full instead of stopping at a clinch, so it is
+  // described by its map count, not by a number of wins.
   const needed = Math.floor(match.best_of / 2) + 1;
+  const target =
+    match.best_of % 2 === 0
+      ? `${match.best_of} карты, возможна ничья`
+      : `до ${needed} побед`;
 
   return (
     <Card className="border-live/40">
@@ -64,7 +70,7 @@ export function LiveMatchCard({
             {match.round_label ? ` · ${match.round_label}` : ""}
           </p>
           <p className="text-xs text-ink-faint">
-            bo{match.best_of} · до {needed} побед ·{" "}
+            bo{match.best_of} · {target} ·{" "}
             {formatDateTime(match.scheduled_at, timeZone)}
           </p>
         </div>

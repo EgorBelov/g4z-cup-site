@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { averageMmr, formatMmr } from "@/lib/format/mmr";
 import type { Player, Team } from "@/lib/types/database";
 
 export function TeamCard({
@@ -13,6 +14,8 @@ export function TeamCard({
   players: Player[];
   href: string;
 }) {
+  const average = averageMmr(players);
+
   return (
     <Link
       href={href}
@@ -40,6 +43,11 @@ export function TeamCard({
                   капитан
                 </span>
               ) : null}
+              {player.mmr !== null ? (
+                <span className="ml-auto shrink-0 tabular-nums text-xs text-ink-faint">
+                  {formatMmr(player.mmr)}
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -47,8 +55,13 @@ export function TeamCard({
         <p className="mt-4 text-sm text-ink-faint">Состав ещё не заявлен</p>
       )}
 
-      {team.seed ? (
-        <p className="mt-auto pt-4 text-xs text-ink-faint">Посев {team.seed}</p>
+      {team.seed || average !== null ? (
+        <p className="mt-auto flex items-center justify-between gap-3 pt-4 text-xs text-ink-faint">
+          {team.seed ? <span>Посев {team.seed}</span> : <span />}
+          {average !== null ? (
+            <span className="tabular-nums">средний MMR {formatMmr(average)}</span>
+          ) : null}
+        </p>
       ) : null}
     </Link>
   );

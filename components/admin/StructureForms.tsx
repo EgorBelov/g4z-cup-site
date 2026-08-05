@@ -71,7 +71,7 @@ export function StageForm({
 
         <Field label="Серия по умолчанию" error={state.fieldErrors?.best_of}>
           <Select name="best_of" defaultValue={String(stage?.best_of ?? 1)}>
-            {[1, 3, 5, 7].map((value) => (
+            {[1, 2, 3, 5, 7].map((value) => (
               <option key={value} value={value}>
                 bo{value}
               </option>
@@ -268,7 +268,8 @@ export function GenerateStageForm({
 
         <Field label="Формат серии">
           <Select name="best_of" defaultValue={String(stage.best_of)}>
-            {[1, 3, 5, 7].map((value) => (
+            {/* bo2 can end 1:1, so it belongs to a group table, not a bracket. */}
+            {(isGroupStage ? [1, 2, 3, 5, 7] : [1, 3, 5, 7]).map((value) => (
               <option key={value} value={value}>
                 bo{value}
               </option>
@@ -349,7 +350,7 @@ export function SwissRoundForm({
         </Field>
         <Field label="Формат серии">
           <Select name="best_of" defaultValue={String(stage.best_of)}>
-            {[1, 3, 5, 7].map((value) => (
+            {[1, 2, 3, 5, 7].map((value) => (
               <option key={value} value={value}>
                 bo{value}
               </option>

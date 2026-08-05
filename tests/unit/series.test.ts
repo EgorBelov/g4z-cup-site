@@ -5,6 +5,7 @@ import { BracketError } from "@/lib/brackets";
 describe("bestOfForScore", () => {
   it.each([
     [1, 0, 1],
+    [1, 1, 2],
     [2, 0, 3],
     [2, 1, 3],
     [3, 2, 5],
@@ -15,7 +16,8 @@ describe("bestOfForScore", () => {
   });
 
   it("rejects scores that cannot be a finished series", () => {
-    expect(() => bestOfForScore(1, 1)).toThrow(BracketError);
+    // 1:1 is a bo2 draw; any other level score is not a series anyone plays.
+    expect(() => bestOfForScore(2, 2)).toThrow(BracketError);
     expect(() => bestOfForScore(0, 0)).toThrow(BracketError);
     expect(() => bestOfForScore(-1, 2)).toThrow(BracketError);
     expect(() => bestOfForScore(5, 0)).toThrow(BracketError);
@@ -61,5 +63,9 @@ describe("seriesMapWinners", () => {
 
   it("handles a sweep", () => {
     expect(seriesMapWinners(3, 0)).toEqual(["team1", "team1", "team1"]);
+  });
+
+  it("splits a drawn bo2", () => {
+    expect(seriesMapWinners(1, 1)).toEqual(["team1", "team2"]);
   });
 });

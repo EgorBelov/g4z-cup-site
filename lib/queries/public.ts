@@ -233,8 +233,9 @@ export async function getStandings(slug: string): Promise<StandingRow[]> {
     .select("*")
     .eq("tournament_id", tournament.id)
     .order("group_order")
-    .order("wins", { ascending: false })
+    .order("points", { ascending: false })
     .order("map_diff", { ascending: false })
+    .order("maps_won", { ascending: false })
     .order("team_name");
 
   return unwrap(result, "getStandings") as StandingRow[];

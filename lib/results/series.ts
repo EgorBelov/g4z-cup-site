@@ -10,7 +10,7 @@ import { BracketError } from "@/lib/brackets/types";
 
 const MAX_WINS = 4; // bo7
 
-/** bo1 for 1 win, bo3 for 2, bo5 for 3, bo7 for 4. */
+/** bo1 for 1 win, bo3 for 2, bo5 for 3, bo7 for 4 — and bo2 for a 1:1 draw. */
 export function bestOfForScore(score1: number, score2: number): number {
   const wins = Math.max(score1, score2);
   const losses = Math.min(score1, score2);
@@ -21,8 +21,11 @@ export function bestOfForScore(score1: number, score2: number): number {
   if (score1 < 0 || score2 < 0) {
     throw new BracketError("Счёт не может быть отрицательным");
   }
+  if (score1 === 1 && score2 === 1) {
+    return 2; // the only level score a supported series length can produce
+  }
   if (score1 === score2) {
-    throw new BracketError("Ничьих не бывает — укажите победителя серии");
+    throw new BracketError("Ничья возможна только в bo2 со счётом 1:1");
   }
   if (wins > MAX_WINS) {
     throw new BracketError(`Слишком длинная серия: максимум ${MAX_WINS} побед (bo7)`);
@@ -44,6 +47,8 @@ export function seriesMapWinners(
   score2: number,
 ): ("team1" | "team2")[] {
   bestOfForScore(score1, score2);
+
+  if (score1 === score2) return ["team1", "team2"]; // drawn bo2
 
   const winner: "team1" | "team2" = score1 > score2 ? "team1" : "team2";
   const loser: "team1" | "team2" = winner === "team1" ? "team2" : "team1";

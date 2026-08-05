@@ -124,6 +124,16 @@ export async function deleteTeamAction(formData: FormData): Promise<void> {
   redirect(`/admin/t/${slug}/teams`);
 }
 
+/** Roster MMR is optional and free-form in the form; anything unparseable is dropped. */
+function parseMmr(value: string | undefined): number | null {
+  const digits = (value ?? "").replace(/\s+/g, "");
+  if (digits === "") return null;
+
+  const parsed = Number(digits);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 20000) return null;
+  return parsed;
+}
+
 /**
  * Saves a roster by diffing against the stored one.
  *
@@ -140,7 +150,7 @@ export async function saveRosterAction(
   const parsed = parseForm(rosterSchema, formData);
   if (parsed.state) return parsed.state;
 
-  const { team_id: teamId, nickname, real_name, role, captain } = parsed.data;
+  const { team_id: teamId, nickname, real_name, role, mmr, captain } = parsed.data;
   const client = writeClient();
 
   const teamResult = await client
@@ -158,6 +168,7 @@ export async function saveRosterAction(
       nickname: value.trim(),
       real_name: (real_name[index] ?? "").trim() || null,
       role: (role[index] ?? "").trim() || null,
+      mmr: parseMmr(mmr[index]),
       is_captain: captain === index + 1,
       sort_order: index + 1,
     }))

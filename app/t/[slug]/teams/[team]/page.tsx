@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { MatchRow } from "@/components/match/MatchRow";
+import { averageMmr, formatMmr } from "@/lib/format/mmr";
 import { getTeamPage, getTournament } from "@/lib/queries/public";
 import { teamParams } from "@/lib/queries/params";
 
@@ -54,6 +55,7 @@ export default async function TeamPage({ params }: Props) {
       match.winner_id !== null &&
       match.winner_id !== team.id,
   ).length;
+  const average = averageMmr(players);
 
   return (
     <Container className="py-8 sm:py-12">
@@ -74,7 +76,14 @@ export default async function TeamPage({ params }: Props) {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <Card>
-          <CardHeader title="Состав" hint={`Игроков: ${players.length}`} />
+          <CardHeader
+            title="Состав"
+            hint={
+              average !== null
+                ? `Игроков: ${players.length} · средний MMR ${formatMmr(average)}`
+                : `Игроков: ${players.length}`
+            }
+          />
           <div className="p-5">
             {players.length > 0 ? (
               <ul className="space-y-2">
@@ -103,11 +112,14 @@ export default async function TeamPage({ params }: Props) {
                         </p>
                       ) : null}
                     </div>
-                    {player.role ? (
-                      <span className="shrink-0 text-xs text-ink-faint">
-                        {player.role}
-                      </span>
-                    ) : null}
+                    <span className="shrink-0 text-right text-xs text-ink-faint">
+                      {player.mmr !== null ? (
+                        <span className="block tabular-nums">
+                          {formatMmr(player.mmr)} MMR
+                        </span>
+                      ) : null}
+                      {player.role ? <span className="block">{player.role}</span> : null}
+                    </span>
                   </li>
                 ))}
               </ul>

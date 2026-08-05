@@ -16,6 +16,8 @@ export function StandingsTable({
   tournamentSlug: string;
 }) {
   const advance = rows[0]?.advance_count ?? null;
+  // Draws only happen in an even series, so a bo1/bo3 group keeps the old columns.
+  const hasDraws = rows.some((row) => row.draws > 0);
 
   return (
     <div className="overflow-x-auto">
@@ -26,9 +28,13 @@ export function StandingsTable({
             <th className="px-3 py-2.5 font-medium">Команда</th>
             <th className="px-3 py-2.5 text-center font-medium">И</th>
             <th className="px-3 py-2.5 text-center font-medium">В</th>
+            {hasDraws ? (
+              <th className="px-3 py-2.5 text-center font-medium">Н</th>
+            ) : null}
             <th className="px-3 py-2.5 text-center font-medium">П</th>
             <th className="px-3 py-2.5 text-center font-medium">Карты</th>
             <th className="px-3 py-2.5 text-center font-medium">±</th>
+            <th className="px-3 py-2.5 text-center font-medium">О</th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +65,11 @@ export function StandingsTable({
                 <td className="px-3 py-3 text-center font-semibold tabular-nums">
                   {row.wins}
                 </td>
+                {hasDraws ? (
+                  <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
+                    {row.draws}
+                  </td>
+                ) : null}
                 <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
                   {row.losses}
                 </td>
@@ -67,6 +78,9 @@ export function StandingsTable({
                 </td>
                 <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
                   {row.map_diff > 0 ? `+${row.map_diff}` : row.map_diff}
+                </td>
+                <td className="px-3 py-3 text-center font-semibold tabular-nums">
+                  {row.points}
                 </td>
               </tr>
             );
@@ -80,6 +94,12 @@ export function StandingsTable({
           первые {advance} команд группы
         </p>
       ) : null}
+
+      <p className="mt-2 text-xs text-ink-faint">
+        {hasDraws
+          ? "О — очки: 2 за победу в серии, 1 за ничью."
+          : "О — очки: 2 за победу в серии."}
+      </p>
     </div>
   );
 }

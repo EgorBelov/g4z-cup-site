@@ -79,6 +79,7 @@ export type Player = {
   steam_url: string | null;
   dotabuff_url: string | null;
   sort_order: number;
+  mmr: number | null;
 };
 
 export type Match = {
@@ -180,6 +181,10 @@ export type StandingRow = {
   maps_won: number;
   maps_lost: number;
   map_diff: number;
+  /** Only an even series (bo2) can end level. */
+  draws: number;
+  /** 2 per win, 1 per draw — for a bo2 stage that is one point per map won. */
+  points: number;
 };
 
 export type Game = {

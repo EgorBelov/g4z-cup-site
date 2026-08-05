@@ -386,6 +386,12 @@ export async function generateStageAction(
     return fail("Нужно минимум 2 команды. Проверьте состав группы или посев.");
   }
 
+  // An even series can end level, which leaves a bracket slot with nobody in it.
+  const isBracket = stage.kind === "single_elim" || stage.kind === "double_elim";
+  if (isBracket && (input.best_of % 2 === 0 || (input.final_best_of ?? 1) % 2 === 0)) {
+    return fail("В плей-офф нужна нечётная серия: bo2 может закончиться вничью.");
+  }
+
   // ── specs ──
   let specs: GeneratedMatch[];
 

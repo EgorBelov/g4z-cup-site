@@ -47,11 +47,12 @@ const slug = trimmed
     error: "Только латиница в нижнем регистре, цифры и дефис",
   });
 
+// bo2 is a group-stage format: both maps are played, so a series can end 1:1.
 const bestOf = z.coerce
   .number()
   .int()
-  .refine((value) => [1, 3, 5, 7].includes(value), {
-    error: "Формат серии: 1, 3, 5 или 7",
+  .refine((value) => [1, 2, 3, 5, 7].includes(value), {
+    error: "Формат серии: 1, 2, 3, 5 или 7",
   });
 
 // ─── auth ────────────────────────────────────────────────────────────────────
@@ -105,6 +106,10 @@ export const rosterSchema = z.object({
     .optional()
     .transform(toArray),
   role: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .transform(toArray),
+  mmr: z
     .union([z.string(), z.array(z.string())])
     .optional()
     .transform(toArray),

@@ -100,7 +100,7 @@ export function RosterForm({ teamId, players }: { teamId: number; players: Playe
           return (
             <div
               key={index}
-              className="grid gap-2 rounded-control border border-edge bg-surface-sunken/60 p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1.5fr)_auto]"
+              className="grid gap-2 rounded-control border border-edge bg-surface-sunken/60 p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto]"
             >
               <Input
                 name="nickname"
@@ -119,6 +119,15 @@ export function RosterForm({ teamId, players }: { teamId: number; players: Playe
                 defaultValue={player?.role ?? ""}
                 placeholder="Роль"
                 aria-label={`Роль игрока ${index + 1}`}
+              />
+              <Input
+                name="mmr"
+                type="number"
+                min={0}
+                max={20000}
+                defaultValue={player?.mmr ?? ""}
+                placeholder="MMR"
+                aria-label={`MMR игрока ${index + 1}`}
               />
               <label className="flex items-center justify-center gap-2 text-xs text-ink-faint">
                 <input

@@ -34,6 +34,7 @@ declare
   grp       bigint;
   rr_stage  bigint;
   group_match bigint;
+  bo2_match bigint;
 begin
   -- Isolated fixture, so the seed data is left alone.
   insert into tournaments (slug, name, status)
@@ -153,12 +154,59 @@ begin
     (select wins from standings where team_id = a_id), 'standings count the win');
   perform assert_equals(1::bigint,
     (select losses from standings where team_id = b_id), 'and the loss');
+  perform assert_equals(2, (select points from standings where team_id = a_id),
+    'a win is worth two points');
   perform assert_equals(0::bigint,
     (select played from standings where team_id = c_id),
     'a team with no games still appears in the table');
   perform assert_equals(3::bigint,
     (select count(*) from standings where tournament_id = t_id),
     'every team in a group appears in the table');
+
+  -- bo2: both maps are always played, so the series may end level.
+  insert into matches (
+    tournament_id, stage_id, group_id, round, position, best_of, team1_id, team2_id
+  )
+  values (t_id, rr_stage, grp, 2, 1, 2, a_id, c_id)
+  returning id into bo2_match;
+
+  insert into games (match_id, game_number, winner_id) values (bo2_match, 1, a_id);
+
+  perform assert_equals('live'::match_status,
+    (select status from matches where id = bo2_match), 'bo2 is not over at 1-0');
+  perform assert_equals(null::bigint,
+    (select winner_id from matches where id = bo2_match),
+    'a bo2 lead is not a series win');
+
+  insert into games (match_id, game_number, winner_id) values (bo2_match, 2, c_id);
+
+  perform assert_equals('finished'::match_status,
+    (select status from matches where id = bo2_match), 'bo2 ends after two maps');
+  perform assert_equals(null::bigint,
+    (select winner_id from matches where id = bo2_match), '1-1 has no winner');
+  perform assert_equals(true,
+    (select finished_at is not null from matches where id = bo2_match),
+    'a drawn series is still stamped as finished');
+  perform assert_equals(1::bigint,
+    (select draws from standings where team_id = a_id), 'the draw is counted');
+  perform assert_equals(2::bigint,
+    (select played from standings where team_id = a_id),
+    'a draw counts as a played series');
+  perform assert_equals(3, (select points from standings where team_id = a_id),
+    'a draw adds one point');
+  perform assert_equals(1, (select points from standings where team_id = c_id),
+    'both sides of a draw score');
+
+  -- Taking both maps wins the series outright.
+  update games set winner_id = a_id where match_id = bo2_match and game_number = 2;
+
+  perform assert_equals(a_id, (select winner_id from matches where id = bo2_match),
+    '2-0 wins a bo2');
+  perform assert_equals(c_id, (select loser_id from matches where id = bo2_match),
+    'and the other side loses it');
+  perform assert_equals(0::bigint,
+    (select draws from standings where team_id = a_id),
+    'the draw is gone once the maps change');
 
   -- Only one tournament can be current.
   begin
