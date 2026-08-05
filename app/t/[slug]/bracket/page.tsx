@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/Badge";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { BracketView } from "@/components/bracket/BracketView";
-import { getBracket, getTournament } from "@/lib/queries/public";
+import { formatDayRange } from "@/lib/format/date";
+import { getBracket, getStages, getTournament } from "@/lib/queries/public";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -28,7 +30,15 @@ export default async function BracketPage({ params }: Props) {
   const tournament = await getTournament(slug);
   if (!tournament) notFound();
 
-  const matches = await getBracket(slug);
+  const [matches, stages] = await Promise.all([getBracket(slug), getStages(slug)]);
+
+  const bracketStages = stages.filter(
+    (stage) => stage.kind === "single_elim" || stage.kind === "double_elim",
+  );
+  const window = formatDayRange(
+    bracketStages[0]?.starts_on ?? null,
+    bracketStages.at(-1)?.ends_on ?? null,
+  );
 
   return (
     <Container className="py-8 sm:py-12">
@@ -36,6 +46,7 @@ export default async function BracketPage({ params }: Props) {
         eyebrow={tournament.name}
         title="Плей-офф"
         description="Сетка строится по связям матчей: победитель попадает в следующий матч сам."
+        actions={window ? <Badge tone="info">{window}</Badge> : null}
       />
 
       <div className="mt-8">

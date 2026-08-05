@@ -121,6 +121,12 @@ export function BracketView({
     );
   }
 
+  // Without a lower bracket the "upper / final" split is meaningless — a single
+  // elimination reads as one left-to-right run of rounds.
+  if (!matches.some((match) => match.bracket === "lower")) {
+    return <BracketColumns matches={matches} timeZone={timeZone} />;
+  }
+
   const sides: (BracketSide | "none")[] = ["upper", "lower", "final"];
   const grouped = sides
     .map((side) => ({

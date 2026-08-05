@@ -46,6 +46,11 @@ export type Stage = {
   sort_order: number;
   best_of: number;
   advance_count: number | null;
+  /** Teams below the advance line that play a decider for the remaining slots. */
+  playin_count: number | null;
+  /** Stage window as plain days — the hour of each match is set separately. */
+  starts_on: string | null;
+  ends_on: string | null;
 };
 
 export type Group = {
@@ -185,6 +190,8 @@ export type StandingRow = {
   draws: number;
   /** 2 per win, 1 per draw — for a bo2 stage that is one point per map won. */
   points: number;
+  /** Places right below the advance line that play a decider for a slot. */
+  playin_count: number | null;
 };
 
 export type Game = {

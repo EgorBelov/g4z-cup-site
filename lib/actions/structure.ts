@@ -76,6 +76,9 @@ export async function saveStageAction(
     sort_order: input.sort_order,
     best_of: input.best_of,
     advance_count: input.advance_count,
+    playin_count: input.playin_count,
+    starts_on: input.starts_on,
+    ends_on: input.ends_on,
   };
 
   if (input.stage_id) {
@@ -338,8 +341,9 @@ export async function generateStageAction(
       .select("*")
       .eq("tournament_id", input.tournament_id)
       .order("group_order")
-      .order("wins", { ascending: false })
+      .order("points", { ascending: false })
       .order("map_diff", { ascending: false })
+      .order("maps_won", { ascending: false })
       .order("team_name");
 
     if (result.error) return fail(result.error.message);

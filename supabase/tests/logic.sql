@@ -45,8 +45,11 @@ begin
   values (t_id, 'single_elim', 'Playoff', 1, 3)
   returning id into stage_id;
 
-  insert into stages (tournament_id, kind, name, sort_order, best_of)
-  values (t_id, 'round_robin', 'Group stage', 0, 1)
+  insert into stages (
+    tournament_id, kind, name, sort_order, best_of,
+    advance_count, playin_count, starts_on, ends_on
+  )
+  values (t_id, 'round_robin', 'Group stage', 0, 1, 2, 2, '2026-08-03', '2026-08-07')
   returning id into rr_stage;
 
   insert into groups (tournament_id, stage_id, name, sort_order)
@@ -207,6 +210,21 @@ begin
   perform assert_equals(0::bigint,
     (select draws from standings where team_id = a_id),
     'the draw is gone once the maps change');
+
+  -- The stage window and the play-in band reach the table through `standings`,
+  -- which is the only thing the group page reads.
+  perform assert_equals(2, (select advance_count from standings where team_id = a_id),
+    'standings carry the advance line');
+  perform assert_equals(2, (select playin_count from standings where team_id = a_id),
+    'standings carry the play-in band');
+
+  begin
+    update stages set starts_on = '2026-08-07', ends_on = '2026-08-03'
+      where id = rr_stage;
+    raise exception 'FAIL: a stage window ending before it starts was accepted';
+  exception when check_violation then
+    raise notice 'ok — a stage window cannot end before it starts';
+  end;
 
   -- Only one tournament can be current.
   begin

@@ -47,6 +47,14 @@ const slug = trimmed
     error: "Только латиница в нижнем регистре, цифры и дефис",
   });
 
+/** A `<input type="date">` value: plain YYYY-MM-DD, no zone conversion. */
+const optionalDay = trimmed
+  .refine((value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+    error: "Дата в формате ГГГГ-ММ-ДД",
+  })
+  .optional()
+  .transform((value) => (value === "" || value === undefined ? null : value));
+
 // bo2 is a group-stage format: both maps are played, so a series can end 1:1.
 const bestOf = z.coerce
   .number()
@@ -123,15 +131,26 @@ function toArray(value: string | string[] | undefined): string[] {
 
 // ─── stages, groups, generation ──────────────────────────────────────────────
 
-export const stageSchema = z.object({
-  tournament_id: z.coerce.number().int().positive(),
-  stage_id: optionalId,
-  kind: z.enum(["round_robin", "swiss", "single_elim", "double_elim"]),
-  name: trimmed.min(2, { error: "Укажите название этапа" }),
-  sort_order: z.coerce.number().int().min(0).default(0),
-  best_of: bestOf,
-  advance_count: optionalInt,
-});
+export const stageSchema = z
+  .object({
+    tournament_id: z.coerce.number().int().positive(),
+    stage_id: optionalId,
+    kind: z.enum(["round_robin", "swiss", "single_elim", "double_elim"]),
+    name: trimmed.min(2, { error: "Укажите название этапа" }),
+    sort_order: z.coerce.number().int().min(0).default(0),
+    best_of: bestOf,
+    advance_count: optionalInt,
+    playin_count: optionalInt,
+    starts_on: optionalDay,
+    ends_on: optionalDay,
+  })
+  .refine(
+    (value) =>
+      value.starts_on === null ||
+      value.ends_on === null ||
+      value.ends_on >= value.starts_on,
+    { error: "Конец этапа раньше начала", path: ["ends_on"] },
+  );
 
 export const groupSchema = z.object({
   tournament_id: z.coerce.number().int().positive(),

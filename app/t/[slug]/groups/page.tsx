@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { MatchRow } from "@/components/match/MatchRow";
 import { StandingsTable } from "@/components/standings/StandingsTable";
-import { getSchedule, getStandings, getTournament } from "@/lib/queries/public";
+import { formatDayRange } from "@/lib/format/date";
+import {
+  getSchedule,
+  getStages,
+  getStandings,
+  getTournament,
+} from "@/lib/queries/public";
 import type { StandingRow } from "@/lib/types/database";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -32,9 +39,10 @@ export default async function GroupsPage({ params }: Props) {
   const tournament = await getTournament(slug);
   if (!tournament) notFound();
 
-  const [standings, schedule] = await Promise.all([
+  const [standings, schedule, stages] = await Promise.all([
     getStandings(slug),
     getSchedule(slug),
+    getStages(slug),
   ]);
 
   const groups = new Map<number, StandingRow[]>();
@@ -42,12 +50,19 @@ export default async function GroupsPage({ params }: Props) {
     groups.set(row.group_id, [...(groups.get(row.group_id) ?? []), row]);
   }
 
+  const groupStage = stages.find((stage) => stage.id === standings[0]?.stage_id);
+  const window = formatDayRange(
+    groupStage?.starts_on ?? null,
+    groupStage?.ends_on ?? null,
+  );
+
   return (
     <Container className="py-8 sm:py-12">
       <PageHeader
         eyebrow={tournament.name}
         title="Групповой этап"
         description="Таблицы считаются из результатов матчей — вручную ничего не проставляется."
+        actions={window ? <Badge tone="info">{window}</Badge> : null}
       />
 
       {groups.size === 0 ? (

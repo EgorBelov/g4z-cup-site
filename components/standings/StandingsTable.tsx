@@ -16,6 +16,9 @@ export function StandingsTable({
   tournamentSlug: string;
 }) {
   const advance = rows[0]?.advance_count ?? null;
+  // Places right under the advance line that still have a shot, via a decider.
+  const playin = rows[0]?.playin_count ?? null;
+  const playinUntil = advance !== null && playin ? advance + playin : null;
   // Draws only happen in an even series, so a bo1/bo3 group keeps the old columns.
   const hasDraws = rows.some((row) => row.draws > 0);
 
@@ -41,13 +44,17 @@ export function StandingsTable({
           {rows.map((row, index) => {
             const position = index + 1;
             const advances = advance !== null && position <= advance;
+            const playsDecider =
+              !advances && playinUntil !== null && position <= playinUntil;
 
             return (
               <tr
                 key={row.team_id}
                 className={cn(
                   "border-t border-edge",
-                  advances ? "bg-accent-soft/40" : "bg-surface-sunken/40",
+                  advances && "bg-accent-soft/40",
+                  playsDecider && "bg-warn-soft/30",
+                  !advances && !playsDecider && "bg-surface-sunken/40",
                 )}
               >
                 <td className="px-3 py-3 font-semibold tabular-nums">{position}</td>
@@ -92,6 +99,13 @@ export function StandingsTable({
         <p className="mt-4 flex items-center gap-2 text-xs text-ink-faint">
           <Badge tone="accent">проходят дальше</Badge>
           первые {advance} команд группы
+        </p>
+      ) : null}
+
+      {playinUntil !== null ? (
+        <p className="mt-2 flex items-center gap-2 text-xs text-ink-faint">
+          <Badge tone="warn">стыковые матчи</Badge>
+          места {advance! + 1}–{playinUntil} играют за оставшиеся слоты
         </p>
       ) : null}
 

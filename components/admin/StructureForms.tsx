@@ -91,6 +91,31 @@ export function StageForm({
             defaultValue={stage?.advance_count ?? ""}
           />
         </Field>
+
+        <Field
+          label="Сколько играет стыковые"
+          hint="Места сразу под проходной зоной, которые борются за оставшиеся слоты"
+          error={state.fieldErrors?.playin_count}
+        >
+          <Input
+            name="playin_count"
+            type="number"
+            min={0}
+            defaultValue={stage?.playin_count ?? ""}
+          />
+        </Field>
+
+        <Field
+          label="Начало этапа"
+          hint="Только дата — час каждого матча задаётся отдельно"
+          error={state.fieldErrors?.starts_on}
+        >
+          <Input name="starts_on" type="date" defaultValue={stage?.starts_on ?? ""} />
+        </Field>
+
+        <Field label="Конец этапа" error={state.fieldErrors?.ends_on}>
+          <Input name="ends_on" type="date" defaultValue={stage?.ends_on ?? ""} />
+        </Field>
       </div>
 
       <FormFeedback state={state} />

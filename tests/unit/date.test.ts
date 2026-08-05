@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dayKey,
   formatDateTime,
+  formatDayRange,
   formatDuration,
   fromDateTimeLocal,
   toDateTimeLocal,
@@ -50,6 +51,25 @@ describe("timezone handling", () => {
     expect(formatDateTime("2026-04-04T11:00:00.000Z", "Europe/Moscow")).toContain(
       "14:00",
     );
+  });
+});
+
+describe("formatDayRange", () => {
+  it("names the month once inside a single month", () => {
+    expect(formatDayRange("2026-08-03", "2026-08-07")).toBe("3 — 7 августа");
+  });
+
+  it("names both months when the stage spans two", () => {
+    expect(formatDayRange("2026-07-30", "2026-08-02")).toBe("30 июля — 2 августа");
+  });
+
+  it("collapses a one-day stage", () => {
+    expect(formatDayRange("2026-08-07", "2026-08-07")).toBe("7 августа");
+    expect(formatDayRange("2026-08-07", null)).toBe("7 августа");
+  });
+
+  it("returns null without a start", () => {
+    expect(formatDayRange(null, "2026-08-07")).toBeNull();
   });
 });
 

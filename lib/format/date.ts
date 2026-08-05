@@ -61,6 +61,43 @@ export function formatDateRange(
   return `${short.format(new Date(from))} — ${withYear.format(new Date(to))}`;
 }
 
+/**
+ * "3 — 7 августа" from two plain `date` values.
+ *
+ * A stage window is a pair of calendar days, not instants, so nothing here goes
+ * through a time zone: `new Date("2026-08-03")` is UTC midnight and would slide
+ * to the previous day for any viewer west of Greenwich.
+ */
+export function formatDayRange(from: string | null, to: string | null): string | null {
+  const start = parseDay(from);
+  if (!start) return null;
+
+  const end = parseDay(to);
+  const short = new Intl.DateTimeFormat("ru-RU", { day: "numeric" });
+  const full = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
+
+  if (!end || (end.day === start.day && end.month === start.month)) {
+    return full.format(start.date);
+  }
+
+  // "3 — 7 августа" inside one month, "30 июля — 2 августа" across two.
+  const head = end.month === start.month ? short : full;
+  return `${head.format(start.date)} — ${full.format(end.date)}`;
+}
+
+function parseDay(
+  value: string | null,
+): { date: Date; day: number; month: number } | null {
+  if (!value) return null;
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return null;
+
+  const [, year, month, day] = match.map(Number) as [number, number, number, number];
+  // Local noon: far enough from either midnight that no formatter rounds a day off.
+  return { date: new Date(year, month - 1, day, 12), day, month };
+}
+
 /** Stable YYYY-MM-DD key in the tournament time zone, for grouping by day. */
 export function dayKey(value: string, timeZone = DEFAULT_TIME_ZONE): string {
   const parts = new Intl.DateTimeFormat("en-CA", {

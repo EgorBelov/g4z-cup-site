@@ -118,7 +118,9 @@ export default async function TeamPage({ params }: Props) {
                           {formatMmr(player.mmr)} MMR
                         </span>
                       ) : null}
-                      {player.role ? <span className="block">{player.role}</span> : null}
+                      {player.role ? (
+                        <span className="block">{player.role}</span>
+                      ) : null}
                     </span>
                   </li>
                 ))}
