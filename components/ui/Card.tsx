@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
+/**
+ * `min-w-0` is load-bearing: a card is almost always a grid or flex child, and
+ * those default to `min-width: auto`, which refuses to shrink below the content.
+ * Without it one wide table inside pushes the whole page past the viewport
+ * instead of scrolling inside its own `overflow-x-auto`.
+ */
 export function Card({
   children,
   className,
@@ -11,7 +17,7 @@ export function Card({
   as?: "div" | "section" | "article" | "li";
 }) {
   return (
-    <Tag className={cn("rounded-card border border-edge bg-panel", className)}>
+    <Tag className={cn("min-w-0 rounded-card border border-edge bg-panel", className)}>
       {children}
     </Tag>
   );

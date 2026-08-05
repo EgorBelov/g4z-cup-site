@@ -114,12 +114,14 @@ export default async function ResultsPage({ params }: Props) {
         <Card className="mt-8">
           <CardHeader title="Все места" hint={`Команд: ${placements.length}`} />
           <div className="overflow-x-auto p-5">
-            <table className="w-full min-w-[28rem] text-left text-sm">
+            {/* No min width: three text columns wrap perfectly well, and forcing
+                one only bought a sideways scroll on a phone. */}
+            <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-wide text-ink-faint">
                 <tr>
-                  <th className="px-3 py-2.5 font-medium">Место</th>
-                  <th className="px-3 py-2.5 font-medium">Команда</th>
-                  <th className="px-3 py-2.5 font-medium">Примечание</th>
+                  <th className="px-2 py-2.5 font-medium sm:px-3">Место</th>
+                  <th className="px-2 py-2.5 font-medium sm:px-3">Команда</th>
+                  <th className="px-2 py-2.5 font-medium sm:px-3">Примечание</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,10 +130,10 @@ export default async function ResultsPage({ params }: Props) {
                     key={placement.id}
                     className="border-t border-edge bg-surface-sunken/40"
                   >
-                    <td className="px-3 py-3 font-semibold tabular-nums">
+                    <td className="px-2 py-3 font-semibold tabular-nums sm:px-3">
                       {placement.place}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-2 py-3 sm:px-3">
                       {placement.team_slug ? (
                         <Link
                           href={`/t/${slug}/teams/${placement.team_slug}`}
@@ -143,7 +145,7 @@ export default async function ResultsPage({ params }: Props) {
                         (placement.team_name ?? "—")
                       )}
                     </td>
-                    <td className="px-3 py-3 text-ink-faint">
+                    <td className="px-2 py-3 text-ink-faint sm:px-3">
                       {placement.note ?? placement.prize ?? "—"}
                     </td>
                   </tr>

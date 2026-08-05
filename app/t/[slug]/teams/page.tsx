@@ -51,7 +51,7 @@ export default async function TeamsPage({ params }: Props) {
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {teams.map((team) => (
-            <li key={team.id}>
+            <li key={team.id} className="min-w-0">
               <TeamCard
                 team={team}
                 groupName={team.group_id ? groupName.get(team.group_id) : null}

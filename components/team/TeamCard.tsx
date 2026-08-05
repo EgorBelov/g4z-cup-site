@@ -36,8 +36,10 @@ export function TeamCard({
       {players.length > 0 ? (
         <ul className="mt-4 space-y-1.5 text-sm">
           {players.slice(0, 5).map((player) => (
-            <li key={player.id} className="flex items-center gap-2">
-              <span className="truncate text-ink-muted">{player.nickname}</span>
+            <li key={player.id} className="flex min-w-0 items-center gap-2">
+              {/* min-w-0 on the item too: a flex child will not truncate below
+                  its content width without it, and nicknames get long. */}
+              <span className="min-w-0 truncate text-ink-muted">{player.nickname}</span>
               {player.is_captain ? (
                 <span className="shrink-0 text-[10px] uppercase text-accent">
                   капитан

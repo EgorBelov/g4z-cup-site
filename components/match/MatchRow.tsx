@@ -61,7 +61,9 @@ export function MatchRow({
       )}
     >
       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-ink-faint">
-        <span className="truncate">{label}</span>
+        {/* min-w-0, or the round label refuses to shrink next to the badge and
+            pushes the card past a narrow screen. */}
+        <span className="min-w-0 truncate">{label}</span>
         <div className="flex shrink-0 items-center gap-2">
           <span className="tabular-nums">
             {formatTime(match.scheduled_at, timeZone)}

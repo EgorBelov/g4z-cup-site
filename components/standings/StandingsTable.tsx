@@ -22,22 +22,26 @@ export function StandingsTable({
   // Draws only happen in an even series, so a bo1/bo3 group keeps the old columns.
   const hasDraws = rows.some((row) => row.draws > 0);
 
+  // Phone-first column set. "Карты" is the only column that is pure detail —
+  // `±` already summarises it — so it is the one that goes on a narrow screen,
+  // which lets the rest of the table fit without sideways scrolling.
+  const cell = "px-1 py-3 sm:px-3";
+  const head = "px-1 py-2.5 font-medium sm:px-3";
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[34rem] text-left text-sm">
+      <table className="w-full text-left text-sm">
         <thead className="text-xs uppercase tracking-wide text-ink-faint">
           <tr>
-            <th className="px-3 py-2.5 font-medium">#</th>
-            <th className="px-3 py-2.5 font-medium">Команда</th>
-            <th className="px-3 py-2.5 text-center font-medium">И</th>
-            <th className="px-3 py-2.5 text-center font-medium">В</th>
-            {hasDraws ? (
-              <th className="px-3 py-2.5 text-center font-medium">Н</th>
-            ) : null}
-            <th className="px-3 py-2.5 text-center font-medium">П</th>
-            <th className="px-3 py-2.5 text-center font-medium">Карты</th>
-            <th className="px-3 py-2.5 text-center font-medium">±</th>
-            <th className="px-3 py-2.5 text-center font-medium">О</th>
+            <th className={head}>#</th>
+            <th className={cn(head, "w-full")}>Команда</th>
+            <th className={cn(head, "text-center")}>И</th>
+            <th className={cn(head, "text-center")}>В</th>
+            {hasDraws ? <th className={cn(head, "text-center")}>Н</th> : null}
+            <th className={cn(head, "text-center")}>П</th>
+            <th className={cn(head, "hidden text-center sm:table-cell")}>Карты</th>
+            <th className={cn(head, "text-center")}>±</th>
+            <th className={cn(head, "text-center")}>О</th>
           </tr>
         </thead>
         <tbody>
@@ -57,36 +61,41 @@ export function StandingsTable({
                   !advances && !playsDecider && "bg-surface-sunken/40",
                 )}
               >
-                <td className="px-3 py-3 font-semibold tabular-nums">{position}</td>
-                <td className="px-3 py-3">
+                <td className={cn(cell, "font-semibold tabular-nums")}>{position}</td>
+                <td className={cell}>
                   <Link
                     href={`/t/${tournamentSlug}/teams/${row.team_slug}`}
-                    className="font-medium hover:text-accent"
+                    className="block max-w-[7.5rem] truncate font-medium hover:text-accent sm:max-w-none"
                   >
                     {row.team_name}
                   </Link>
                 </td>
-                <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
+                <td className={cn(cell, "text-center tabular-nums text-ink-muted")}>
                   {row.played}
                 </td>
-                <td className="px-3 py-3 text-center font-semibold tabular-nums">
+                <td className={cn(cell, "text-center font-semibold tabular-nums")}>
                   {row.wins}
                 </td>
                 {hasDraws ? (
-                  <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
+                  <td className={cn(cell, "text-center tabular-nums text-ink-muted")}>
                     {row.draws}
                   </td>
                 ) : null}
-                <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
+                <td className={cn(cell, "text-center tabular-nums text-ink-muted")}>
                   {row.losses}
                 </td>
-                <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
+                <td
+                  className={cn(
+                    cell,
+                    "hidden text-center tabular-nums text-ink-muted sm:table-cell",
+                  )}
+                >
                   {row.maps_won}:{row.maps_lost}
                 </td>
-                <td className="px-3 py-3 text-center tabular-nums text-ink-muted">
+                <td className={cn(cell, "text-center tabular-nums text-ink-muted")}>
                   {row.map_diff > 0 ? `+${row.map_diff}` : row.map_diff}
                 </td>
-                <td className="px-3 py-3 text-center font-semibold tabular-nums">
+                <td className={cn(cell, "text-center font-semibold tabular-nums")}>
                   {row.points}
                 </td>
               </tr>
