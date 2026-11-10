@@ -5,7 +5,17 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container } from "@/components/ui/PageHeader";
 import { MatchRow } from "@/components/match/MatchRow";
-import { getHighlights, getTournament } from "@/lib/queries/public";
+import {
+  getHighlights,
+  getTournament,
+  getTeams,
+  getRosters,
+  getStandings,
+  getStages,
+} from "@/lib/queries/public";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { formatDayRange } from "@/lib/format/date";
+import Link from "next/link";
 import { formatDateRange } from "@/lib/format/date";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -45,7 +55,15 @@ export default async function TournamentOverviewPage({ params }: Props) {
   const tournament = await getTournament(slug);
   if (!tournament) notFound();
 
-  const { live, upcoming, recent } = await getHighlights(slug);
+  const [{ live, upcoming, recent }, teams, { players }, standings, stages] =
+    await Promise.all([
+      getHighlights(slug),
+      getTeams(slug),
+      getRosters(slug),
+      getStandings(slug),
+      getStages(slug),
+    ]);
+  const groupIds = [...new Set(standings.map((row) => row.group_id))];
   const dates = formatDateRange(
     tournament.starts_at,
     tournament.ends_at,
@@ -54,55 +72,52 @@ export default async function TournamentOverviewPage({ params }: Props) {
 
   return (
     <Container className="py-8 sm:py-12">
-      <section className="rounded-card border border-edge bg-gradient-to-br from-accent-soft via-panel to-info-soft p-6 sm:p-10">
-        <div className="flex flex-wrap items-center gap-3">
-          <TournamentStatusBadge status={tournament.status} />
-          {tournament.edition ? (
-            <Badge tone="neutral">сезон {tournament.edition}</Badge>
+      <section className="grid items-center gap-8 pb-12 pt-4 lg:grid-cols-2 lg:gap-16 lg:pb-16">
+        <div>
+          <p className="eyebrow">
+            {dates ?? "Даты уточняются"} / {tournament.game}
+          </p>
+          <h1 className="page-title mb-7 text-6xl sm:text-8xl">{tournament.name}</h1>
+          <p className="text-lg leading-relaxed">
+            Свои люди.
+            <br />
+            На одной орбите.
+          </p>
+          {tournament.description ? (
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink-muted">
+              {tournament.description}
+            </p>
           ) : null}
-          <Badge tone="neutral">{tournament.game}</Badge>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <TournamentStatusBadge status={tournament.status} />
+            {tournament.edition ? <Badge>Сезон {tournament.edition}</Badge> : null}
+            <span className="eyebrow">
+              {teams.length} команд / {players.length} игроков
+            </span>
+          </div>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <ButtonLink href={`/t/${slug}/schedule`}>Расписание ↗</ButtonLink>
+            {tournament.stream_url ? (
+              <ButtonLink href={tournament.stream_url} variant="secondary" external>
+                Смотреть эфир ↗
+              </ButtonLink>
+            ) : null}
+          </div>
         </div>
-
-        <h1 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl">
-          {tournament.name}
-        </h1>
-
-        {tournament.description ? (
-          <p className="mt-4 max-w-2xl text-ink-muted">{tournament.description}</p>
-        ) : null}
-
-        <dl className="mt-8 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-control border border-edge bg-surface-sunken/60 p-4">
-            <dt className="text-xs uppercase tracking-wide text-ink-faint">Даты</dt>
-            <dd className="mt-1 font-semibold">{dates ?? "уточняются"}</dd>
-          </div>
-          <div className="rounded-control border border-edge bg-surface-sunken/60 p-4">
-            <dt className="text-xs uppercase tracking-wide text-ink-faint">Формат</dt>
-            <dd className="mt-1 font-semibold">{tournament.format_summary ?? "—"}</dd>
-          </div>
-          <div className="rounded-control border border-edge bg-surface-sunken/60 p-4">
-            <dt className="text-xs uppercase tracking-wide text-ink-faint">
-              Призовой фонд
-            </dt>
-            <dd className="mt-1 font-semibold">{tournament.prize_pool ?? "—"}</dd>
-          </div>
-        </dl>
-
-        <div className="mt-8 flex flex-wrap gap-2">
-          <ButtonLink href={`/t/${slug}/schedule`}>Расписание</ButtonLink>
-          <ButtonLink href={`/t/${slug}/groups`} variant="secondary">
-            Группы
-          </ButtonLink>
-          <ButtonLink href={`/t/${slug}/bracket`} variant="secondary">
-            Плей-офф
-          </ButtonLink>
-          {tournament.stream_url ? (
-            <ButtonLink href={tournament.stream_url} variant="live" external>
-              Смотреть стрим
-            </ButtonLink>
-          ) : null}
-        </div>
+        <BrandMark animated className="mx-auto w-full max-w-[480px]" />
       </section>
+      <dl className="grid gap-6 border-y border-edge py-7 sm:grid-cols-3">
+        {[
+          { label: "Даты турнира", value: dates },
+          { label: "Формат", value: tournament.format_summary },
+          { label: "Призовой фонд", value: tournament.prize_pool },
+        ].map((stat) => (
+          <div key={stat.label}>
+            <dt className="eyebrow">{stat.label}</dt>
+            <dd className="mt-3 text-lg font-normal">{stat.value ?? "Уточняется"}</dd>
+          </div>
+        ))}
+      </dl>
 
       {live.length > 0 ? (
         <Card className="mt-8 border-live/40">
@@ -110,7 +125,7 @@ export default async function TournamentOverviewPage({ params }: Props) {
             title="Идёт сейчас"
             hint="Счёт обновляется автоматически, перезагружать страницу не нужно"
           />
-          <div className="grid gap-3 p-5 sm:grid-cols-2">
+          <div className="px-5 pb-5">
             {live.map((match) => (
               <MatchRow
                 key={match.id}
@@ -123,7 +138,7 @@ export default async function TournamentOverviewPage({ params }: Props) {
         </Card>
       ) : null}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-12 grid gap-10 lg:grid-cols-2">
         <Card>
           <CardHeader
             title="Ближайшие матчи"
@@ -133,7 +148,7 @@ export default async function TournamentOverviewPage({ params }: Props) {
               </ButtonLink>
             }
           />
-          <div className="space-y-3 p-5">
+          <div className="px-5 pb-5">
             {upcoming.length > 0 ? (
               upcoming.map((match) => (
                 <MatchRow
@@ -158,7 +173,7 @@ export default async function TournamentOverviewPage({ params }: Props) {
               </ButtonLink>
             }
           />
-          <div className="space-y-3 p-5">
+          <div className="px-5 pb-5">
             {recent.length > 0 ? (
               recent.map((match) => (
                 <MatchRow
@@ -174,6 +189,106 @@ export default async function TournamentOverviewPage({ params }: Props) {
           </div>
         </Card>
       </div>
+      <div className="mt-12 grid gap-10 lg:grid-cols-2">
+        <Card>
+          <CardHeader
+            title="Положение команд"
+            action={
+              <ButtonLink href={`/t/${slug}/groups`} size="sm" variant="ghost">
+                Все группы ↗
+              </ButtonLink>
+            }
+          />
+          <div className="space-y-7 px-5 pb-5">
+            {groupIds.length ? (
+              groupIds.map((id) => (
+                <section key={id}>
+                  <h3 className="eyebrow mb-3">
+                    {standings.find((row) => row.group_id === id)?.group_name}
+                  </h3>
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-xs text-ink-faint">
+                      <tr>
+                        <th scope="col" className="py-3 font-normal">
+                          Команда
+                        </th>
+                        <th scope="col" className="py-3 text-right font-normal">
+                          Игры
+                        </th>
+                        <th scope="col" className="py-3 text-right font-normal">
+                          Очки
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {standings
+                        .filter((row) => row.group_id === id)
+                        .slice(0, 4)
+                        .map((row) => (
+                          <tr key={row.team_id} className="border-t border-edge">
+                            <td className="py-4 pr-3">
+                              <Link
+                                href={`/t/${slug}/teams/${row.team_slug}`}
+                                className="break-words hover:text-accent"
+                              >
+                                {row.team_name}
+                              </Link>
+                            </td>
+                            <td className="text-right tabular-nums text-ink-faint">
+                              {row.played}
+                            </td>
+                            <td className="text-right tabular-nums text-accent">
+                              {row.points}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </section>
+              ))
+            ) : (
+              <EmptyState title="Таблицы появятся после распределения по группам" />
+            )}
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Путь к кубку" />
+          <ol className="px-5 pb-5">
+            {stages.length ? (
+              stages.map((stage, index) => (
+                <li key={stage.id} className="flex gap-5 border-t border-edge py-5">
+                  <span className="font-mono text-sm text-accent">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3 className="text-lg">{stage.name}</h3>
+                    <p className="mt-2 text-xs text-ink-faint">
+                      BO{stage.best_of} /{" "}
+                      {formatDayRange(stage.starts_on, stage.ends_on) ??
+                        "Даты уточняются"}
+                    </p>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li>
+                <EmptyState title="Этапы ещё не объявлены" />
+              </li>
+            )}
+          </ol>
+        </Card>
+      </div>
+      {tournament.telegram_url ? (
+        <section className="mt-12 flex flex-wrap items-center justify-between gap-6 border-t border-edge py-8">
+          <div>
+            <p className="eyebrow mb-3">Игра продолжается за пределами сервера</p>
+            <h2 className="section-title">Оставайся на связи.</h2>
+          </div>
+          <ButtonLink href={tournament.telegram_url} variant="secondary" external>
+            Наш Telegram ↗
+          </ButtonLink>
+        </section>
+      ) : null}
     </Container>
   );
 }

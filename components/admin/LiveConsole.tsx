@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import { IconSubmit } from "@/components/ui/Form";
 import { MatchStatusBadge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { recordGameWinnerAction, undoLastGameAction } from "@/lib/actions/games";
-import { setMatchStatusAction } from "@/lib/actions/matches";
+import { MatchStatusForm } from "@/components/admin/MatchStatusForm";
 import { formatDateTime } from "@/lib/format/date";
 import type { MatchDetails } from "@/lib/types/database";
 
@@ -13,6 +14,24 @@ import type { MatchDetails } from "@/lib/types/database";
  * The screen an organiser actually holds during a tournament: one tap per map
  * result, undo next to it, everything reachable with a thumb.
  */
+function WinnerSubmit({ label, score }: { label: string; score: number }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex h-full min-h-48 w-full flex-col items-center justify-center gap-4 rounded-card border border-edge bg-panel px-3 py-7 text-center transition hover:border-accent active:scale-[0.98] disabled:cursor-wait disabled:opacity-50 sm:min-h-56 sm:px-6"
+    >
+      <span className="text-6xl font-normal tracking-tight tabular-nums text-accent sm:text-7xl">
+        {score}
+      </span>
+      <span className="break-words text-base">{label}</span>
+      <span className="text-xs leading-relaxed text-ink-faint">
+        {pending ? "Записываем результат…" : "Выиграл карту"}
+      </span>
+    </button>
+  );
+}
 function WinnerButton({
   matchId,
   teamId,
@@ -25,21 +44,10 @@ function WinnerButton({
   score: number;
 }) {
   return (
-    <form action={recordGameWinnerAction} className="flex-1">
+    <form action={recordGameWinnerAction} className="min-w-0 flex-1">
       <input type="hidden" name="match_id" value={matchId} />
       <input type="hidden" name="winner_id" value={teamId} />
-      <button
-        type="submit"
-        className="flex w-full flex-col items-center gap-1 rounded-card border border-accent/30 bg-accent-soft px-4 py-5 text-center transition active:scale-[0.98]"
-      >
-        <span className="text-3xl font-extrabold tabular-nums text-accent">
-          {score}
-        </span>
-        <span className="line-clamp-2 text-sm font-medium">{label}</span>
-        <span className="text-[11px] uppercase tracking-wide text-ink-faint">
-          выиграл карту
-        </span>
-      </button>
+      <WinnerSubmit label={label} score={score} />
     </form>
   );
 }
@@ -48,7 +56,9 @@ export function LiveMatchCard({
   match,
   timeZone,
   adminHref,
+  showDraft = true,
 }: {
+  showDraft?: boolean;
   match: MatchDetails;
   timeZone: string;
   adminHref: string;
@@ -109,9 +119,9 @@ export function LiveMatchCard({
 
           <Link
             href={adminHref}
-            className="rounded-control border border-edge bg-panel px-3 py-1.5 text-sm text-ink-muted hover:text-ink"
+            className="inline-flex min-h-11 items-center rounded-pill border border-edge px-4 py-2 text-sm text-ink-muted hover:text-ink"
           >
-            Драфт и детали
+            {showDraft ? "Драфт и детали" : "Карты и детали"}
           </Link>
         </div>
       </div>
@@ -129,7 +139,7 @@ export function StartMatchCard({
   adminHref: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-edge bg-surface-sunken/60 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-edge py-6">
       <div className="min-w-0">
         <p className="truncate font-medium">
           {match.team1_name ?? match.team1_source ?? "TBD"}
@@ -146,15 +156,15 @@ export function StartMatchCard({
       <div className="flex items-center gap-2">
         <Link
           href={adminHref}
-          className="rounded-control border border-edge bg-panel px-3 py-1.5 text-sm text-ink-muted hover:text-ink"
+          className="inline-flex min-h-11 items-center rounded-pill border border-edge px-4 py-2 text-sm text-ink-muted hover:text-ink"
         >
           Открыть
         </Link>
-        <form action={setMatchStatusAction}>
-          <input type="hidden" name="match_id" value={match.id} />
-          <input type="hidden" name="status" value="live" />
-          <IconSubmit title="Начать матч">▶ Начать</IconSubmit>
-        </form>
+        {match.team1_id && match.team2_id ? (
+          <MatchStatusForm matchId={match.id} status="live" label="Начать матч">
+            ▶ Начать
+          </MatchStatusForm>
+        ) : null}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 const control =
-  "w-full rounded-control border border-edge bg-surface-sunken px-3.5 py-2.5 text-ink outline-none transition placeholder:text-ink-faint focus:border-accent/60";
+  "min-h-12 w-full rounded-control border border-edge bg-transparent px-4 py-3 text-ink outline-none transition placeholder:text-ink-faint focus:border-accent/60";
 
 export function Field({
   label,
@@ -21,13 +21,10 @@ export function Field({
 }) {
   return (
     <div className={className}>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1.5 block text-sm font-medium text-ink-muted"
-      >
-        {label}
+      <label htmlFor={htmlFor} className="block">
+        <span className="mb-2 block text-sm font-normal text-ink-muted">{label}</span>
+        {children}
       </label>
-      {children}
       {hint ? <p className="mt-1.5 text-xs text-ink-faint">{hint}</p> : null}
       {error?.length ? (
         <p className="mt-1.5 text-xs text-live">{error.join(". ")}</p>

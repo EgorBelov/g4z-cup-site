@@ -7,11 +7,11 @@ import { idle } from "@/lib/actions/state";
 import {
   deleteMatchAction,
   saveMatchAction,
-  setMatchStatusAction,
   shiftScheduleAction,
 } from "@/lib/actions/matches";
 import { toDateTimeLocal } from "@/lib/format/date";
 import type { Group, MatchDetails, Stage, Team } from "@/lib/types/database";
+import { MatchStatusForm } from "@/components/admin/MatchStatusForm";
 
 export function MatchForm({
   tournamentId,
@@ -152,8 +152,16 @@ export function MatchForm({
 }
 
 export function StatusButtons({ match }: { match: MatchDetails }) {
+  if (match.status === "finished") {
+    return (
+      <p className="text-sm text-ink-faint">
+        Результат серии считается по картам. Для исправления измените или отмените
+        результат карты ниже.
+      </p>
+    );
+  }
   const options: {
-    status: string;
+    status: "scheduled" | "live" | "cancelled";
     label: string;
     variant: "secondary" | "live" | "danger";
   }[] = [
@@ -167,16 +175,13 @@ export function StatusButtons({ match }: { match: MatchDetails }) {
       {options
         .filter((option) => option.status !== match.status)
         .map((option) => (
-          <form key={option.status} action={setMatchStatusAction}>
-            <input type="hidden" name="match_id" value={match.id} />
-            <input type="hidden" name="status" value={option.status} />
-            <IconSubmit
-              title={option.label}
-              variant={option.variant === "live" ? "secondary" : option.variant}
-            >
-              {option.label}
-            </IconSubmit>
-          </form>
+          <MatchStatusForm
+            key={option.status}
+            matchId={match.id}
+            status={option.status}
+            label={option.label}
+            variant={option.variant === "live" ? "secondary" : option.variant}
+          />
         ))}
     </div>
   );

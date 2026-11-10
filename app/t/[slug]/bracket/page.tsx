@@ -44,8 +44,8 @@ export default async function BracketPage({ params }: Props) {
     <Container className="py-8 sm:py-12">
       <PageHeader
         eyebrow={tournament.name}
-        title="Плей-офф"
-        description="Сетка строится по связям матчей: победитель попадает в следующий матч сам."
+        title="Ближе к кубку."
+        description="Плей-офф. Сетка строится по связям матчей: победитель попадает в следующий матч сам."
         actions={window ? <Badge tone="info">{window}</Badge> : null}
       />
 

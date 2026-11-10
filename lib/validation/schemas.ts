@@ -249,7 +249,7 @@ export const matchIdSchema = z.object({
 
 export const matchStatusSchema = z.object({
   match_id: z.coerce.number().int().positive(),
-  status: z.enum(["scheduled", "live", "finished", "cancelled"]),
+  status: z.enum(["scheduled", "live", "cancelled"]),
 });
 
 export const shiftScheduleSchema = z.object({

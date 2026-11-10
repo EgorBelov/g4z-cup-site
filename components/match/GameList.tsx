@@ -66,7 +66,9 @@ export function GameList({
   games,
   picks,
   bans,
+  showDraft = true,
 }: {
+  showDraft?: boolean;
   match: MatchDetails;
   games: Game[];
   picks: GamePick[];
@@ -76,7 +78,7 @@ export function GameList({
     return (
       <EmptyState
         title="Карты ещё не добавлены"
-        hint="Как только матч начнётся, здесь появятся счёт по картам, драфт и длительность."
+        hint="Здесь появятся результаты и подробности сыгранных карт."
       />
     );
   }
@@ -94,7 +96,7 @@ export function GameList({
               <h3 className="font-bold">Карта {game.game_number}</h3>
               <div className="flex flex-wrap items-center gap-2">
                 {duration ? <Badge tone="neutral">{duration}</Badge> : null}
-                {game.radiant_team_id ? (
+                {showDraft && game.radiant_team_id ? (
                   <Badge tone="info">
                     Radiant:{" "}
                     {game.radiant_team_id === match.team1_id
@@ -102,7 +104,7 @@ export function GameList({
                       : (match.team2_name ?? "TBD")}
                   </Badge>
                 ) : null}
-                {game.dota_match_id ? (
+                {showDraft && game.dota_match_id ? (
                   <a
                     href={`https://www.dotabuff.com/matches/${game.dota_match_id}`}
                     target="_blank"
@@ -115,22 +117,29 @@ export function GameList({
               </div>
             </div>
 
-            <div className="flex flex-col gap-6 sm:flex-row">
-              <DraftColumn
-                teamName={match.team1_name ?? "Команда 1"}
-                picks={gamePicks.filter((pick) => pick.team_id === match.team1_id)}
-                bans={gameBans.filter((ban) => ban.team_id === match.team1_id)}
-                isWinner={game.winner_id === match.team1_id}
-              />
-              <div className="hidden w-px bg-edge sm:block" />
-              <DraftColumn
-                teamName={match.team2_name ?? "Команда 2"}
-                picks={gamePicks.filter((pick) => pick.team_id === match.team2_id)}
-                bans={gameBans.filter((ban) => ban.team_id === match.team2_id)}
-                isWinner={game.winner_id === match.team2_id}
-              />
-            </div>
-
+            {showDraft ? (
+              <div className="flex flex-col gap-6 sm:flex-row">
+                <DraftColumn
+                  teamName={match.team1_name ?? "Команда 1"}
+                  picks={gamePicks.filter((pick) => pick.team_id === match.team1_id)}
+                  bans={gameBans.filter((ban) => ban.team_id === match.team1_id)}
+                  isWinner={game.winner_id === match.team1_id}
+                />
+                <div className="hidden w-px bg-edge sm:block" />
+                <DraftColumn
+                  teamName={match.team2_name ?? "Команда 2"}
+                  picks={gamePicks.filter((pick) => pick.team_id === match.team2_id)}
+                  bans={gameBans.filter((ban) => ban.team_id === match.team2_id)}
+                  isWinner={game.winner_id === match.team2_id}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-ink-muted">
+                {game.winner_id
+                  ? `Победитель — ${game.winner_id === match.team1_id ? match.team1_name : match.team2_name}`
+                  : "Результат карты ещё не внесён"}
+              </p>
+            )}
             {game.notes ? (
               <p className="mt-4 text-sm text-ink-faint">{game.notes}</p>
             ) : null}

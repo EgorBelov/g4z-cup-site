@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { siteUrl } from "@/lib/env";
+import { MotionSettings } from "@/components/brand/MotionSettings";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     template: "%s — G4Z CUP",
   },
   description:
-    "Турниры G4Z CUP по Dota 2: расписание, группы, плей-офф, составы и архив прошлых сезонов.",
+    "G4Z CUP — игровое сообщество и турниры по Dota 2, CS2 и другим дисциплинам. Расписание, составы, результаты и история наших игр.",
   openGraph: {
     type: "website",
     siteName: "G4Z CUP",
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="ru" data-scroll-behavior="smooth">
       <body className="min-h-screen bg-surface text-ink">
+        <MotionSettings />
         {children}
         <Analytics />
         <SpeedInsights />

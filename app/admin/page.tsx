@@ -17,7 +17,7 @@ export default async function AdminDashboardPage() {
   return (
     <AdminShell
       title="Турниры"
-      subtitle="Один турнир помечен текущим — именно он открывается на главной"
+      subtitle="Текущий кубок выделяется на главной сообщества. Остальные турниры тоже остаются доступны."
       actions={
         <>
           <ButtonLink href="/admin/tournaments/new" size="sm">
@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
               <p className="text-xs uppercase tracking-[0.2em] text-accent">
                 текущий турнир
               </p>
-              <h2 className="mt-1 truncate text-2xl font-bold tracking-tight">
+              <h2 className="mt-1 truncate text-2xl font-normal tracking-tight">
                 {current.name}
               </h2>
               <p className="mt-1 text-sm text-ink-muted">
@@ -110,7 +110,7 @@ export default async function AdminDashboardPage() {
                         />
                         <button
                           type="submit"
-                          className="rounded-control border border-edge bg-panel px-3 py-1.5 text-xs text-ink-muted hover:text-ink"
+                          className="inline-flex min-h-11 items-center rounded-pill border border-edge px-4 py-2 text-sm text-ink-muted hover:text-ink"
                         >
                           Сделать текущим
                         </button>

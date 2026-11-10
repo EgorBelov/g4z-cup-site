@@ -4,3 +4,6 @@ playwright-report/
 test-results/
 package-lock.json
 *.sql
+
+# Original design exports; keep these reference files as supplied.
+work/figma-batch-*.html

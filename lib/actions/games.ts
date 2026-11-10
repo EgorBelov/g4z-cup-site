@@ -10,6 +10,7 @@ import {
   draftSchema,
   gameIdSchema,
   gameSchema,
+  matchIdSchema,
   quickWinnerSchema,
 } from "@/lib/validation/schemas";
 import { matchContext } from "@/lib/actions/matches";
@@ -31,10 +32,9 @@ async function nextGameNumber(matchId: number): Promise<number> {
 export async function addGameAction(formData: FormData): Promise<void> {
   await assertAdmin();
 
-  const matchId = Number(formData.get("match_id"));
-  if (!Number.isInteger(matchId) || matchId <= 0) {
-    throw new Error("Некорректный матч");
-  }
+  const parsed = parseForm(matchIdSchema, formData);
+  if (parsed.state) throw new Error(parsed.state.error ?? "Некорректный запрос");
+  const { match_id: matchId } = parsed.data;
 
   const tournament = await matchContext(matchId);
   const gameNumber = await nextGameNumber(matchId);
@@ -184,10 +184,9 @@ export async function recordGameWinnerAction(formData: FormData): Promise<void> 
 export async function undoLastGameAction(formData: FormData): Promise<void> {
   await assertAdmin();
 
-  const matchId = Number(formData.get("match_id"));
-  if (!Number.isInteger(matchId) || matchId <= 0) {
-    throw new Error("Некорректный матч");
-  }
+  const parsed = parseForm(matchIdSchema, formData);
+  if (parsed.state) throw new Error(parsed.state.error ?? "Некорректный запрос");
+  const { match_id: matchId } = parsed.data;
 
   const tournament = await matchContext(matchId);
   const client = writeClient();

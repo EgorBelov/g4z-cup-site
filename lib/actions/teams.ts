@@ -80,7 +80,7 @@ export async function saveTeamAction(
       payload: row,
     });
 
-    invalidate(tags.teams(slug), tags.matches(slug));
+    invalidate(tags.teams(slug), tags.matches(slug), tags.tournaments());
     redirect(`/admin/t/${slug}/teams/${input.team_id}`);
   }
 
@@ -97,7 +97,7 @@ export async function saveTeamAction(
     payload: row,
   });
 
-  invalidate(tags.teams(slug), tags.matches(slug));
+  invalidate(tags.teams(slug), tags.matches(slug), tags.tournaments());
   redirect(`/admin/t/${slug}/teams/${created}`);
 }
 
@@ -120,7 +120,7 @@ export async function deleteTeamAction(formData: FormData): Promise<void> {
     summary: "Команда удалена",
   });
 
-  invalidate(tags.teams(slug), tags.matches(slug));
+  invalidate(tags.teams(slug), tags.matches(slug), tags.tournaments());
   redirect(`/admin/t/${slug}/teams`);
 }
 

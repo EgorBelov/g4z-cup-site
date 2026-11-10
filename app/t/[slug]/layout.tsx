@@ -28,7 +28,9 @@ export default function TournamentLayout({
         ))}
       </Suspense>
 
-      <div className="flex-1">{children}</div>
+      <main id="main-content" className="flex-1">
+        {children}
+      </main>
       <SiteFooter />
     </div>
   );
@@ -54,6 +56,7 @@ async function TournamentChrome({ slug }: { slug: string }) {
   return (
     <>
       <SiteHeader
+        titleHref={base}
         title={tournament.name}
         subtitle={tournament.game}
         badge={tournament.edition ? String(tournament.edition) : "G4Z"}

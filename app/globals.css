@@ -1,52 +1,41 @@
 @import "tailwindcss";
 
-/*
-  Design tokens. Tailwind 4 reads theme config from CSS, so this file is the
-  single source of truth for colour and spacing — no more repeating
-  `border-white/10 bg-white/5` in three hundred places.
-*/
+/* «Орбита». All shared colours and radii live here. */
 @theme {
-  --color-surface: #05070f;
-  --color-surface-raised: #0b1120;
-  --color-surface-sunken: #03040a;
-  --color-panel: oklch(1 0 0 / 5%);
-  --color-panel-strong: oklch(1 0 0 / 8%);
-  --color-edge: oklch(1 0 0 / 10%);
-  --color-edge-strong: oklch(1 0 0 / 18%);
-
-  --color-ink: #f8fafc;
-  --color-ink-muted: oklch(1 0 0 / 65%);
-  --color-ink-faint: oklch(1 0 0 / 45%);
-
-  --color-accent: #10b981;
-  --color-accent-soft: oklch(0.72 0.15 162 / 15%);
-  --color-live: #f43f5e;
-  --color-live-soft: oklch(0.65 0.22 15 / 15%);
-  --color-info: #38bdf8;
-  --color-info-soft: oklch(0.75 0.13 232 / 15%);
-  --color-warn: #fbbf24;
-  --color-warn-soft: oklch(0.82 0.16 85 / 15%);
-
-  --color-gold: #fbbf24;
-  --color-silver: #cbd5e1;
-  --color-bronze: #d97706;
-
+  --color-surface: #10110f;
+  --color-surface-raised: #191c16;
+  --color-surface-sunken: #0c0e0b;
+  --color-panel: #191c16;
+  --color-panel-strong: #22261d;
+  --color-edge: #2d302a;
+  --color-edge-strong: #505548;
+  --color-ink: #e9e9df;
+  --color-ink-muted: #a5aa9c;
+  --color-ink-faint: #969a8e;
+  --color-accent: #d0df97;
+  --color-accent-soft: #242b1c;
+  --color-live: #fa718a;
+  --color-live-soft: #301b20;
+  --color-info: #b8c9ae;
+  --color-info-soft: #20291d;
+  --color-warn: #e5c984;
+  --color-warn-soft: #302a1d;
+  --color-gold: #d0df97;
+  --color-silver: #c8cabe;
+  --color-bronze: #c5aa85;
   --radius-card: 1.25rem;
   --radius-control: 0.875rem;
-
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+  --radius-pill: 999px;
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
-
 :root {
   color-scheme: dark;
 }
-
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 7rem;
 }
-
 body {
   margin: 0;
   background-color: var(--color-surface);
@@ -54,35 +43,144 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
-
 * {
   box-sizing: border-box;
 }
-
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }
-
-/* Visible keyboard focus everywhere, since the admin panel is used in a hurry. */
+button:not(:disabled),
+summary {
+  cursor: pointer;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+::selection {
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
 :focus-visible {
   outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
   outline-offset: 2px;
 }
-
+@layer components {
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.8;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+  .page-title {
+    margin-top: 1rem;
+    font-size: clamp(2.75rem, 5vw, 4.25rem);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.055em;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+  .hero-title {
+    font-size: clamp(5.5rem, 11.8vw, 10.625rem);
+    line-height: 0.82;
+    letter-spacing: -0.085em;
+    font-weight: 400;
+  }
+  .section-title {
+    font-size: clamp(1.45rem, 2.2vw, 1.75rem);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.2;
+  }
+  .nav-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    color: var(--color-ink-faint);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    transition:
+      color 150ms,
+      border-color 150ms;
+  }
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: var(--color-ink);
+  }
+  .nav-link[aria-current="page"] {
+    border-bottom-color: var(--color-accent);
+  }
+  .orbit-dot {
+    offset-path: path(
+      "M 596 133 C 669 138 585 296 371 411 C 151 526 9 535 23 474 C 40 399 230 246 425 171 C 503 141 562 122 596 133 Z"
+    );
+    offset-distance: 0%;
+    animation: orbit 18s linear infinite;
+    animation-play-state: paused;
+  }
+  html[data-motion="on"] .orbit-dot {
+    animation-play-state: running;
+  }
+  .admin-shell .page-title {
+    font-size: clamp(2.25rem, 4vw, 3.125rem);
+  }
+  .mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+  .mobile-menu[open] .menu-lines {
+    transform: rotate(90deg);
+  }
+  .skip-link {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+    transform: translateY(-200%);
+  }
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+}
+@keyframes orbit {
+  to {
+    offset-distance: 100%;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation: none !important;
     transition-duration: 0.01ms !important;
   }
 }
-
 @utility scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
-
   &::-webkit-scrollbar {
     display: none;
   }

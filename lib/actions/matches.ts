@@ -30,6 +30,8 @@ async function loadTournament(id: number): Promise<TournamentRef> {
 }
 
 export async function matchContext(matchId: number): Promise<TournamentRef> {
+  await assertAdmin();
+
   const { data, error } = await writeClient()
     .from("matches")
     .select("tournament_id")
@@ -111,7 +113,7 @@ export async function saveMatchAction(
     payload: row,
   });
 
-  invalidate(...matchWriteTags(tournament.slug, created));
+  invalidate(...matchWriteTags(tournament.slug, created), tags.tournaments());
   redirect(`/admin/t/${tournament.slug}/matches/${created}`);
 }
 
@@ -136,32 +138,30 @@ export async function deleteMatchAction(formData: FormData): Promise<void> {
     summary: `Матч #${parsed.data.id} удалён`,
   });
 
-  invalidate(...matchWriteTags(tournament.slug, parsed.data.id));
+  invalidate(...matchWriteTags(tournament.slug, parsed.data.id), tags.tournaments());
   redirect(`/admin/t/${tournament.slug}/matches`);
 }
 
 /**
- * Manual status override. Score and the finished flag are still derived from
- * games; this only starts, cancels or reopens a match.
+ * The database owns lifecycle transitions as well as the derived series result.
  */
-export async function setMatchStatusAction(formData: FormData): Promise<void> {
+export async function setMatchStatusAction(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   await assertAdmin();
 
   const parsed = parseForm(matchStatusSchema, formData);
-  if (parsed.state) throw new Error(parsed.state.error ?? "Некорректный запрос");
+  if (parsed.state) return parsed.state;
 
   const { match_id: matchId, status } = parsed.data;
   const tournament = await matchContext(matchId);
 
-  const patch: Record<string, unknown> = { status };
-  if (status === "live") patch.started_at = new Date().toISOString();
-  if (status === "scheduled") {
-    patch.started_at = null;
-    patch.finished_at = null;
-  }
-
-  const { error } = await writeClient().from("matches").update(patch).eq("id", matchId);
-  if (error) throw new Error(error.message);
+  const { error } = await writeClient().rpc("set_match_lifecycle", {
+    p_match_id: matchId,
+    p_status: status,
+  });
+  if (error) return fail(error.message);
 
   await audit({
     action: "match.status",
@@ -171,6 +171,7 @@ export async function setMatchStatusAction(formData: FormData): Promise<void> {
   });
 
   invalidate(...matchWriteTags(tournament.slug, matchId));
+  return done("Матч обновлён");
 }
 
 /**

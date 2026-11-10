@@ -32,7 +32,15 @@ export function AddGameButton({ matchId }: { matchId: number }) {
   );
 }
 
-function GameSettings({ match, game }: { match: MatchDetails; game: Game }) {
+function GameSettings({
+  match,
+  game,
+  showDraft,
+}: {
+  match: MatchDetails;
+  game: Game;
+  showDraft: boolean;
+}) {
   const [state, action] = useActionState(saveGameAction, idle);
 
   const teamOptions = [
@@ -57,7 +65,7 @@ function GameSettings({ match, game }: { match: MatchDetails; game: Game }) {
           </Select>
         </Field>
 
-        <Field label="Radiant">
+        <Field label="Radiant" className={showDraft ? undefined : "hidden"}>
           <Select name="radiant_team_id" defaultValue={game.radiant_team_id ?? ""}>
             <option value="">—</option>
             {teamOptions.map((option) => (
@@ -79,7 +87,7 @@ function GameSettings({ match, game }: { match: MatchDetails; game: Game }) {
           />
         </Field>
 
-        <Field label="ID матча в Dota">
+        <Field label="ID матча в Dota" className={showDraft ? undefined : "hidden"}>
           <Input
             name="dota_match_id"
             type="number"
@@ -236,7 +244,9 @@ export function GameEditor({
   bans,
   rosters,
   heroes,
+  showDraft = true,
 }: {
+  showDraft?: boolean;
   match: MatchDetails;
   games: Game[];
   picks: GamePick[];
@@ -283,16 +293,18 @@ export function GameEditor({
           />
 
           <div className="space-y-6 p-5">
-            <GameSettings match={match} game={game} />
-            <div className="border-t border-edge pt-5">
-              <DraftEditor
-                match={match}
-                game={game}
-                picks={picks.filter((pick) => pick.game_id === game.id)}
-                bans={bans.filter((ban) => ban.game_id === game.id)}
-                rosters={rosters}
-              />
-            </div>
+            <GameSettings match={match} game={game} showDraft={showDraft} />
+            {showDraft ? (
+              <div className="border-t border-edge pt-5">
+                <DraftEditor
+                  match={match}
+                  game={game}
+                  picks={picks.filter((pick) => pick.game_id === game.id)}
+                  bans={bans.filter((ban) => ban.game_id === game.id)}
+                  rosters={rosters}
+                />
+              </div>
+            ) : null}
           </div>
         </Card>
       ))}

@@ -14,16 +14,12 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-end justify-between gap-5">
       <div className="min-w-0">
-        {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            {eyebrow}
-          </p>
-        ) : null}
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-          {title}
-        </h1>
+        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+        <h1 className="page-title">{title}</h1>
         {description ? (
-          <p className="mt-3 max-w-2xl text-ink-muted">{description}</p>
+          <div className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+            {description}
+          </div>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -39,7 +35,9 @@ export function Container({
   className?: string;
 }) {
   return (
-    <div className={`mx-auto w-full max-w-6xl px-4 sm:px-6 ${className ?? ""}`}>
+    <div
+      className={`mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-16 ${className ?? ""}`}
+    >
       {children}
     </div>
   );

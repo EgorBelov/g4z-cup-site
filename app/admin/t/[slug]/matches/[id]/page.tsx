@@ -1,3 +1,4 @@
+import { isDota } from "@/lib/format/discipline";
 import { notFound } from "next/navigation";
 import { AdminShell, tournamentTabs } from "@/components/admin/AdminShell";
 import {
@@ -41,7 +42,7 @@ export default async function AdminMatchPage({ params }: Props) {
     adminStages(tournament.id),
     adminGroups(tournament.id),
     adminTeams(tournament.id),
-    loadHeroes(),
+    isDota(tournament.game) ? loadHeroes() : Promise.resolve([]),
   ]);
 
   const { match, games, picks, bans, rosters } = data;
@@ -70,7 +71,7 @@ export default async function AdminMatchPage({ params }: Props) {
             <p className="text-xs uppercase tracking-wide text-ink-faint">
               Счёт серии (считается по картам)
             </p>
-            <p className="mt-1 text-3xl font-extrabold tabular-nums">
+            <p className="mt-1 text-3xl font-normal tabular-nums">
               {match.score1} : {match.score2}
             </p>
           </div>
@@ -80,12 +81,13 @@ export default async function AdminMatchPage({ params }: Props) {
 
       <Card>
         <CardHeader
-          title="Карты и драфт"
+          title={isDota(tournament.game) ? "Карты и драфт" : "Карты матча"}
           hint="Счёт, победитель серии и продвижение по сетке пересчитываются автоматически"
         />
         <div className="p-5">
           <GameEditor
             match={match}
+            showDraft={isDota(tournament.game)}
             games={games}
             picks={picks}
             bans={bans}

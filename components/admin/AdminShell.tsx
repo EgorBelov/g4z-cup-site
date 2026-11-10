@@ -1,15 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/ui/PageHeader";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { buttonClass } from "@/components/ui/Button";
 import { logoutAction } from "@/lib/actions/auth";
-import { cn } from "@/lib/utils/cn";
 
 export type AdminTab = { href: string; label: string };
 
-/**
- * Admin chrome. Navigation is a plain server-rendered list so the panel works
- * on a phone with a flaky connection — which is where it is actually used.
- */
+/** Plain server-rendered links keep the console usable on a flaky connection. */
 export function AdminShell({
   title,
   subtitle,
@@ -28,57 +27,44 @@ export function AdminShell({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-edge bg-surface/90 backdrop-blur-xl">
+    <div className="admin-shell flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b border-edge bg-surface/95 backdrop-blur-xl">
         <Container>
-          <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-            <div className="min-w-0">
-              <Link
-                href="/admin"
-                className="text-[11px] uppercase tracking-[0.2em] text-accent"
-              >
-                Админка G4Z CUP
-              </Link>
-              <h1 className="truncate text-lg font-bold tracking-tight">{title}</h1>
-              {subtitle ? (
-                <p className="truncate text-xs text-ink-faint">{subtitle}</p>
-              ) : null}
-            </div>
-
+          <div className="flex flex-wrap items-center justify-between gap-3 py-4 sm:min-h-[88px]">
+            <Link href="/admin" className="flex items-center gap-3">
+              <BrandMark className="size-11" />
+              <span className="text-xl font-bold tracking-[-0.06em]">G4Z CUP</span>
+              <span className="eyebrow ml-2 hidden sm:inline">Организаторам</span>
+            </Link>
             <div className="flex flex-wrap items-center gap-2">
-              {actions}
               {publicHref ? (
-                <Link
-                  href={publicHref}
-                  className="rounded-control border border-edge bg-panel px-3 py-1.5 text-sm text-ink-muted hover:text-ink"
-                >
-                  Открыть на сайте
+                <Link href={publicHref} className={buttonClass("secondary", "sm")}>
+                  На сайт ↗
                 </Link>
-              ) : null}
+              ) : (
+                <Link href="/" className={buttonClass("secondary", "sm")}>
+                  На сайт ↗
+                </Link>
+              )}
               <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="rounded-control border border-edge bg-panel px-3 py-1.5 text-sm text-ink-muted hover:text-ink"
-                >
+                <button type="submit" className={buttonClass("ghost", "sm")}>
                   Выйти
                 </button>
               </form>
             </div>
           </div>
-
-          {tabs && tabs.length > 0 ? (
-            <nav className="scrollbar-none -mx-1 overflow-x-auto pb-3">
-              <div className="flex min-w-max gap-2 px-1">
+          {tabs?.length ? (
+            <nav
+              aria-label="Управление турниром"
+              className="scrollbar-none overflow-x-auto"
+            >
+              <div className="flex min-w-max gap-6">
                 {tabs.map((tab) => (
                   <Link
                     key={tab.href}
                     href={tab.href}
-                    className={cn(
-                      "whitespace-nowrap rounded-control border px-3 py-1.5 text-sm font-medium transition",
-                      tab.href === activeHref
-                        ? "border-accent/30 bg-accent-soft text-accent"
-                        : "border-edge bg-panel text-ink-muted hover:text-ink",
-                    )}
+                    aria-current={tab.href === activeHref ? "page" : undefined}
+                    className="nav-link min-h-12"
                   >
                     {tab.label}
                   </Link>
@@ -88,10 +74,24 @@ export function AdminShell({
           ) : null}
         </Container>
       </header>
-
-      <main className="flex-1">
-        <Container className="py-6 sm:py-8">{children}</Container>
+      <main id="main-content" className="flex-1">
+        <Container className="py-8 sm:py-12">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+            <div className="min-w-0">
+              <p className="eyebrow">Панель организатора</p>
+              <h1 className="page-title">{title}</h1>
+              {subtitle ? (
+                <p className="mt-4 max-w-2xl break-words text-sm leading-relaxed text-ink-faint">
+                  {subtitle}
+                </p>
+              ) : null}
+            </div>
+            {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          </div>
+          {children}
+        </Container>
       </main>
+      <SiteFooter />
     </div>
   );
 }

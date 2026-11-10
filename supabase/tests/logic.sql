@@ -35,6 +35,8 @@ declare
   rr_stage  bigint;
   group_match bigint;
   bo2_match bigint;
+  lifecycle_match bigint;
+  requested_status text;
 begin
   -- Isolated fixture, so the seed data is left alone.
   insert into tournaments (slug, name, status)
@@ -225,6 +227,84 @@ begin
   exception when check_violation then
     raise notice 'ok — a stage window cannot end before it starts';
   end;
+
+  -- Lifecycle commands cannot override a series outcome or skip map validation.
+  insert into matches (tournament_id, stage_id, round, position, best_of)
+  values (t_id, stage_id, 3, 1, 3) returning id into lifecycle_match;
+
+  begin
+    perform set_match_lifecycle(lifecycle_match, 'live');
+    raise exception 'FAIL: a match without opponents was started';
+  exception when check_violation then
+    raise notice 'ok — start requires both teams';
+  end;
+
+  update matches set team1_id = a_id, team2_id = b_id where id = lifecycle_match;
+  perform set_match_lifecycle(lifecycle_match, 'live');
+  perform assert_equals('live'::match_status,
+    (select status from matches where id = lifecycle_match), 'explicit start is live');
+  perform assert_equals(true,
+    (select started_at is not null from matches where id = lifecycle_match),
+    'explicit start has a timestamp');
+  perform assert_equals(0,
+    (select score1 + score2 from matches where id = lifecycle_match),
+    'explicit start does not invent maps');
+
+  perform set_match_lifecycle(lifecycle_match, 'scheduled');
+  perform assert_equals('scheduled'::match_status,
+    (select status from matches where id = lifecycle_match), 'unplayed start can be reset');
+  perform assert_equals(null::timestamptz,
+    (select started_at from matches where id = lifecycle_match), 'reset clears start time');
+
+  insert into games (match_id, game_number, winner_id)
+    values (lifecycle_match, 1, a_id);
+  begin
+    perform set_match_lifecycle(lifecycle_match, 'scheduled');
+    raise exception 'FAIL: a played match was returned to the schedule';
+  exception when check_violation then
+    raise notice 'ok — maps must be removed before resetting';
+  end;
+
+  perform set_match_lifecycle(lifecycle_match, 'cancelled');
+  perform assert_equals('cancelled'::match_status,
+    (select status from matches where id = lifecycle_match), 'unfinished match can be cancelled');
+  perform assert_equals(1,
+    (select score1 from matches where id = lifecycle_match), 'cancellation keeps the map score');
+  perform set_match_lifecycle(lifecycle_match, 'live');
+  perform assert_equals('live'::match_status,
+    (select status from matches where id = lifecycle_match), 'cancelled match can resume');
+
+  insert into games (match_id, game_number, winner_id)
+    values (lifecycle_match, 2, a_id);
+  foreach requested_status in array array['scheduled', 'live', 'cancelled'] loop
+    begin
+      perform set_match_lifecycle(lifecycle_match, requested_status);
+      raise exception 'FAIL: finished series was overridden with %', requested_status;
+    exception when check_violation then
+      raise notice 'ok — finished series rejects % override', requested_status;
+    end;
+  end loop;
+  perform assert_equals(a_id,
+    (select winner_id from matches where id = lifecycle_match), 'lifecycle keeps derived winner');
+
+  begin
+    perform set_match_lifecycle(lifecycle_match, 'finished');
+    raise exception 'FAIL: lifecycle accepted a manual finish';
+  exception when invalid_parameter_value then
+    raise notice 'ok — finishing requires map results';
+  end;
+
+  perform assert_equals(false,
+    has_function_privilege('anon', 'public.set_match_lifecycle(bigint,text)', 'EXECUTE'),
+    'anonymous users cannot change lifecycle');
+  perform assert_equals(false,
+    has_function_privilege('authenticated', 'public.set_match_lifecycle(bigint,text)', 'EXECUTE'),
+    'player sessions cannot change lifecycle');
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    perform assert_equals(true,
+      has_function_privilege('service_role', 'public.set_match_lifecycle(bigint,text)', 'EXECUTE'),
+      'service role can execute lifecycle commands');
+  end if;
 
   -- Only one tournament can be current.
   begin

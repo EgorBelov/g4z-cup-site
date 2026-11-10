@@ -111,6 +111,37 @@ for (const relation of ["audit_log", "login_attempts"]) {
   }
 }
 
+// A null match id cannot select or mutate a row. This probes the installed
+// lifecycle function and its grants without starting/cancelling a real match.
+if (env.SUPABASE_SERVICE_ROLE_KEY) {
+  const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+  const input = { p_match_id: null, p_status: "scheduled" };
+  const { error } = await service.rpc("set_match_lifecycle", input);
+  if (error?.code !== "P0002") {
+    problems.push({
+      relation: "set_match_lifecycle",
+      migration: "0009_match_lifecycle.sql",
+      message: error?.message ?? "ожидался отказ для отсутствующего матча",
+    });
+    console.log(`✗ set_match_lifecycle: ${error?.message ?? "неожиданный ответ"}`);
+  } else {
+    console.log("✓ set_match_lifecycle доступна серверу");
+  }
+  const { error: publicError } = await client.rpc("set_match_lifecycle", input);
+  if (!["42501", "PGRST202"].includes(publicError?.code ?? "")) {
+    problems.push({
+      relation: "set_match_lifecycle privileges",
+      migration: "0009_match_lifecycle.sql",
+      message: "не подтверждён запрет вызова публичным ключом",
+    });
+    console.log("✗ set_match_lifecycle: не подтверждён запрет публичного вызова");
+  } else {
+    console.log("✓ set_match_lifecycle закрыта для публичного ключа");
+  }
+}
+
 const { data: tournaments, error: listError } = await client
   .from("tournaments")
   .select("slug, status, is_current")

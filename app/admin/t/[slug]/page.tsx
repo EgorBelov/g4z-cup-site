@@ -48,10 +48,7 @@ export default async function AdminTournamentPage({ params }: Props) {
             value: `${finished}${live ? ` · ${live} в игре` : ""}`,
           },
         ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-card border border-edge bg-panel p-4"
-          >
+          <div key={stat.label} className="border-y border-edge px-1 py-6">
             <p className="text-xs uppercase tracking-wide text-ink-faint">
               {stat.label}
             </p>

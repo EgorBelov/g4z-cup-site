@@ -488,7 +488,6 @@ export async function generateStageAction(
     team2_source:
       spec.slot2?.kind === "seed" ? null : slotLabel(spec.slot2, specs, entrantNames),
     scheduled_at: times[index] ?? null,
-    status: "scheduled" as const,
   }));
 
   const inserted = await client
@@ -666,7 +665,6 @@ export async function generateSwissRoundAction(
     team1_id: pair.team1,
     team2_id: pair.team2,
     scheduled_at: scheduledAt,
-    status: "scheduled" as const,
   }));
 
   const { error } = await client.from("matches").insert(rowsToInsert);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
+import { isDota } from "@/lib/format/discipline";
 import { TeamCard } from "@/components/team/TeamCard";
 import { getRosters, getTeams, getTournament } from "@/lib/queries/public";
 
@@ -40,8 +41,8 @@ export default async function TeamsPage({ params }: Props) {
     <Container className="py-8 sm:py-12">
       <PageHeader
         eyebrow={tournament.name}
-        title="Команды"
-        description={`Участников: ${teams.length}.`}
+        title="Свои люди."
+        description={`Команды турнира / ${tournament.game} / участников: ${teams.length}.`}
       />
 
       {teams.length === 0 ? (
@@ -49,11 +50,12 @@ export default async function TeamsPage({ params }: Props) {
           <EmptyState title="Команды ещё не заявлены" />
         </div>
       ) : (
-        <ul className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-8 grid gap-x-10 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
           {teams.map((team) => (
             <li key={team.id} className="min-w-0">
               <TeamCard
                 team={team}
+                showMmr={isDota(tournament.game)}
                 groupName={team.group_id ? groupName.get(team.group_id) : null}
                 players={players.filter((player) => player.team_id === team.id)}
                 href={`/t/${slug}/teams/${team.slug}`}

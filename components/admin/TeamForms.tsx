@@ -85,7 +85,15 @@ export function TeamForm({
  * Roster editor. Rows are matched to existing players by position, so saving
  * updates in place instead of wiping and re-inserting the squad.
  */
-export function RosterForm({ teamId, players }: { teamId: number; players: Player[] }) {
+export function RosterForm({
+  teamId,
+  players,
+  showMmr = true,
+}: {
+  teamId: number;
+  players: Player[];
+  showMmr?: boolean;
+}) {
   const [state, action] = useActionState(saveRosterAction, idle);
   const captainIndex = players.findIndex((player) => player.is_captain);
 
@@ -121,6 +129,7 @@ export function RosterForm({ teamId, players }: { teamId: number; players: Playe
                 aria-label={`Роль игрока ${index + 1}`}
               />
               <Input
+                className={showMmr ? undefined : "hidden"}
                 name="mmr"
                 type="number"
                 min={0}

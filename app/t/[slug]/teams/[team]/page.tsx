@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { MatchRow } from "@/components/match/MatchRow";
+import { isDota } from "@/lib/format/discipline";
 import { averageMmr, formatMmr } from "@/lib/format/mmr";
 import { getTeamPage, getTournament } from "@/lib/queries/public";
 import { teamParams } from "@/lib/queries/params";
@@ -55,7 +56,9 @@ export default async function TeamPage({ params }: Props) {
       match.winner_id !== null &&
       match.winner_id !== team.id,
   ).length;
-  const average = averageMmr(players);
+  const main = players.filter((p) => !p.is_standin);
+  const rated = main.filter((p) => p.mmr !== null).length;
+  const average = isDota(tournament.game) ? averageMmr(main) : null;
 
   return (
     <Container className="py-8 sm:py-12">
@@ -74,13 +77,32 @@ export default async function TeamPage({ params }: Props) {
         }
       />
 
+      <dl className="mt-10 grid grid-cols-2 gap-6 border-y border-edge py-6 sm:grid-cols-4">
+        {[
+          { label: "Игроков", value: players.length },
+          { label: "Побед", value: wins },
+          { label: "Поражений", value: losses },
+          {
+            label: "Ничьих",
+            value: matches.filter(
+              (m) => m.status === "finished" && m.winner_id === null,
+            ).length,
+          },
+        ].map((stat) => (
+          <div key={stat.label}>
+            <dd className="mb-3 text-4xl tracking-tight tabular-nums">{stat.value}</dd>
+            <dt className="eyebrow">{stat.label}</dt>
+          </div>
+        ))}
+      </dl>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <Card>
           <CardHeader
             title="Состав"
             hint={
               average !== null
-                ? `Игроков: ${players.length} · средний MMR ${formatMmr(average)}`
+                ? `Игроков: ${players.length} · средний MMR ${formatMmr(average)} (${rated}/${main.length} основных)`
                 : `Игроков: ${players.length}`
             }
           />
@@ -90,18 +112,18 @@ export default async function TeamPage({ params }: Props) {
                 {players.map((player) => (
                   <li
                     key={player.id}
-                    className="flex items-center justify-between gap-3 rounded-control border border-edge bg-surface-sunken/60 px-4 py-3"
+                    className="flex items-center justify-between gap-3 border-t border-edge px-1 py-5"
                   >
                     <div className="min-w-0">
                       <p className="truncate font-medium">
                         {player.nickname}
                         {player.is_captain ? (
-                          <span className="ml-2 text-[10px] uppercase text-accent">
+                          <span className="ml-2 text-xs uppercase text-accent">
                             капитан
                           </span>
                         ) : null}
                         {player.is_standin ? (
-                          <span className="ml-2 text-[10px] uppercase text-warn">
+                          <span className="ml-2 text-xs uppercase text-warn">
                             стендин
                           </span>
                         ) : null}
@@ -113,12 +135,12 @@ export default async function TeamPage({ params }: Props) {
                       ) : null}
                     </div>
                     <span className="shrink-0 text-right text-xs text-ink-faint">
-                      {player.mmr !== null ? (
+                      {isDota(tournament.game) && player.mmr !== null ? (
                         <span className="block tabular-nums">
                           {formatMmr(player.mmr)} MMR
                         </span>
                       ) : null}
-                      {player.role ? (
+                      {isDota(tournament.game) && player.role ? (
                         <span className="block">{player.role}</span>
                       ) : null}
                     </span>
@@ -133,7 +155,7 @@ export default async function TeamPage({ params }: Props) {
 
         <Card>
           <CardHeader title="Матчи" hint={`Всего: ${matches.length}`} />
-          <div className="grid gap-3 p-5 sm:grid-cols-2">
+          <div className="px-5 pb-5">
             {matches.length > 0 ? (
               matches.map((match) => (
                 <MatchRow

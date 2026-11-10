@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/Button";
-import { Container } from "@/components/ui/PageHeader";
+import { isDota } from "@/lib/format/discipline";
+import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { ScoreBoard } from "@/components/match/ScoreBoard";
 import { GameList } from "@/components/match/GameList";
 import { getMatchPage, getTournament } from "@/lib/queries/public";
@@ -55,6 +56,13 @@ export default async function MatchPage({ params }: Props) {
 
   return (
     <Container className="py-8 sm:py-12">
+      <div className="mb-8">
+        <PageHeader
+          eyebrow={tournament.name}
+          title="В центре игры."
+          description={`${match.stage_name} / BO${match.best_of} / ${tournament.game}`}
+        />
+      </div>
       <div className="mb-6 flex flex-wrap gap-2">
         <ButtonLink href={`/t/${slug}/schedule`} variant="ghost" size="sm">
           ← Расписание
@@ -73,8 +81,16 @@ export default async function MatchPage({ params }: Props) {
       <ScoreBoard match={match} timeZone={tournament.time_zone} />
 
       <section className="mt-8">
-        <h2 className="mb-4 text-xl font-bold tracking-tight">Карты и драфт</h2>
-        <GameList match={match} games={games} picks={picks} bans={bans} />
+        <h2 className="section-title mb-6">
+          {isDota(tournament.game) ? "Карты и драфт" : "Карты матча"}
+        </h2>
+        <GameList
+          showDraft={isDota(tournament.game)}
+          match={match}
+          games={games}
+          picks={picks}
+          bans={bans}
+        />
       </section>
     </Container>
   );

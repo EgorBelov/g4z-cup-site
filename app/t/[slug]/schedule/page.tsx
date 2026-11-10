@@ -98,10 +98,11 @@ async function ScheduleView({ slug }: { slug: string }) {
                 title={<span className="capitalize">{day.label}</span>}
                 hint={`Матчей: ${day.matches.length}`}
               />
-              <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="px-5 pb-5">
                 {day.matches.map((match) => (
                   <MatchRow
                     key={match.id}
+                    layout="schedule"
                     match={match}
                     timeZone={tournament.time_zone}
                     href={`/t/${slug}/matches/${match.id}`}

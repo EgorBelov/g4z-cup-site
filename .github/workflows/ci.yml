@@ -51,7 +51,7 @@ jobs:
       - name: Create database and Supabase roles
         run: |
           psql -d postgres -c 'create database g4z;'
-          psql -c 'create role anon; create role authenticated;'
+          psql -c 'create role anon; create role authenticated; create role service_role bypassrls;'
 
       - name: Apply migrations
         run: |
@@ -90,20 +90,9 @@ jobs:
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
-      # No Supabase credentials in CI: the app degrades to empty content, which
-      # is exactly what the smoke tests assert against.
-      - name: Build
-        env:
-          AUTH_SECRET: "ci-only-secret-0123456789abcdef0123456789abcdef"
-          ADMIN_PASSWORD_HASH: "scrypt$32768$00112233445566778899aabbccddeeff$deadbeef"
-          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
-        run: npm run build
-
-      - name: Run Playwright
-        env:
-          AUTH_SECRET: "ci-only-secret-0123456789abcdef0123456789abcdef"
-          ADMIN_PASSWORD_HASH: "scrypt$32768$00112233445566778899aabbccddeeff$deadbeef"
-          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      # Playwright builds production code with local fixtures and disposable
+      # credentials. The suite cannot mutate a real Supabase project.
+      - name: Build and run Playwright
         run: npm run test:e2e
 
       - uses: actions/upload-artifact@v4

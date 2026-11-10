@@ -1,3 +1,4 @@
+import { isDota } from "@/lib/format/discipline";
 import { notFound } from "next/navigation";
 import { AdminShell, tournamentTabs } from "@/components/admin/AdminShell";
 import { LiveMatchCard, StartMatchCard } from "@/components/admin/LiveConsole";
@@ -19,8 +20,8 @@ export default async function AdminLivePage({ params }: Props) {
 
   return (
     <AdminShell
-      title="Ведение матча"
-      subtitle="Один тап на карту. Счёт, победитель серии и сетка обновятся сами"
+      title="Игра под контролем."
+      subtitle="Ведение матча. Нажмите на команду, выигравшую карту; последнее действие можно отменить."
       tabs={tournamentTabs(slug)}
       activeHref={`/admin/t/${slug}/live`}
       publicHref={`/t/${slug}`}
@@ -32,6 +33,7 @@ export default async function AdminLivePage({ params }: Props) {
           {live.map((match) => (
             <LiveMatchCard
               key={match.id}
+              showDraft={isDota(tournament.game)}
               match={match}
               timeZone={tournament.time_zone}
               adminHref={`/admin/t/${slug}/matches/${match.id}`}
@@ -41,7 +43,7 @@ export default async function AdminLivePage({ params }: Props) {
       ) : (
         <EmptyState
           title="Сейчас никто не играет"
-          hint="Нажмите «Начать» у ближайшего матча — он попадёт сюда и на главную страницу сайта."
+          hint="Нажмите «Начать» у ближайшего матча — он появится здесь и в обзоре турнира."
         />
       )}
 

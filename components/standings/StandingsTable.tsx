@@ -25,7 +25,7 @@ export function StandingsTable({
   // Phone-first column set. "Карты" is the only column that is pure detail —
   // `±` already summarises it — so it is the one that goes on a narrow screen,
   // which lets the rest of the table fit without sideways scrolling.
-  const cell = "px-1 py-3 sm:px-3";
+  const cell = "px-1 py-5 sm:px-3";
   const head = "px-1 py-2.5 font-medium sm:px-3";
 
   return (
@@ -56,16 +56,15 @@ export function StandingsTable({
                 key={row.team_id}
                 className={cn(
                   "border-t border-edge",
-                  advances && "bg-accent-soft/40",
-                  playsDecider && "bg-warn-soft/30",
-                  !advances && !playsDecider && "bg-surface-sunken/40",
+                  advances && "text-accent",
+                  playsDecider && "text-warn",
                 )}
               >
                 <td className={cn(cell, "font-semibold tabular-nums")}>{position}</td>
                 <td className={cell}>
                   <Link
                     href={`/t/${tournamentSlug}/teams/${row.team_slug}`}
-                    className="block max-w-[7.5rem] truncate font-medium hover:text-accent sm:max-w-none"
+                    className="block max-w-[7.5rem] break-words font-normal hover:text-accent sm:max-w-none"
                   >
                     {row.team_name}
                   </Link>

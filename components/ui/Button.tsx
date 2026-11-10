@@ -6,20 +6,21 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "live";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-control font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center gap-3 rounded-pill text-center font-medium leading-normal transition disabled:cursor-not-allowed disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-surface hover:bg-accent/85",
-  secondary: "border border-edge bg-panel text-ink hover:bg-panel-strong",
+  primary: "border border-ink bg-ink text-surface hover:border-accent hover:bg-accent",
+  secondary:
+    "border border-edge bg-transparent text-ink hover:border-edge-strong hover:bg-panel",
   ghost: "text-ink-muted hover:bg-panel hover:text-ink",
   danger: "border border-live/40 bg-live/10 text-live hover:bg-live/20",
-  live: "bg-live text-white hover:bg-live/85",
+  live: "border border-accent bg-accent text-surface hover:bg-accent/85",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2.5 text-sm",
-  lg: "px-5 py-3.5 text-base",
+  sm: "px-4 py-2 text-sm",
+  md: "px-5 py-3 text-sm",
+  lg: "px-6 py-3.5 text-base",
 };
 
 export function buttonClass(

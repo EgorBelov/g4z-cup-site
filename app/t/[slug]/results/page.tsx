@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { getResults, getTournament } from "@/lib/queries/public";
-import { cn } from "@/lib/utils/cn";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -19,12 +18,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const podium = [
-  "border-gold/40 bg-gold/10 text-gold",
-  "border-silver/40 bg-silver/10 text-silver",
-  "border-bronze/40 bg-bronze/10 text-bronze",
-];
-
 export default async function ResultsPage({ params }: Props) {
   const { slug } = await params;
   const tournament = await getTournament(slug);
@@ -37,7 +30,7 @@ export default async function ResultsPage({ params }: Props) {
     <Container className="py-8 sm:py-12">
       <PageHeader
         eyebrow={tournament.name}
-        title="Итоги турнира"
+        title="Последнее GG."
         description="Финальное распределение мест и индивидуальные награды."
       />
 
@@ -52,18 +45,15 @@ export default async function ResultsPage({ params }: Props) {
 
       {top3.length > 0 ? (
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
-          {top3.map((placement, index) => (
-            <div
-              key={placement.id}
-              className={cn(
-                "rounded-card border p-6",
-                podium[index] ?? "border-edge bg-panel",
-              )}
-            >
+          {top3.map((placement) => (
+            <div key={placement.id} className="border-t border-edge py-7">
               <p className="text-xs uppercase tracking-[0.2em] opacity-80">
                 {placement.place} место
               </p>
-              <p className="mt-3 text-2xl font-extrabold tracking-tight text-ink">
+              <p className="my-6 text-7xl font-normal tracking-[-0.06em] text-accent">
+                {String(placement.place).padStart(2, "0")}
+              </p>
+              <p className="mt-3 break-words text-2xl font-normal tracking-tight text-ink">
                 {placement.team_slug ? (
                   <Link
                     href={`/t/${slug}/teams/${placement.team_slug}`}
@@ -89,14 +79,11 @@ export default async function ResultsPage({ params }: Props) {
       {awards.length > 0 ? (
         <section className="mt-8 grid gap-4 sm:grid-cols-2">
           {awards.map((award) => (
-            <Card
-              key={award.id}
-              className="bg-gradient-to-br from-accent-soft via-panel to-info-soft p-6"
-            >
+            <Card key={award.id} className="py-7">
               <p className="text-xs uppercase tracking-[0.2em] text-accent">
                 {award.title}
               </p>
-              <p className="mt-3 text-2xl font-extrabold tracking-tight">
+              <p className="mt-3 text-2xl font-normal tracking-tight">
                 {award.nickname ?? "—"}
               </p>
               {award.team_label ? (
@@ -126,10 +113,7 @@ export default async function ResultsPage({ params }: Props) {
               </thead>
               <tbody>
                 {placements.map((placement) => (
-                  <tr
-                    key={placement.id}
-                    className="border-t border-edge bg-surface-sunken/40"
-                  >
+                  <tr key={placement.id} className="border-t border-edge">
                     <td className="px-2 py-3 font-semibold tabular-nums sm:px-3">
                       {placement.place}
                     </td>

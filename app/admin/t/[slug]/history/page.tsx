@@ -71,7 +71,7 @@ export default async function AdminHistoryPage({ params }: Props) {
         ].map((item) => (
           <li
             key={item.step}
-            className="flex items-center gap-3 rounded-card border border-edge bg-panel p-4"
+            className="flex items-center gap-3 border-y border-edge px-1 py-6"
           >
             <span
               className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold ${

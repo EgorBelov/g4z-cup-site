@@ -1,3 +1,4 @@
+import { isDota } from "@/lib/format/discipline";
 import { notFound } from "next/navigation";
 import { AdminShell, tournamentTabs } from "@/components/admin/AdminShell";
 import { DeleteTeamButton, RosterForm, TeamForm } from "@/components/admin/TeamForms";
@@ -57,7 +58,11 @@ export default async function AdminTeamPage({ params }: Props) {
             hint={`Заявлено игроков: ${data.players.length}`}
           />
           <div className="p-5">
-            <RosterForm teamId={data.team.id} players={data.players} />
+            <RosterForm
+              showMmr={isDota(tournament.game)}
+              teamId={data.team.id}
+              players={data.players}
+            />
           </div>
         </Card>
       </div>

@@ -60,8 +60,8 @@ export default async function GroupsPage({ params }: Props) {
     <Container className="py-8 sm:py-12">
       <PageHeader
         eyebrow={tournament.name}
-        title="Групповой этап"
-        description="Таблицы считаются из результатов матчей — вручную ничего не проставляется."
+        title="Кто идёт дальше?"
+        description="Групповой этап: результаты серий, очки и борьба за выход в плей-офф."
         actions={window ? <Badge tone="info">{window}</Badge> : null}
       />
 

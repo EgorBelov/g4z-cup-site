@@ -17,9 +17,7 @@ export function Card({
   as?: "div" | "section" | "article" | "li";
 }) {
   return (
-    <Tag className={cn("min-w-0 rounded-card border border-edge bg-panel", className)}>
-      {children}
-    </Tag>
+    <Tag className={cn("min-w-0 border-t border-edge", className)}>{children}</Tag>
   );
 }
 
@@ -33,9 +31,9 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-edge px-5 py-4">
+    <div className="flex flex-wrap items-start justify-between gap-4 px-5 pb-5 pt-7">
       <div className="min-w-0">
-        <h2 className="text-lg font-bold tracking-tight">{title}</h2>
+        <h2 className="section-title">{title}</h2>
         {hint ? <p className="mt-1 text-sm text-ink-faint">{hint}</p> : null}
       </div>
       {action}
@@ -53,7 +51,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-dashed border-edge bg-surface-sunken/40 px-5 py-10 text-center">
+    <div className="border-y border-edge px-5 py-10 text-center">
       <p className="font-medium text-ink-muted">{title}</p>
       {hint ? <p className="mt-2 text-sm text-ink-faint">{hint}</p> : null}
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}

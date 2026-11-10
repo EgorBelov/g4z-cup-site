@@ -21,10 +21,10 @@ function BracketMatch({ match, timeZone }: { match: MatchDetails; timeZone: stri
   ) => (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 rounded-control border px-3 py-2 text-sm",
+        "flex min-w-0 items-center justify-between gap-3 border-b px-1 py-3 text-sm",
         match.winner_id !== null && match.winner_id === teamId
-          ? "border-accent/40 bg-accent-soft font-semibold"
-          : "border-edge bg-surface-sunken/60",
+          ? "border-edge text-accent"
+          : "border-edge text-ink-muted",
       )}
     >
       <span className={cn("truncate", !name && "italic text-ink-faint")}>
@@ -46,7 +46,7 @@ function BracketMatch({ match, timeZone }: { match: MatchDetails; timeZone: stri
           : "border-edge bg-panel",
       )}
     >
-      <div className="mb-2 flex items-center justify-between gap-2 text-[11px] text-ink-faint">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-faint">
         <span className="truncate">{match.round_label ?? `Раунд ${match.round}`}</span>
         <MatchStatusBadge status={match.status} />
       </div>
@@ -56,7 +56,7 @@ function BracketMatch({ match, timeZone }: { match: MatchDetails; timeZone: stri
         {side(match.team2_name, match.team2_source, match.score2, match.team2_id)}
       </div>
 
-      <p className="mt-2 text-[11px] text-ink-faint">
+      <p className="mt-2 text-xs text-ink-faint">
         bo{match.best_of} · {formatDateTime(match.scheduled_at, timeZone)}
       </p>
     </Link>
@@ -75,16 +75,16 @@ function BracketColumns({
   );
 
   return (
-    <div className="overflow-x-auto pb-2">
-      <div className="flex min-w-max gap-4">
+    <div className="min-w-0 pb-2 md:overflow-x-auto">
+      <div className="flex flex-col gap-8 md:min-w-max md:flex-row md:gap-7">
         {rounds.map((round) => {
           const roundMatches = matches
             .filter((match) => match.round === round)
             .sort((a, b) => a.position - b.position);
 
           return (
-            <div key={round} className="w-64 shrink-0 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            <div key={round} className="w-full space-y-4 md:w-72 md:shrink-0">
+              <p className="eyebrow">
                 {roundMatches[0]?.round_label ?? `Раунд ${round}`}
               </p>
               {roundMatches.map((match) => (
@@ -112,6 +112,22 @@ export function BracketView({
   matches: MatchDetails[];
   timeZone: string;
 }) {
+  const stageIds = [...new Set(matches.map((match) => match.stage_id))];
+  if (stageIds.length > 1) {
+    return (
+      <div className="space-y-12">
+        {stageIds.map((id) => {
+          const stageMatches = matches.filter((match) => match.stage_id === id);
+          return (
+            <section key={id}>
+              <h2 className="section-title mb-7">{stageMatches[0]?.stage_name}</h2>
+              <BracketView matches={stageMatches} timeZone={timeZone} />
+            </section>
+          );
+        })}
+      </div>
+    );
+  }
   if (matches.length === 0) {
     return (
       <EmptyState

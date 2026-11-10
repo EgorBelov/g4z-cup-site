@@ -21,8 +21,8 @@ export default function GlobalError({
       <Container className="py-16">
         <PageHeader
           eyebrow="Ошибка"
-          title="Что-то сломалось"
-          description="Мы записали ошибку. Попробуйте обновить страницу — данные турнира при этом не пострадали."
+          title="Потеряли сигнал. Но не игру."
+          description="Не удалось загрузить страницу. Попробуйте ещё раз — результаты турнира сохраняются независимо от этой ошибки."
           actions={
             <>
               <Button onClick={reset}>Обновить</Button>
