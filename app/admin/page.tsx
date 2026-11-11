@@ -20,6 +20,9 @@ export default async function AdminDashboardPage() {
       subtitle="Текущий кубок выделяется на главной сообщества. Остальные турниры тоже остаются доступны."
       actions={
         <>
+          <ButtonLink href="/admin/players" variant="secondary" size="sm">
+            Игроки
+          </ButtonLink>
           <ButtonLink href="/admin/tournaments/new" size="sm">
             Новый турнир
           </ButtonLink>

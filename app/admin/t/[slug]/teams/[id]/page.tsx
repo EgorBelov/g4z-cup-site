@@ -58,13 +58,19 @@ export default async function AdminTeamPage({ params }: Props) {
             hint={`Заявлено игроков: ${data.players.length}`}
           />
           <div className="p-5">
-            <RosterForm
-              key={data.team.roster_version}
-              showMmr={isDota(tournament.game)}
-              teamId={data.team.id}
-              rosterVersion={data.team.roster_version}
-              players={data.players}
-            />
+            {data.team.community_team_id ? (
+              <ButtonLink href={`/admin/t/${slug}/registrations`} variant="secondary">
+                Управлять через заявку
+              </ButtonLink>
+            ) : (
+              <RosterForm
+                key={data.team.roster_version}
+                showMmr={isDota(tournament.game)}
+                teamId={data.team.id}
+                rosterVersion={data.team.roster_version}
+                players={data.players}
+              />
+            )}
           </div>
         </Card>
       </div>

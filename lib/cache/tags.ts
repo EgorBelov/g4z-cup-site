@@ -10,6 +10,7 @@
  */
 
 export const tags = {
+  communityTeams: () => "community-teams",
   /** The list of tournaments and which one is current. */
   tournaments: () => "tournaments",
   /** Metadata of one tournament. */

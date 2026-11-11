@@ -7,14 +7,14 @@ import { sessionCookieOptions } from "@/lib/supabase/session";
 
 /** Only called for the private Telegram check, after the admin gate. */
 export async function refreshSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next();
   const client = createServerClient(supabaseUrl(), supabaseAnonKey(), {
     cookieOptions: sessionCookieOptions,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(values, headers) {
         for (const { name, value } of values) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = NextResponse.next({ request: { headers: request.headers } });
         for (const { name, value, options } of values) {
           response.cookies.set(name, value, options);
         }

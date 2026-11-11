@@ -102,6 +102,7 @@ export function tournamentTabs(slug: string): AdminTab[] {
     { href: base, label: "Турнир" },
     { href: `${base}/structure`, label: "Этапы и сетка" },
     { href: `${base}/teams`, label: "Команды" },
+    { href: `${base}/registrations`, label: "Заявки" },
     { href: `${base}/matches`, label: "Матчи" },
     { href: `${base}/live`, label: "Ведение матча" },
     { href: `${base}/results`, label: "Итоги" },

@@ -59,9 +59,15 @@ export function authSecret(): string {
 
 export function siteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL;
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  // A local .env must not turn links on a Vercel deployment into localhost.
+  if (
+    fromEnv &&
+    !(process.env.VERCEL && /^http:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(fromEnv))
+  )
+    return fromEnv.replace(/\/$/, "");
 
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercel === "g4z-cup-site.vercel.app") return "https://g4z-cup.ru";
   if (vercel) return `https://${vercel}`;
 
   return "http://localhost:3000";

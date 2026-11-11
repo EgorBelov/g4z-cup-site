@@ -22,6 +22,11 @@ export function writeClient(): SupabaseClient {
   if (!cached) {
     cached = createClient(supabaseUrl(), supabaseServiceKey(), {
       auth: { persistSession: false, autoRefreshToken: false },
+      // Service-role reads include private profiles and current application
+      // versions. Never let the underlying HTTP request enter Next's data cache.
+      global: {
+        fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+      },
     });
   }
   return cached;

@@ -52,6 +52,7 @@ jobs:
         run: |
           psql -d postgres -c 'create database g4z;'
           psql -c 'create role anon; create role authenticated; create role service_role bypassrls;'
+          psql -c 'create schema auth; create table auth.users(id uuid primary key);'
           psql -c 'grant usage on schema public to service_role; alter default privileges in schema public grant all on tables to service_role; alter default privileges in schema public grant all on sequences to service_role;'
 
       - name: Apply migrations
@@ -72,6 +73,7 @@ jobs:
         run: |
           node scripts/build-setup-sql.mjs --check
           psql -d postgres -c 'create database bundle_check;'
+          psql -d bundle_check -c 'create schema auth; create table auth.users(id uuid primary key);'
           psql -d bundle_check -v ON_ERROR_STOP=1 -q -f supabase/setup.sql
 
       - name: Assert database logic

@@ -25,6 +25,16 @@ export async function saveTournamentAction(
   const zone = input.time_zone;
 
   const row = {
+    discipline: input.discipline,
+    game:
+      input.discipline === "dota2"
+        ? "Dota 2"
+        : input.discipline === "cs2"
+          ? "CS2"
+          : input.game,
+    registration_open: input.registration_open,
+    roster_size: input.roster_size,
+    max_substitutes: input.max_substitutes,
     slug: input.slug,
     name: input.name,
     edition: input.edition,
@@ -40,21 +50,26 @@ export async function saveTournamentAction(
     logo_url: input.logo_url,
   };
 
-  const existingId = formData.get("tournament_id");
-  const isUpdate = existingId !== null && existingId !== "";
+  const existingId = input.tournament_id;
+  const isUpdate = existingId !== null;
+  let previousSlug: string | null = null;
 
   if (isUpdate) {
-    const { error } = await client
+    const previous = await client
       .from("tournaments")
-      .update(row)
-      .eq("id", Number(existingId));
+      .select("slug")
+      .eq("id", existingId)
+      .single();
+    if (previous.error) return fail("Турнир не найден");
+    previousSlug = previous.data.slug as string;
+    const { error } = await client.from("tournaments").update(row).eq("id", existingId);
 
     if (error) return fail(`Не удалось сохранить турнир: ${error.message}`);
 
     await audit({
       action: "tournament.update",
       entity: "tournament",
-      entityId: Number(existingId),
+      entityId: existingId,
       summary: `Обновлён турнир ${row.name}`,
       payload: row,
     });
@@ -76,7 +91,11 @@ export async function saveTournamentAction(
     });
   }
 
-  invalidate(tags.tournaments(), tags.tournament(input.slug));
+  invalidate(
+    tags.tournaments(),
+    tags.tournament(input.slug),
+    previousSlug ? tags.tournament(previousSlug) : null,
+  );
   redirect(`/admin/t/${input.slug}`);
 }
 

@@ -9,6 +9,7 @@ try {
   await db.exec(
     "create role anon; create role authenticated; create role service_role bypassrls;",
   );
+  await db.exec("create schema auth; create table auth.users(id uuid primary key);");
   // Mirror Supabase's service-role defaults; plain CI also tests grants below.
   await db.exec(`
     grant usage on schema public to service_role;

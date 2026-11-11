@@ -17,6 +17,10 @@ export type Tournament = {
   name: string;
   edition: number | null;
   game: string;
+  discipline: "dota2" | "cs2" | "other";
+  registration_open: boolean;
+  roster_size: number;
+  max_substitutes: number;
   status: TournamentStatus;
   is_current: boolean;
   starts_at: string | null;
@@ -62,6 +66,7 @@ export type Group = {
 };
 
 export type Team = {
+  community_team_id?: number | null;
   id: number;
   roster_version: number;
   tournament_id: number;
@@ -86,12 +91,13 @@ export type Player = {
   dotabuff_url: string | null;
   sort_order: number;
   mmr: number | null;
+  elo: number | null;
 };
 
 /** Public snapshots never carry real names or private external links. */
 export type PublicPlayer = Omit<Player, "real_name" | "steam_url" | "dotabuff_url">;
 export const PUBLIC_PLAYER_COLUMNS =
-  "id,team_id,nickname,role,is_captain,is_standin,sort_order,mmr";
+  "id,team_id,nickname,role,is_captain,is_standin,sort_order,mmr,elo";
 
 export type Match = {
   id: number;

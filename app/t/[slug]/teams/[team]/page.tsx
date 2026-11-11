@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
 import { MatchRow } from "@/components/match/MatchRow";
-import { isDota } from "@/lib/format/discipline";
+import { isDota, isCs } from "@/lib/format/discipline";
 import { averageMmr, formatMmr } from "@/lib/format/mmr";
 import { getTeamPage, getTournament } from "@/lib/queries/public";
 import { teamParams } from "@/lib/queries/params";
@@ -59,6 +59,11 @@ export default async function TeamPage({ params }: Props) {
   const main = players.filter((p) => !p.is_standin);
   const rated = main.filter((p) => p.mmr !== null).length;
   const average = isDota(tournament.game) ? averageMmr(main) : null;
+  const eloMain = main.filter((p) => typeof p.elo === "number");
+  const averageElo =
+    isCs(tournament.game) && eloMain.length
+      ? Math.round(eloMain.reduce((sum, p) => sum + p.elo!, 0) / eloMain.length)
+      : null;
 
   return (
     <Container className="py-8 sm:py-12">
@@ -103,7 +108,9 @@ export default async function TeamPage({ params }: Props) {
             hint={
               average !== null
                 ? `Игроков: ${players.length} · средний MMR ${formatMmr(average)} (${rated}/${main.length} основных)`
-                : `Игроков: ${players.length}`
+                : averageElo !== null
+                  ? `Игроков: ${players.length} · средний Elo ${formatMmr(averageElo)} (${eloMain.length}/${main.length} основных)`
+                  : `Игроков: ${players.length}`
             }
           />
           <div className="p-5">
@@ -130,6 +137,11 @@ export default async function TeamPage({ params }: Props) {
                       </p>
                     </div>
                     <span className="shrink-0 text-right text-xs text-ink-faint">
+                      {isCs(tournament.game) && player.elo != null ? (
+                        <span className="block tabular-nums">
+                          {formatMmr(player.elo)} Elo
+                        </span>
+                      ) : null}
                       {isDota(tournament.game) && player.mmr !== null ? (
                         <span className="block tabular-nums">
                           {formatMmr(player.mmr)} MMR

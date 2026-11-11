@@ -73,7 +73,11 @@ export function TournamentList({ tournaments }: { tournaments: TournamentSummary
                 </p>
               ) : null}
               <div className="mt-auto flex items-center justify-between border-t border-edge pt-4 text-sm text-ink-muted">
-                <span>Открыть турнир</span>
+                <span>
+                  {tournament.registration_open
+                    ? "Приём заявок открыт"
+                    : "Открыть турнир"}
+                </span>
                 <span className="grid size-9 place-items-center rounded-pill bg-panel-strong text-accent transition group-hover:bg-accent group-hover:text-surface">
                   <Icon name="arrow" className="size-4" />
                 </span>

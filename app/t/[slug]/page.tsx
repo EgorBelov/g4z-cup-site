@@ -99,6 +99,12 @@ export default async function TournamentOverviewPage({ params }: Props) {
             </span>
           </div>
           <div className="mt-7 flex flex-wrap gap-3">
+            {tournament.registration_open ? (
+              <ButtonLink href={`/t/${slug}/register`}>
+                <Icon name="users" />
+                Участвовать в турнире
+              </ButtonLink>
+            ) : null}
             <ButtonLink href={`/t/${slug}/schedule`}>Расписание ↗</ButtonLink>
             {tournament.stream_url ? (
               <ButtonLink href={tournament.stream_url} variant="secondary" external>

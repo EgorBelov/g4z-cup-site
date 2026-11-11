@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui/Card";
 import { Container, PageHeader } from "@/components/ui/PageHeader";
-import { isDota } from "@/lib/format/discipline";
+import { isDota, isCs } from "@/lib/format/discipline";
 import { TeamCard } from "@/components/team/TeamCard";
 import { getRosters, getTeams, getTournament } from "@/lib/queries/public";
 
@@ -56,6 +56,7 @@ export default async function TeamsPage({ params }: Props) {
               <TeamCard
                 team={team}
                 showMmr={isDota(tournament.game)}
+                showElo={isCs(tournament.game)}
                 groupName={team.group_id ? groupName.get(team.group_id) : null}
                 players={players.filter((player) => player.team_id === team.id)}
                 href={`/t/${slug}/teams/${team.slug}`}

@@ -7,6 +7,7 @@ import { BrandMark } from "@/components/brand/BrandMark";
 import { MotionToggle } from "@/components/brand/MotionSettings";
 import { Container } from "@/components/ui/PageHeader";
 import { community } from "@/lib/community";
+import { buttonClass } from "@/components/ui/Button";
 
 export type NavLink = { href: string; label: string };
 const defaultLinks: NavLink[] = [
@@ -57,6 +58,9 @@ export function SiteHeader({
   ));
   const socials = (
     <>
+      <Link href="/me" prefetch={false} className={buttonClass("secondary", "sm")}>
+        Кабинет
+      </Link>
       {stream ? (
         <a href={stream} target="_blank" rel="noreferrer" className="nav-link">
           Эфир ↗

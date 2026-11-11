@@ -16,6 +16,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Публичные чтения — только через `lib/queries/public.ts`, каждое в `use cache`
   с тегом из `lib/cache/tags.ts`. Любая мутация обязана вызвать `updateTag`
   для затронутых тегов, иначе сайт останется со старыми данными.
+- Персональные чтения кабинета и проверка приватного приглашения по токену —
+  `lib/queries/player.ts` / `registration.ts`, без общего кэша. Контакты других
+  игроков не передавать клиентским компонентам, поиску капитанов и Realtime.
 - Записи в базу — только через `lib/supabase/write.ts` (service role) внутри
   server actions. Ключ anon даёт лишь чтение, политик на запись в RLS нет.
 - Любое изменение схемы — новой миграцией в `supabase/migrations/`, никогда
@@ -24,8 +27,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Безопасность
 
-- Каждый server action начинается с `assertAdmin()` — action доступен прямым
-  POST, `proxy.ts` его не защищает.
+- Административные server actions начинаются с `assertAdmin()`. Действия игроков
+  начинают с `assertPlayer()` (проверенные Supabase Auth + профиль + лимит частоты),
+  завершение регистрации — с `assertTelegramSession()`. Начало входа/регистрации
+  публично, но проверяет origin и лимит IP через `assertAuthEntry()`. Все проверки
+  выполняются внутри action: прямой POST не защищён `proxy.ts`. Telegram-сессия
+  никогда не даёт права организатора.
 - Каждый вход формы валидируется схемой из `lib/validation/schemas.ts` через
   `parseForm`. Никаких `Number(formData.get(...))` напрямую.
 - Секреты не префиксуются `NEXT_PUBLIC_`. Модули с доступом к записи помечены

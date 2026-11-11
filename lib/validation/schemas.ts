@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeProfileUrl, safePlayerReturn } from "@/lib/validation/profile";
 
 /**
  * Input schemas for every mutation.
@@ -70,9 +71,179 @@ export const loginSchema = z.object({
   redirectTo: optionalText,
 });
 
+const profileUrl = (kind: "steam" | "faceit" | "dotabuff", optional = false) =>
+  z
+    .string()
+    .trim()
+    .max(300)
+    .nullish()
+    .transform((value, ctx) => {
+      if (!value && optional) return null;
+      try {
+        return normalizeProfileUrl(value ?? "", kind);
+      } catch (error) {
+        ctx.addIssue({
+          code: "custom",
+          message: error instanceof Error ? error.message : "Некорректная ссылка",
+        });
+        return z.NEVER;
+      }
+    });
+const rating = z
+  .preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+    z.coerce.number().int().min(0).max(20000).nullish(),
+  )
+  .transform((v) => v ?? null);
+export const profileSchema = z.object({
+  nickname: trimmed.min(2).max(80),
+  telegram_username: trimmed
+    .transform((v) => v.replace(/^@/, ""))
+    .pipe(
+      z
+        .string()
+        .regex(
+          /^[A-Za-z0-9_]{5,32}$/,
+          "От 5 до 32 латинских букв, цифр и подчёркиваний",
+        ),
+    ),
+  steam_url: profileUrl("steam").pipe(z.string()),
+  faceit_url: profileUrl("faceit", true),
+  dotabuff_url: profileUrl("dotabuff", true),
+  dota_mmr: rating,
+  cs_elo: rating,
+});
+export const registerPlayerSchema = profileSchema.extend({
+  next: z.string().optional().transform(safePlayerReturn),
+});
+export const updateProfileSchema = profileSchema.extend({
+  version: z.coerce.number().int().min(0),
+});
+export const playerLoginSchema = z.object({
+  next: z.string().optional().transform(safePlayerReturn),
+});
+export const communityTeamSchema = z.object({
+  name: trimmed.min(2).max(80),
+  slug: z.union([z.literal(""), slug]).optional(),
+  tag: optionalText.pipe(z.string().max(12).nullable()),
+  description: optionalText.pipe(z.string().max(2000).nullable()),
+  team_id: optionalId,
+  team_version: z.coerce.number().int().min(0).optional(),
+});
+export const registrationCommandSchema = z
+  .object({
+    action: z.enum([
+      "application_create",
+      "interest",
+      "invite_create",
+      "invite_revoke",
+      "invite_accept",
+      "invite_decline",
+      "self_join",
+      "member_slot",
+      "member_remove",
+      "member_leave",
+      "submit",
+      "withdraw",
+      "review",
+      "admin_member",
+      "captain_request",
+      "captain_direct",
+      "second_remove",
+      "captain_accept",
+      "captain_decline",
+      "captain_revoke",
+      "team_archive",
+      "team_restore",
+    ]),
+    application_id: optionalId,
+    team_id: optionalId,
+    tournament_id: optionalId,
+    version: z.coerce.number().int().min(0).optional(),
+    team_version: z.coerce.number().int().min(0).optional(),
+    profile_id: z.uuid().optional(),
+    replace_profile_id: z
+      .union([z.literal(""), z.uuid()])
+      .optional()
+      .transform((v) => v || null),
+    recipient_id: z
+      .union([z.literal(""), z.uuid()])
+      .optional()
+      .transform((v) => v || null),
+    invite_id: optionalId,
+    request_id: optionalId,
+    token: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{43}$/)
+      .optional(),
+    slot: z.enum(["main", "substitute"]).optional(),
+    role: z.enum(["main", "second"]).optional(),
+    status: z.enum(["accepted", "rejected", "waitlisted"]).optional(),
+    reason: optionalText.pipe(z.string().max(1000).nullable()),
+    active: z
+      .enum(["true", "false"])
+      .optional()
+      .transform((v) => v === "true"),
+  })
+  .superRefine((input, ctx) => {
+    const required: Record<string, string[]> = {
+      application_create: ["team_id", "tournament_id"],
+      interest: ["tournament_id"],
+      invite_create: ["application_id", "version"],
+      invite_revoke: ["invite_id", "version"],
+      self_join: ["application_id", "version"],
+      member_slot: ["application_id", "version", "profile_id", "slot"],
+      member_remove: ["application_id", "version", "profile_id"],
+      member_leave: ["application_id", "version"],
+      submit: ["application_id", "version"],
+      withdraw: ["application_id", "version"],
+      review: ["application_id", "version", "status"],
+      admin_member: ["application_id", "version", "profile_id", "slot", "reason"],
+      captain_request: ["team_id", "team_version", "recipient_id", "role"],
+      captain_direct: ["team_id", "team_version", "recipient_id", "role", "reason"],
+      second_remove: ["team_id", "team_version"],
+      captain_accept: ["request_id"],
+      captain_decline: ["request_id"],
+      captain_revoke: ["request_id"],
+      team_archive: ["team_id", "team_version"],
+      team_restore: ["team_id", "team_version"],
+    };
+    for (const key of required[input.action] ?? []) {
+      const value = input[key as keyof typeof input];
+      if (value === null || value === undefined || value === "")
+        ctx.addIssue({ code: "custom", path: [key], message: "Обязательное поле" });
+    }
+    if (
+      ["invite_accept", "invite_decline"].includes(input.action) &&
+      !input.token &&
+      !input.invite_id
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["invite_id"],
+        message: "Нужно приглашение",
+      });
+    if (input.action === "review" && input.status === "rejected" && !input.reason)
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: "Укажите причину отказа",
+      });
+  });
+export const playerSearchSchema = z.object({
+  team_id: z.coerce.number().int().positive(),
+  query: trimmed.min(2).max(80),
+});
+
 // ─── tournaments ─────────────────────────────────────────────────────────────
 
 export const tournamentSchema = z.object({
+  tournament_id: optionalId,
+  discipline: z.enum(["dota2", "cs2", "other"]).default("dota2"),
+  game: trimmed.min(2).max(80).default("Dota 2"),
+  registration_open: checkbox,
+  roster_size: z.coerce.number().int().min(1).max(32).default(5),
+  max_substitutes: z.coerce.number().int().min(0).max(32).default(2),
   slug,
   name: trimmed.min(2, { error: "Укажите название" }),
   edition: optionalInt,

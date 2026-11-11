@@ -162,11 +162,13 @@ export async function saveRosterAction(
 
   const teamResult = await client
     .from("teams")
-    .select("id, tournament_id, name")
+    .select("id, tournament_id, name, community_team_id")
     .eq("id", teamId)
     .maybeSingle();
 
   if (teamResult.error || !teamResult.data) return fail("Команда не найдена");
+  if (teamResult.data.community_team_id)
+    return fail("Состав этой команды изменяется через её турнирную заявку");
   const team = teamResult.data as Pick<Team, "id" | "tournament_id" | "name">;
   const slug = await tournamentSlug(team.tournament_id);
 

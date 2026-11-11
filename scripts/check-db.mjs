@@ -57,6 +57,7 @@ const required = [
   ["match_details", "0003_views.sql"],
   ["standings", "0003_views.sql"],
   ["tournament_summaries", "0003_views.sql"],
+  ["disciplines", "0012_registration_schema.sql"],
 ];
 
 const isNetworkError = (message) =>
@@ -82,8 +83,10 @@ for (const [relation, migration] of required) {
     .from(relation)
     .select(
       relation === "players"
-        ? "id,team_id,nickname,role,is_captain,is_standin,sort_order,mmr"
-        : "*",
+        ? "id,team_id,nickname,role,is_captain,is_standin,sort_order,mmr,elo"
+        : relation === "tournaments" || relation === "tournament_summaries"
+          ? "id,discipline,registration_open,roster_size,max_substitutes"
+          : "*",
       { head: true, count: "exact" },
     );
 
@@ -103,6 +106,23 @@ for (const [relation, columns, migration] of [
   ["players", "steam_url", "0011_player_privacy.sql"],
   ["players", "dotabuff_url", "0011_player_privacy.sql"],
   ["players", "real_name", "0011_player_privacy.sql"],
+  ["players", "profile_id", "0012_registration_schema.sql"],
+  ...[
+    "player_profiles",
+    "community_teams",
+    "registration_teams",
+    "team_members",
+    "team_invites",
+    "captain_requests",
+    "registration_revisions",
+    "registration_events",
+  ].map((table) => [table, "id", "0012_registration_schema.sql"]),
+  ...["player_ratings", "participation_interests"].map((table) => [
+    table,
+    "profile_id",
+    "0012_registration_schema.sql",
+  ]),
+  ["registration_limits", "key", "0012_registration_schema.sql"],
 ]) {
   const { error } = await client.from(relation).select(columns).limit(1);
   const label = `${relation}.${columns}`;
@@ -167,6 +187,33 @@ if (env.SUPABASE_SERVICE_ROLE_KEY) {
     .from("teams")
     .select("roster_version")
     .limit(1);
+  const registrationInput = {
+    p_actor: null,
+    p_admin: false,
+    p_action: "preflight",
+    p_input: {},
+    p_ip: null,
+  };
+  const [registrationService, registrationPublic, profileAccess] = await Promise.all([
+    service.rpc("registration_command", registrationInput),
+    client.rpc("registration_command", registrationInput),
+    service.from("player_profiles").select("id").limit(0),
+  ]);
+  if (
+    registrationService.error?.message !== "Требуется аккаунт игрока" ||
+    !["42501", "PGRST202"].includes(registrationPublic.error?.code ?? "") ||
+    profileAccess.error
+  ) {
+    problems.push({
+      relation: "registration commands",
+      migration: "0013_registration_commands.sql",
+      message: "Не подтверждены команды и приватные права service role",
+    });
+    console.log("✗ registration commands: функции или права не готовы");
+  } else
+    console.log(
+      "✓ registration commands доступны только серверу; неверный actor отклоняется без записи",
+    );
   if (versionError)
     problems.push({
       relation: "teams.roster_version",
@@ -174,6 +221,16 @@ if (env.SUPABASE_SERVICE_ROLE_KEY) {
       message: versionError.message,
     });
 }
+const community = await client.rpc("public_community_team", {
+  p_slug: "nonexistent-registration-preflight",
+});
+if (community.error)
+  problems.push({
+    relation: "public_community_team",
+    migration: "0013_registration_commands.sql",
+    message: community.error.message,
+  });
+else console.log("✓ безопасная публичная проекция команды доступна");
 
 const { data: tournaments, error: listError } = await client
   .from("tournaments")

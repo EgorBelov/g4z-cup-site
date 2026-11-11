@@ -13,6 +13,8 @@ import { refreshSession } from "@/lib/supabase/refresh-session";
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  if (!pathname.startsWith("/admin")) return refreshSession(request);
+
   if (pathname === "/admin/login") {
     return NextResponse.next();
   }
@@ -36,5 +38,15 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/me",
+    "/me/:path*",
+    "/login",
+    "/register",
+    "/auth/complete",
+    "/invite/:path*",
+    "/t/:slug/register",
+  ],
 };

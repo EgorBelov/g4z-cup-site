@@ -10,16 +10,25 @@ export function TeamCard({
   players,
   href,
   showMmr = true,
+  showElo = false,
 }: {
   team: Team;
   groupName?: string | null;
   players: PublicPlayer[];
   href: string;
   showMmr?: boolean;
+  showElo?: boolean;
 }) {
   const main = players.filter((p) => !p.is_standin);
-  const rated = main.filter((p) => p.mmr !== null).length;
-  const average = showMmr ? averageMmr(main) : null;
+  const ratings = main
+    .map((p) => (showMmr ? p.mmr : showElo ? p.elo : null))
+    .filter((v): v is number => typeof v === "number");
+  const rated = ratings.length;
+  const average = showMmr
+    ? averageMmr(main)
+    : rated
+      ? Math.round(ratings.reduce((a, b) => a + b, 0) / rated)
+      : null;
 
   return (
     <Link
@@ -67,9 +76,9 @@ export function TeamCard({
               {player.is_captain ? (
                 <span className="shrink-0 text-xs uppercase text-accent">капитан</span>
               ) : null}
-              {showMmr && player.mmr !== null ? (
+              {(showMmr && player.mmr != null) || (showElo && player.elo != null) ? (
                 <span className="ml-auto shrink-0 tabular-nums text-xs text-ink-faint">
-                  {formatMmr(player.mmr)}
+                  {formatMmr(showMmr ? player.mmr : player.elo)} {showElo ? "Elo" : ""}
                 </span>
               ) : null}
             </li>
@@ -84,7 +93,7 @@ export function TeamCard({
           {team.seed ? <span>Посев {team.seed}</span> : <span />}
           {average !== null ? (
             <span className="tabular-nums">
-              MMR {formatMmr(average)} · {rated}/{main.length}
+              {showMmr ? "MMR" : "Elo"} {formatMmr(average)} · {rated}/{main.length}
             </span>
           ) : null}
         </p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { FormFeedback, SubmitButton } from "@/components/ui/Form";
 import {
   saveTournamentAction,
@@ -152,6 +152,71 @@ export function TournamentForm({ tournament }: { tournament?: Tournament }) {
           />
         </Field>
       </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Дисциплина" htmlFor="discipline">
+          <Select
+            id="discipline"
+            name="discipline"
+            defaultValue={tournament?.discipline ?? "dota2"}
+          >
+            <option value="dota2">Dota 2</option>
+            <option value="cs2">CS2</option>
+            <option value="other">Другая игра</option>
+          </Select>
+        </Field>
+        <Field
+          label="Название другой игры"
+          htmlFor="game"
+          hint="Для Dota 2 и CS2 название задаётся автоматически"
+        >
+          <Input
+            id="game"
+            name="game"
+            defaultValue={tournament?.game ?? "Dota 2"}
+            maxLength={80}
+          />
+        </Field>
+        <Field
+          label="Основных игроков"
+          htmlFor="roster_size"
+          error={state.fieldErrors?.roster_size}
+        >
+          <Input
+            id="roster_size"
+            name="roster_size"
+            type="number"
+            min={1}
+            max={32}
+            defaultValue={tournament?.roster_size ?? 5}
+            required
+          />
+        </Field>
+        <Field
+          label="Максимум запасных"
+          htmlFor="max_substitutes"
+          error={state.fieldErrors?.max_substitutes}
+        >
+          <Input
+            id="max_substitutes"
+            name="max_substitutes"
+            type="number"
+            min={0}
+            max={32}
+            defaultValue={tournament?.max_substitutes ?? 2}
+            required
+          />
+        </Field>
+      </div>
+      <Checkbox
+        name="registration_open"
+        label="Приём командных заявок открыт"
+        defaultChecked={tournament?.registration_open ?? false}
+      />
+      <p className="text-xs text-ink-muted">
+        Число команд не ограничено. Закрытие блокирует изменения игроков и капитанов, но
+        организатор может продолжать рассмотрение заявок.
+      </p>
 
       <Field label="Формат (кратко)" htmlFor="format_summary">
         <Input

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { FormFeedback, IconSubmit, SubmitButton } from "@/components/ui/Form";
@@ -14,6 +14,9 @@ import {
 import type { Group, Player, Team } from "@/lib/types/database";
 
 const ROSTER_SLOTS = 7;
+const subscribeHydration = () => () => {};
+const clientHydrated = () => true;
+const serverHydrated = () => false;
 
 export function TeamForm({
   tournamentId,
@@ -97,6 +100,13 @@ export function RosterForm({
   showMmr?: boolean;
 }) {
   const [state, action] = useActionState(saveRosterAction, idle);
+  // Reordering needs client state. Do not accept clicks on the server-rendered
+  // buttons before React has attached their handlers.
+  const hydrated = useSyncExternalStore(
+    subscribeHydration,
+    clientHydrated,
+    serverHydrated,
+  );
   const [rows, setRows] = useState(() =>
     Array.from({ length: Math.max(ROSTER_SLOTS, players.length) }, (_, index) => ({
       key: players[index] ? `player-${players[index].id}` : `new-${index}`,
@@ -133,7 +143,7 @@ export function RosterForm({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={index === 0}
+                    disabled={!hydrated || index === 0}
                     aria-label={`Поднять игрока ${index + 1}`}
                     onClick={() => moveRow(index, -1)}
                   >
@@ -143,7 +153,7 @@ export function RosterForm({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={index === rows.length - 1}
+                    disabled={!hydrated || index === rows.length - 1}
                     aria-label={`Опустить игрока ${index + 1}`}
                     onClick={() => moveRow(index, 1)}
                   >
@@ -209,7 +219,7 @@ export function RosterForm({
         type="button"
         variant="secondary"
         size="sm"
-        disabled={rows.length >= 64}
+        disabled={!hydrated || rows.length >= 64}
         onClick={() =>
           setRows((current) => [
             ...current,

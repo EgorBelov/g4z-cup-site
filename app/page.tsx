@@ -39,6 +39,10 @@ export default function HomePage() {
                 Собирай своих. Заходи в игру. Здесь каждый кубок — повод встретиться.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
+                <ButtonLink href="/register">
+                  <Icon name="users" />
+                  Создать аккаунт
+                </ButtonLink>
                 <ButtonLink href="#tournaments" variant="live">
                   <Icon name="trophy" />К турнирам
                   <Icon name="arrow" className="size-4" />

@@ -1,9 +1,15 @@
 /** Isolated PostgREST stand-in for visual/navigation tests. Never uses real credentials. */
 import { createServer } from "node:http";
 import { createHash, createHmac, randomUUID } from "node:crypto";
+import { readFileSync, readdirSync } from "node:fs";
+import { PGlite } from "@electric-sql/pglite";
 
 const stamp = "2026-08-03T15:00:00Z";
 const base = {
+  discipline: "dota2",
+  registration_open: false,
+  roster_size: 5,
+  max_substitutes: 2,
   edition: 11,
   status: "live",
   is_current: false,
@@ -34,6 +40,7 @@ const tournaments = [
     slug: "orbit-cs",
     name: "G4Z CS2: осенний кубок сообщества",
     game: "CS2",
+    discipline: "cs2",
     status: "upcoming",
   },
   {
@@ -51,9 +58,85 @@ const tournaments = [
     slug: "orbit-empty",
     name: "Первый турнир",
     game: "Другая игра",
+    discipline: "other",
     status: "upcoming",
   },
 ];
+tournaments.push({
+  ...base,
+  id: 13,
+  slug: "g4z-cup-13",
+  name: "G4Z CUP 13",
+  edition: 13,
+  game: "Dota 2",
+  status: "upcoming",
+  registration_open: true,
+  starts_at: null,
+  ends_at: null,
+});
+
+// Actual PostgreSQL functions, constraints and grants back registration tests.
+// Only the external Telegram consent/code exchange is simulated.
+const registrationDb = await PGlite.create();
+await registrationDb.exec(`create role anon;create role authenticated;create role service_role bypassrls;
+  create schema auth;create table auth.users(id uuid primary key);
+  grant usage on schema public to service_role;
+  alter default privileges in schema public grant all on tables to service_role;
+  alter default privileges in schema public grant all on sequences to service_role;`);
+for (const file of readdirSync("supabase/migrations")
+  .filter((f) => f.endsWith(".sql"))
+  .sort())
+  await registrationDb.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
+for (const t of tournaments)
+  await registrationDb.query(
+    `insert into public.tournaments(id,slug,name,game,discipline,status,registration_open,roster_size,max_substitutes) overriding system value values($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [
+      t.id,
+      t.slug,
+      t.name,
+      t.game,
+      t.discipline,
+      t.status,
+      t.registration_open,
+      t.roster_size,
+      t.max_substitutes,
+    ],
+  );
+await registrationDb.exec(
+  "alter sequence teams_id_seq restart with 10000;alter sequence players_id_seq restart with 1000000;",
+);
+const privateRegistrationTables = new Set([
+  "player_profiles",
+  "player_ratings",
+  "community_teams",
+  "registration_teams",
+  "team_members",
+  "team_invites",
+  "captain_requests",
+  "participation_interests",
+  "registration_revisions",
+  "registration_events",
+  "registration_limits",
+]);
+const rpcDefinitions = {
+  registration_throttle: [
+    ["p_key", "p_limit", "p_window"],
+    ["text", "integer", "integer"],
+  ],
+  register_player: [
+    ["p_user", "p_telegram_id", "p_verified_username", "p_profile", "p_ip"],
+    ["uuid", "text", "text", "jsonb", "text"],
+  ],
+  registration_command: [
+    ["p_actor", "p_admin", "p_action", "p_input", "p_ip"],
+    ["uuid", "boolean", "text", "jsonb", "text"],
+  ],
+  public_community_team: [["p_slug"], ["text"]],
+  search_registration_players: [
+    ["p_actor", "p_admin", "p_team", "p_query"],
+    ["uuid", "boolean", "bigint", "text"],
+  ],
+};
 const stages = [1, 2, 3].flatMap((id) => [
   {
     id: id * 10,
@@ -396,10 +479,20 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-function issueAuthSession() {
+function fixtureAuthUser(number = 1) {
+  if (number === 1) return authUser;
+  const user = structuredClone(authUser);
+  user.id = `a1000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
+  user.identities[0].id = String(1234567890 + number);
+  user.identities[0].user_id = user.id;
+  user.identities[0].identity_data.sub = user.identities[0].id;
+  user.identities[0].identity_data.preferred_username = `fixture_player_${number}`;
+  return user;
+}
+function issueAuthSession(user = authUser) {
   const payload = Buffer.from(
     JSON.stringify({
-      sub: authUser.id,
+      sub: user.id,
       aud: "authenticated",
       role: "authenticated",
       iat: Math.floor(Date.now() / 1000),
@@ -414,17 +507,47 @@ function issueAuthSession() {
     refresh_token: randomUUID(),
     token_type: "bearer",
     expires_in: 3600,
-    user: authUser,
+    user,
   };
   authSessions.set(access, session);
   authRefreshTokens.set(session.refresh_token, session);
   return session;
 }
 
-createServer((req, res) => {
+createServer(async (req, res) => {
   const url = new URL(req.url, "http://127.0.0.1:54329");
   if (url.pathname === "/health") {
     res.end("ok");
+    return;
+  }
+  const rpcName = url.pathname.replace("/rest/v1/rpc/", "");
+  if (
+    req.method === "POST" &&
+    url.pathname.startsWith("/rest/v1/rpc/") &&
+    Object.hasOwn(rpcDefinitions, rpcName)
+  ) {
+    const service = req.headers.apikey === "fixture-service-key";
+    if (!service && rpcName !== "public_community_team") {
+      json(res, 403, { code: "42501", message: "permission denied" });
+      return;
+    }
+    let raw = "";
+    for await (const chunk of req) raw += chunk;
+    try {
+      const input = JSON.parse(raw);
+      const [names, casts] = rpcDefinitions[rpcName];
+      const args = names.map((name) => input[name] ?? null);
+      const result = await registrationDb.transaction(async (tx) => {
+        await tx.exec(`set local role ${service ? "service_role" : "anon"}`);
+        return tx.query(
+          `select public.${rpcName}(${casts.map((cast, i) => `$${i + 1}::${cast}`).join(",")}) as result`,
+          args,
+        );
+      });
+      json(res, 200, result.rows[0].result);
+    } catch (error) {
+      json(res, 400, { code: error.code ?? "XX000", message: error.message });
+    }
     return;
   }
   if (req.method === "GET" && url.pathname === "/auth/v1/authorize") {
@@ -440,7 +563,15 @@ createServer((req, res) => {
       return;
     }
     const code = randomUUID();
-    authCodes.set(code, challenge);
+    const number = Number(url.searchParams.get("fixture_user") ?? 1);
+    const user = fixtureAuthUser(
+      Number.isInteger(number) && number >= 1 && number <= 1000 ? number : 1,
+    );
+    await registrationDb.query(
+      "insert into auth.users(id)values($1)on conflict do nothing",
+      [user.id],
+    );
+    authCodes.set(code, { challenge, user });
     res.writeHead(302, {
       Location: `${callback}?code=${code}`,
       "Cache-Control": "no-store",
@@ -457,19 +588,22 @@ createServer((req, res) => {
       const input = JSON.parse(body);
       const grant = url.searchParams.get("grant_type");
       let valid = false;
+      let user = authUser;
       if (grant === "pkce") {
         const expected = authCodes.get(input.auth_code);
         const actual =
           typeof input.code_verifier === "string"
             ? createHash("sha256").update(input.code_verifier).digest("base64url")
             : null;
-        valid = Boolean(expected && expected === actual);
+        valid = Boolean(expected && expected.challenge === actual);
+        if (valid) user = expected.user;
         // A mismatched browser must not consume another browser's code.
         if (valid) authCodes.delete(input.auth_code);
       } else if (grant === "refresh_token") {
         const old = authRefreshTokens.get(input.refresh_token);
         valid = Boolean(old);
         if (old) {
+          user = old.user;
           authSessions.delete(old.access_token);
           authRefreshTokens.delete(input.refresh_token);
         }
@@ -478,7 +612,7 @@ createServer((req, res) => {
         res,
         valid ? 200 : 400,
         valid
-          ? issueAuthSession()
+          ? issueAuthSession(user)
           : { code: "bad_code_verifier", msg: "Invalid fixture exchange" },
       );
     });
@@ -495,7 +629,7 @@ createServer((req, res) => {
       res.writeHead(204);
       res.end();
     } else {
-      json(res, 200, authUser);
+      json(res, 200, session.user);
     }
     return;
   }
@@ -636,7 +770,12 @@ createServer((req, res) => {
     return;
   }
   const relation = url.pathname.replace("/rest/v1/", "");
-  if (!(relation in data)) {
+  const registrationPrivate = privateRegistrationTables.has(relation);
+  if (registrationPrivate && req.headers.apikey !== "fixture-service-key") {
+    json(res, 403, { code: "42501", message: "permission denied" });
+    return;
+  }
+  if (!(relation in data) && !registrationPrivate) {
     res.writeHead(404);
     res.end(JSON.stringify({ message: `Unknown fixture relation ${relation}` }));
     return;
@@ -645,7 +784,7 @@ createServer((req, res) => {
   if (
     relation === "players" &&
     req.headers.apikey !== "fixture-service-key" &&
-    (columns === "*" || /(?:real_name|steam_url|dotabuff_url)/.test(columns))
+    (columns === "*" || /(?:real_name|steam_url|dotabuff_url|profile_id)/.test(columns))
   ) {
     res.writeHead(403, { "Content-Type": "application/json" });
     res.end(
@@ -653,15 +792,52 @@ createServer((req, res) => {
     );
     return;
   }
-  let rows = data[relation].slice();
+  let rows;
+  if (registrationPrivate)
+    rows = JSON.parse(
+      JSON.stringify(
+        (await registrationDb.query(`select * from public.${relation}`)).rows,
+      ),
+    );
+  else if (["teams", "players", "audit_log"].includes(relation))
+    rows = data[relation].concat(
+      JSON.parse(
+        JSON.stringify(
+          (await registrationDb.query(`select * from public.${relation}`)).rows,
+        ),
+      ),
+    );
+  else rows = data[relation].slice();
+  if (relation === "tournament_summaries") {
+    const snapshots = (
+      await registrationDb.query(
+        "select tournament_id,count(*)::integer as n from public.teams group by tournament_id",
+      )
+    ).rows;
+    rows = rows.map((t) => ({
+      ...t,
+      ...tournaments.find((c) => c.id === t.id),
+      team_count:
+        t.team_count + (snapshots.find((s) => s.tournament_id === t.id)?.n ?? 0),
+    }));
+  }
   for (const [field, expression] of url.searchParams) {
     if (["select", "order", "limit", "offset"].includes(field)) continue;
     if (field === "or") {
-      const predicates = expression.replace(/^\(|\)$/g, "").split(",");
+      const predicates = [
+        ...expression
+          .replace(/^\(|\)$/g, "")
+          .matchAll(/([a-z_]+)\.(eq|in)\.(\([^)]*\)|[^,]*)/g),
+      ];
       rows = rows.filter((row) =>
         predicates.some((part) => {
-          const [column, operator, ...parts] = part.split(".");
-          return operator === "eq" && String(row[column]) === parts.join(".");
+          const [, column, operator, value] = part;
+          return operator === "eq"
+            ? String(row[column]) === value
+            : value
+                .replace(/^\(|\)$/g, "")
+                .split(",")
+                .includes(String(row[column]));
         }),
       );
       continue;
@@ -676,6 +852,24 @@ createServer((req, res) => {
       );
     else if (op === "is") rows = rows.filter((r) => String(r[field]) === value);
     else if (op === "gte") rows = rows.filter((r) => String(r[field]) >= value);
+    else if (op === "gt")
+      rows = rows.filter((r) =>
+        typeof r[field] === "number"
+          ? r[field] > Number(value)
+          : String(r[field]) > value,
+      );
+    else if (op === "lt")
+      rows = rows.filter((r) =>
+        typeof r[field] === "number"
+          ? r[field] < Number(value)
+          : String(r[field]) < value,
+      );
+    else if (op === "ilike")
+      rows = rows.filter((r) =>
+        String(r[field])
+          .toLowerCase()
+          .includes(value.replace(/%/g, "").replace(/\\/g, "").toLowerCase()),
+      );
     else if (op === "or") continue;
     else {
       res.writeHead(400);
@@ -697,6 +891,8 @@ createServer((req, res) => {
     return 0;
   });
   const total = rows.length;
+  if (url.searchParams.has("offset"))
+    rows = rows.slice(Number(url.searchParams.get("offset")));
   if (url.searchParams.has("limit"))
     rows = rows.slice(0, Number(url.searchParams.get("limit")));
   const object = req.headers.accept?.includes("application/vnd.pgrst.object+json");

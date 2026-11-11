@@ -56,6 +56,31 @@ try {
     );
   }
   const callback = `${site.origin}/auth/callback`;
+  const authSite = new URL(env.AUTH_SITE_URL || site.origin);
+  const extraOrigins = (env.AUTH_REDIRECT_ORIGINS || "").split(",").filter(Boolean);
+  const callbacks = [
+    ...new Set(
+      [site.origin, authSite.origin, ...extraOrigins].map((value) => {
+        const origin = new URL(value);
+        if (
+          origin.pathname !== "/" ||
+          origin.search ||
+          origin.hash ||
+          origin.username ||
+          origin.password ||
+          (origin.protocol !== "https:" &&
+            !(
+              origin.protocol === "http:" &&
+              ["localhost", "127.0.0.1"].includes(origin.hostname)
+            ))
+        )
+          throw new Error(
+            "Auth URLs должны быть HTTPS origins (HTTP только для localhost)",
+          );
+        return `${origin.origin}/auth/callback`;
+      }),
+    ),
+  ];
   const providerCallback = `${base}/auth/v1/callback`;
   console.log(
     `Callback для BotFather → Login Widget → Allowed URLs: ${providerCallback}`,
@@ -138,16 +163,16 @@ try {
       method: "PATCH",
       headers,
       body: JSON.stringify({
-        site_url: site.origin,
-        uri_allow_list: [...new Set([...allowed, callback])].join(","),
+        site_url: authSite.origin,
+        uri_allow_list: [...new Set([...allowed, ...callbacks])].join(","),
       }),
     });
     if (!response.ok)
       throw new Error(
         `Провайдер настроен, но callback не сохранён: HTTP ${response.status}`,
       );
-    allowed.push(callback);
-    config.site_url = site.origin;
+    allowed.push(...callbacks);
+    config.site_url = authSite.origin;
     console.log(
       "✓ Провайдер и callback настроены; остальные адреса возврата сохранены",
     );
@@ -176,9 +201,11 @@ try {
         "Допустимые scopes: только openid/profile, без телефона и отправки сообщений.",
       );
   }
-  if (config.site_url !== site.origin)
-    problems.push("Supabase Auth Site URL отличается от NEXT_PUBLIC_SITE_URL.");
-  if (!allowed.includes(callback))
+  if (config.site_url !== authSite.origin)
+    problems.push(
+      "Supabase Auth Site URL отличается от AUTH_SITE_URL / NEXT_PUBLIC_SITE_URL.",
+    );
+  if (callbacks.some((url) => !allowed.includes(url)))
     problems.push(
       "Точный callback приложения отсутствует в Redirect URLs Supabase Auth.",
     );

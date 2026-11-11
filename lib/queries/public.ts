@@ -34,6 +34,31 @@ import type {
 
 const MATCH_COLUMNS = "*";
 
+export type PublicCommunityTeam = {
+  id: number;
+  slug: string;
+  name: string;
+  tag: string | null;
+  description: string | null;
+  archived: boolean;
+  main_captain: { nickname: string; code: number };
+  second_captain: { nickname: string; code: number } | null;
+  participations: { name: string; slug: string; team_slug: string }[];
+};
+export async function getPublicCommunityTeam(
+  slug: string,
+): Promise<PublicCommunityTeam | null> {
+  "use cache";
+  cacheTag(tags.communityTeams());
+  cacheLife("hours");
+  if (!isSupabaseConfigured()) return null;
+  const { data, error } = await readClient().rpc("public_community_team", {
+    p_slug: slug,
+  });
+  if (error) throw new Error("Не удалось загрузить команду сообщества");
+  return data as PublicCommunityTeam | null;
+}
+
 export async function getCurrentTournament(): Promise<Tournament | null> {
   "use cache";
   cacheTag(tags.tournaments());

@@ -1,24 +1,37 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { isAdmin } from "@/lib/auth/guard";
 import { telegramIdentity, TELEGRAM_PROBE_PATH } from "@/lib/auth/telegram";
-import { siteUrl } from "@/lib/env";
+import { siteUrl, authSecret } from "@/lib/env";
+import { AUTH_FLOW_COOKIE, openAuthFlow } from "@/lib/auth/flow";
+import { allowedAuthOrigin } from "@/lib/auth/origin";
 import { sessionClient } from "@/lib/supabase/session";
 
-function finish(result: string) {
-  // Never forward arbitrary next/redirect_to or upstream error descriptions.
-  const response = NextResponse.redirect(
-    new URL(`${TELEGRAM_PROBE_PATH}?result=${result}`, siteUrl()),
-    303,
-  );
-  response.headers.set("Cache-Control", "private, no-store");
-  response.headers.set("Referrer-Policy", "no-referrer");
-  return response;
-}
-
 export async function GET(request: NextRequest) {
-  // Until registration ships, callbacks only serve the closed admin check.
-  // Neither a successful Telegram login nor its Supabase session grants admin.
-  if (!(await isAdmin())) return finish("admin");
+  const flow = openAuthFlow(
+    (await cookies()).get(AUTH_FLOW_COOKIE)?.value,
+    authSecret(),
+  );
+  const origin =
+    flow && allowedAuthOrigin(flow.origin)
+      ? flow.origin
+      : allowedAuthOrigin(request.nextUrl.origin)
+        ? request.nextUrl.origin
+        : new URL(siteUrl()).origin;
+  const probe = flow?.purpose === "probe";
+  function finish(result: string) {
+    const path = probe
+      ? `${TELEGRAM_PROBE_PATH}?result=${result}`
+      : result === "success"
+        ? "/auth/complete"
+        : `${flow?.purpose === "register" ? "/register" : "/login"}?notice=${result}`;
+    const response = NextResponse.redirect(new URL(path, origin), 303);
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    return response;
+  }
+  if (!flow || !allowedAuthOrigin(flow.origin)) return finish("expired");
+  if (probe && !(await isAdmin())) return finish("admin");
   const params = request.nextUrl.searchParams;
   if (params.has("error")) return finish("provider");
   const codes = params.getAll("code");

@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
   // the database on every request.
   // node_modules/next/dist/docs/01-app/01-getting-started/08-caching.md
   cacheComponents: true,
-  experimental: {
-    instantNavigationDevToolsToggle: true,
-  },
+  // Keep the existing prefetch behavior while upgrading the application.
+  // node_modules/next/dist/docs/01-app/02-guides/adopting-partial-prefetching.md
+  partialPrefetching: false,
 };
 
 export default nextConfig;

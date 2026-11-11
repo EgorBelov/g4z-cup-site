@@ -26,7 +26,7 @@ test("Telegram compatibility check is private and callback ignores external redi
   await page.goto("/admin/telegram");
   await expect(page).toHaveURL(/\/admin\/login/);
   await page.goto("/auth/callback?code=forged&next=https://example.com");
-  await expect(page).toHaveURL(/\/admin\/login/);
+  await expect(page).toHaveURL(/\/login\?notice=expired/);
   expect(await page.context().cookies()).not.toEqual(
     expect.arrayContaining([
       expect.objectContaining({ name: expect.stringMatching(/^sb-/) }),
@@ -132,9 +132,9 @@ test("Telegram code requires the initiating browser and cannot be replayed", asy
     await page.getByRole("button", { name: "Войти через Telegram" }).click();
     await expect.poll(() => callback).not.toBe("");
     await otherPage.goto(`${callback}&next=https://example.com`);
-    await expect(otherPage).toHaveURL(/\/admin\/telegram\?result=exchange/);
+    await expect(otherPage).toHaveURL(/\/login\?notice=expired/);
     await expect(
-      otherPage.getByRole("heading", { name: "Готово к проверке" }),
+      otherPage.getByRole("heading", { name: "Войти в G4Z CUP" }),
     ).toBeVisible();
     await page.unroute("**/auth/v1/authorize?*");
     const response = await context.request.get(callback, { maxRedirects: 0 });
