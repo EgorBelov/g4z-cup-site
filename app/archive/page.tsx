@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Container, PageHeader, Skeleton } from "@/components/ui/PageHeader";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { TournamentList } from "@/components/layout/TournamentList";
+import { TournamentExplorer } from "@/components/layout/TournamentExplorer";
 import { EmptyState } from "@/components/ui/Card";
 import { listTournaments } from "@/lib/queries/public";
 
@@ -37,7 +37,7 @@ async function ArchiveList() {
   return (
     <div className="mt-12">
       {tournaments.length ? (
-        <TournamentList tournaments={tournaments} />
+        <TournamentExplorer tournaments={tournaments} />
       ) : (
         <EmptyState
           title="Турниров пока нет."

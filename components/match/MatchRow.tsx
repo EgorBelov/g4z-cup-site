@@ -20,7 +20,7 @@ export function MatchRow({
     return (
       <Link
         href={href}
-        className="group grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-4 border-t border-edge py-6 transition hover:bg-panel/40 sm:grid-cols-[70px_minmax(0,1fr)_auto_auto] sm:gap-7"
+        className="interactive-card group mb-3 grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-4 rounded-card border border-edge bg-panel p-4 sm:grid-cols-[70px_minmax(0,1fr)_auto_auto] sm:gap-7 sm:p-5"
       >
         <span className="font-mono text-sm text-ink-faint">
           {formatTime(match.scheduled_at, timeZone) ?? "—"}
@@ -29,7 +29,7 @@ export function MatchRow({
           <span className="min-w-0 flex-1 break-words text-sm sm:text-base">
             {match.team1_name ?? match.team1_source ?? "TBD"}
           </span>
-          <span className="font-mono text-sm text-accent">
+          <span className="w-fit rounded-control bg-accent-soft px-3 py-2 font-mono text-sm text-accent">
             {showScore ? `${match.score1} : ${match.score2}` : "vs"}
           </span>
           <span className="min-w-0 flex-1 break-words text-sm sm:text-base">
@@ -54,7 +54,10 @@ export function MatchRow({
   return (
     <Link
       href={href}
-      className="group block border-t border-edge py-5 transition hover:bg-panel/40"
+      className={cn(
+        "interactive-card group mb-3 block rounded-control border bg-surface p-4 last:mb-0",
+        match.status === "live" ? "border-live/30" : "border-edge",
+      )}
     >
       <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs text-ink-faint">
         <span className="min-w-0 break-words">
@@ -82,10 +85,24 @@ export function MatchRow({
               score: match.score2,
             },
           ].map((side, index) => (
-            <div key={index} className="flex min-w-0 justify-between gap-3">
+            <div
+              key={index}
+              className="flex min-w-0 items-center justify-between gap-3"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "grid size-7 shrink-0 place-items-center rounded-control text-xs",
+                  index === 0
+                    ? "bg-accent-soft text-accent"
+                    : "bg-violet-soft text-violet",
+                )}
+              >
+                {(side.name ?? "?").slice(0, 1).toUpperCase()}
+              </span>
               <span
                 className={cn(
-                  "break-words",
+                  "min-w-0 flex-1 break-words",
                   side.id !== null && side.id === match.winner_id
                     ? "text-accent"
                     : "text-ink",
@@ -94,7 +111,14 @@ export function MatchRow({
               >
                 {side.name ?? side.fallback ?? "TBD"}
               </span>
-              <span className="shrink-0 font-mono tabular-nums">
+              <span
+                className={cn(
+                  "grid size-7 shrink-0 place-items-center rounded-control font-mono tabular-nums",
+                  side.id !== null && side.id === match.winner_id
+                    ? "bg-accent-soft text-accent"
+                    : "bg-panel-strong text-ink-muted",
+                )}
+              >
                 {showScore ? side.score : "—"}
               </span>
             </div>

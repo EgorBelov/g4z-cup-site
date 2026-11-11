@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
+import { Icon } from "./Icon";
 import type { MatchStatus, TournamentStatus } from "@/lib/types/database";
 
 const tones = {
@@ -63,5 +64,14 @@ const tournamentLabels: Record<TournamentStatus, { label: string; tone: Tone }> 
 
 export function TournamentStatusBadge({ status }: { status: TournamentStatus }) {
   const config = tournamentLabels[status];
-  return <Badge tone={config.tone}>{config.label}</Badge>;
+  return (
+    <Badge tone={config.tone}>
+      {status === "live" ? (
+        <span className="size-1.5 animate-pulse rounded-pill bg-live" />
+      ) : (
+        <Icon name={status === "finished" ? "trophy" : "calendar"} className="size-3" />
+      )}
+      {config.label}
+    </Badge>
+  );
 }

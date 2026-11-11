@@ -103,6 +103,41 @@ test("motion can be stopped and persists after navigation", async ({
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
 });
 
+test("discipline filters update tournament cards and reset on the homepage and archive", async ({
+  page,
+}, info) => {
+  for (const path of ["/", "/archive"]) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    const scope = path === "/" ? page.locator("#tournaments") : page.locator("main");
+    const filters = scope.getByRole("group", { name: "Дисциплина турниров" });
+    await expect(
+      scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+    ).toBeVisible();
+    if (path === "/")
+      await page.screenshot({
+        path: info.outputPath("community-cards.png"),
+        fullPage: true,
+        animations: "disabled",
+      });
+    const cs = filters.getByRole("button", { name: /CS2/ });
+    await cs.click();
+    await expect(cs).toHaveAttribute("aria-pressed", "true");
+    await expect(scope.getByRole("heading", { name: /осенний кубок/ })).toBeVisible();
+    await expect(
+      scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+    ).toHaveCount(0);
+    await expect(scope.getByRole("status")).toHaveText("Показано турниров: 1");
+    const all = filters.getByRole("button", { name: /Все игры/ });
+    await all.focus();
+    await page.keyboard.press("Enter");
+    await expect(all).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+    ).toBeVisible();
+    await fitsViewport(page);
+  }
+});
+
 test("system reduced motion keeps the brand still", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });

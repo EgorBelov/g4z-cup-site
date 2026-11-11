@@ -3,7 +3,9 @@ import { BrandMark } from "@/components/brand/BrandMark";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { TournamentList } from "@/components/layout/TournamentList";
+import { TournamentExplorer } from "@/components/layout/TournamentExplorer";
 import { ButtonLink } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { Container, Skeleton } from "@/components/ui/PageHeader";
 import { listTournaments } from "@/lib/queries/public";
 import { community } from "@/lib/community";
@@ -14,10 +16,13 @@ export default function HomePage() {
       <SiteHeader />
       <main id="main-content" className="flex-1">
         <Container>
-          <section className="grid items-center gap-6 py-12 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-20">
+          <section className="grid items-center gap-8 py-10 sm:py-14 lg:grid-cols-2 lg:gap-12">
             <div>
-              <p className="eyebrow">Игровое сообщество / Dota 2 · CS2 · и не только</p>
-              <h1 className="hero-title my-9">
+              <span className="inline-flex items-center gap-2 rounded-pill border border-accent/25 bg-accent-soft px-3 py-1.5 text-xs text-accent">
+                <Icon name="spark" className="size-4" />
+                Игровое сообщество
+              </span>
+              <h1 className="hero-title my-8">
                 G4Z
                 <br />
                 CUP
@@ -25,29 +30,95 @@ export default function HomePage() {
                   [GG]
                 </span>
               </h1>
-              <p className="text-lg leading-relaxed sm:text-xl">
+              <p className="text-2xl leading-snug tracking-tight sm:text-3xl">
                 Свои люди.
                 <br />
-                На одной орбите.
+                <span className="text-ink-muted">На одной орбите.</span>
               </p>
-              <p className="mt-5 max-w-sm text-sm leading-relaxed text-ink-faint">
-                Собираемся ради игры. Встречаемся на турнирах. Остаёмся сообществом
-                между сезонами.
+              <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-faint">
+                Собирай своих. Заходи в игру. Здесь каждый кубок — повод встретиться.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <ButtonLink href="#tournaments">
-                  К турнирам <span aria-hidden="true">↗</span>
+                <ButtonLink href="#tournaments" variant="live">
+                  <Icon name="trophy" />К турнирам
+                  <Icon name="arrow" className="size-4" />
                 </ButtonLink>
-                {community.telegram ? (
-                  <ButtonLink href={community.telegram} variant="secondary" external>
-                    Наш Telegram ↗
-                  </ButtonLink>
-                ) : null}
+                <ButtonLink href="/archive" variant="secondary">
+                  <Icon name="archive" className="size-4" />
+                  История кубков
+                </ButtonLink>
+              </div>
+              <div className="mt-7 flex flex-wrap gap-2">
+                <span className="game-chip text-ember">
+                  <Icon name="swords" className="size-4" />
+                  Dota 2
+                </span>
+                <span className="game-chip text-violet">
+                  <Icon name="target" className="size-4" />
+                  CS2
+                </span>
+                <span className="game-chip text-ink-muted">
+                  <Icon name="game" className="size-4" />И не только
+                </span>
               </div>
             </div>
-            <div className="mx-auto w-full max-w-[520px] py-3 lg:max-w-none">
-              <BrandMark animated className="w-full" />
-              <p className="eyebrow text-center tracking-[0.5em]">G4Z CUP</p>
+            <div className="grid min-w-0 gap-3">
+              <div className="orbit-stage relative isolate overflow-hidden rounded-card border border-edge bg-panel px-4 pb-4 pt-5 sm:px-6">
+                <div className="relative z-10 flex items-center justify-between gap-3">
+                  <span className="eyebrow text-accent">Место встречи — G4Z</span>
+                  <span aria-hidden="true" className="flex gap-1.5">
+                    <span className="size-2 rounded-pill bg-ember" />
+                    <span className="size-2 rounded-pill bg-violet" />
+                    <span className="size-2 rounded-pill bg-accent" />
+                  </span>
+                </div>
+                <BrandMark animated className="relative mx-auto w-full max-w-[400px]" />
+                <p className="relative text-center text-xs text-ink-muted">
+                  Разные игры. Одна команда своих.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {community.telegram ? (
+                  <a
+                    href={community.telegram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="interactive-card group flex items-center gap-3 rounded-card border border-edge bg-panel p-4"
+                  >
+                    <span className="grid size-11 shrink-0 place-items-center rounded-control bg-accent-soft text-accent">
+                      <Icon name="telegram" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium">Наш Telegram</span>
+                      <span className="mt-1 block text-xs text-ink-faint">
+                        Анонсы и свои люди
+                      </span>
+                    </span>
+                    <Icon name="arrow" className="size-4 text-accent" />
+                  </a>
+                ) : null}
+                {community.stream ? (
+                  <a
+                    href={community.stream}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="interactive-card group flex items-center gap-3 rounded-card border border-edge bg-panel p-4"
+                  >
+                    <span className="grid size-11 shrink-0 place-items-center rounded-control bg-violet-soft text-violet">
+                      <Icon name="play" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium">
+                        Канал трансляций
+                      </span>
+                      <span className="mt-1 block text-xs text-ink-faint">
+                        Болеем за своих
+                      </span>
+                    </span>
+                    <Icon name="arrow" className="size-4 text-violet" />
+                  </a>
+                ) : null}
+              </div>
             </div>
           </section>
           <Suspense fallback={<Skeleton className="h-60" />}>
@@ -68,43 +139,52 @@ async function CommunityTournaments() {
   const finished = tournaments.filter((t) => t.status === "finished").slice(0, 3);
   return (
     <>
-      <section id="tournaments" className="pb-10 pt-4">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow mb-3">Следующая встреча — в игре</p>
-            <h2 className="section-title">На нашей орбите</h2>
+      <section id="tournaments" className="pb-10 pt-6">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="grid size-12 place-items-center rounded-control bg-accent-soft text-accent">
+              <Icon name="trophy" className="size-6" />
+            </span>
+            <div>
+              <p className="eyebrow mb-1">Следующая встреча — в игре</p>
+              <h2 className="section-title">На нашей орбите</h2>
+            </div>
           </div>
-          <span className="eyebrow">{active.length} активных турниров</span>
+          <span className="rounded-pill border border-edge bg-panel px-3 py-2 font-mono text-xs text-ink-muted">
+            {active.length} активных турниров
+          </span>
         </div>
         {active.length ? (
-          <TournamentList tournaments={active} />
+          <TournamentExplorer tournaments={active} />
         ) : (
-          <div className="grid gap-6 border-y border-edge py-10 sm:grid-cols-2">
-            <h3 className="text-3xl font-normal tracking-tight sm:text-4xl">
-              Свои никуда
-              <br />
-              не пропадают.
-            </h3>
+          <div className="grid items-center gap-6 rounded-card border border-edge bg-panel p-6 sm:grid-cols-[auto_1fr_auto] sm:p-8">
+            <span className="grid size-20 place-items-center rounded-card bg-accent-soft text-accent">
+              <Icon name="game" className="size-10" />
+            </span>
             <div>
-              <p className="max-w-md text-sm leading-relaxed text-ink-muted">
-                Сейчас активных турниров нет. Новый кубок появится здесь, а сыгранные
-                матчи, составы и результаты всегда можно найти в архиве.
+              <h3 className="text-2xl tracking-tight">Свои никуда не пропадают.</h3>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-ink-muted">
+                Готовимся к следующей встрече. А пока — сыгранные матчи, составы и
+                лучшие моменты прошлых кубков.
               </p>
-              <div className="mt-6">
-                <ButtonLink href="/archive" variant="secondary">
-                  Заглянуть в архив ↗
-                </ButtonLink>
-              </div>
             </div>
+            <ButtonLink href="/archive" variant="secondary">
+              Заглянуть в архив
+              <Icon name="arrow" className="size-4" />
+            </ButtonLink>
           </div>
         )}
       </section>
       {finished.length ? (
         <section className="pt-6">
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="section-title">Последнее GG</h2>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Icon name="archive" className="size-6 text-violet" />
+              <h2 className="section-title">Последнее GG</h2>
+            </div>
             <ButtonLink href="/archive" variant="ghost">
-              Вся история ↗
+              Вся история
+              <Icon name="arrow" className="size-4" />
             </ButtonLink>
           </div>
           <TournamentList tournaments={finished} />
