@@ -85,8 +85,9 @@ supabase db reset              # применит миграции и supabase/s
 `0011` запрещает `players.*` для публичных ролей: прежнее приложение ещё использует
 эту выборку. После обновления выполнить `npm run db:check`.
 
-Telegram-вход и пользовательские кабинеты пока не выпущены. Для проверки
-совместимости Telegram OIDC с текущим Supabase Auth подготовлены команды:
+Регистрация игроков и пользовательские кабинеты пока не выпущены. Для проверки
+совместимости Telegram OIDC с текущим Supabase Auth подготовлены команды
+(Node.js 22+, как в CI):
 
 ```bash
 npm run auth:telegram:check    # только чтение настроек и проверка redirect
@@ -96,17 +97,34 @@ npm run auth:telegram:setup    # создать/обновить custom:telegram
 Для них нужны ключи Supabase из `.env`, `SUPABASE_ACCESS_TOKEN` и
 `NEXT_PUBLIC_SITE_URL` с фактическим адресом приложения. Для `setup` также нужны
 `TELEGRAM_CLIENT_ID` и `TELEGRAM_CLIENT_SECRET` из BotFather → бот → Login Widget.
-Там же в Allowed URLs указать `https://<project-ref>.supabase.co/auth/v1/callback`.
+В мини-приложении BotFather в Redirect URLs указать
+`https://<project-ref>.supabase.co/auth/v1/callback`.
 Эти секреты нужны локальному инструменту настройки, в браузер они не попадают.
 Команда `setup` сохраняет остальные разрешённые адреса возврата Supabase.
 
 Провайдер запрашивает только `openid profile`, без телефона и разрешения писать
-пользователю; включены PKCE и проверка nonce, email необязателен.
+пользователю; включён PKCE, `skip_nonce_check=false`, email необязателен.
+В реальном redirect проверяются code flow, state и PKCE S256. Supabase не
+добавляет nonce автоматически в этот запрос; прежнее требование nonce в preflight
+исправлено. Наличие флага `skip_nonce_check=false` само по себе не доказывает
+проверку nonce в callback.
 Документация: [Telegram OIDC](https://core.telegram.org/bots/telegram-login),
 [Supabase Custom Providers](https://supabase.com/docs/guides/auth/custom-oauth-providers).
-Автоматическая проверка не заменяет реальный вход: callback/обмен кода,
-сессию без email и повторный вход в тот же аккаунт ещё нужно подтвердить
-до реализации пользовательских actions и полного сценария регистрации.
+После `setup` запустить `npm run dev`, войти в админку и открыть
+`/admin/telegram` по адресу из `NEXT_PUBLIC_SITE_URL`. Кнопка «Проверка Telegram»
+есть на главной админки. Страница выполняет настоящий OAuth/PKCE-круг:
+`/auth/callback` обменивает одноразовый код через Supabase Auth, а сервер
+проверяет сессию вызовом `getUser`. Повторный вход тем же Telegram должен
+показать тот же Supabase Auth ID. Приватные HttpOnly cookies отдельны от
+cookie организатора, обновляются proxy только на этой закрытой странице;
+callback и ответы с сессией не кэшируются. Telegram-вход не выдаёт права
+организатора. Это техническая проверка: профиль игрока ещё не создаётся.
+
+Полный круг с реальным Telegram нужно подтвердить до реализации регистрации.
+Браузерные тесты с изолированным Auth проверяют обмен/одноразовость кода,
+привязку к браузеру, сохранение/обновление сессии, повторный вход, независимость
+прав организатора и отсутствие идентификаторов на публичных страницах. Они не
+подтверждают работу Telegram или корректность Client Secret.
 
 SQL-проверки можно запускать локально без Docker и без доступа к рабочей базе:
 

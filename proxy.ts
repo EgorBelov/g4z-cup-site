@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
+import { refreshSession } from "@/lib/supabase/refresh-session";
 
 /**
  * Proxy (formerly middleware — renamed in Next.js 16).
@@ -22,6 +23,7 @@ export async function proxy(request: NextRequest) {
   const authorised = secret ? await verifySessionToken(token, secret) : false;
 
   if (authorised) {
+    if (pathname === "/admin/telegram") return refreshSession(request);
     return NextResponse.next();
   }
 

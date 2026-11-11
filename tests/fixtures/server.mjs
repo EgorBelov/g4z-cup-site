@@ -1,5 +1,6 @@
 /** Isolated PostgREST stand-in for visual/navigation tests. Never uses real credentials. */
 import { createServer } from "node:http";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 
 const stamp = "2026-08-03T15:00:00Z";
 const base = {
@@ -355,10 +356,147 @@ const data = {
   login_attempts: [],
 };
 
+// Fake Auth exercises our callback/cookies against the real SSR SDK. It does
+// not pretend to verify Telegram or replace the mandatory real login check.
+const authCodes = new Map();
+const authSessions = new Map();
+const authRefreshTokens = new Map();
+const authUser = {
+  id: "a1000000-0000-4000-8000-000000000001",
+  aud: "authenticated",
+  role: "authenticated",
+  email: "",
+  phone: "",
+  app_metadata: { provider: "custom:telegram", providers: ["custom:telegram"] },
+  // Deliberately different: code must use the confirmed provider identity.
+  user_metadata: { preferred_username: "editable_untrusted_name" },
+  identities: [
+    {
+      id: "1234567890",
+      identity_id: "a2000000-0000-4000-8000-000000000001",
+      user_id: "a1000000-0000-4000-8000-000000000001",
+      provider: "custom:telegram",
+      identity_data: {
+        sub: "1234567890",
+        iss: "https://oauth.telegram.org",
+        preferred_username: "fixture_player",
+      },
+      created_at: stamp,
+      updated_at: stamp,
+    },
+  ],
+  created_at: stamp,
+};
+
+function json(res, status, body) {
+  res.writeHead(status, {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-store",
+  });
+  res.end(JSON.stringify(body));
+}
+
+function issueAuthSession() {
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: authUser.id,
+      aud: "authenticated",
+      role: "authenticated",
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      session_id: randomUUID(),
+    }),
+  ).toString("base64url");
+  const unsigned = `${Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")}.${payload}`;
+  const access = `${unsigned}.${createHmac("sha256", "fixture-auth-only").update(unsigned).digest("base64url")}`;
+  const session = {
+    access_token: access,
+    refresh_token: randomUUID(),
+    token_type: "bearer",
+    expires_in: 3600,
+    user: authUser,
+  };
+  authSessions.set(access, session);
+  authRefreshTokens.set(session.refresh_token, session);
+  return session;
+}
+
 createServer((req, res) => {
   const url = new URL(req.url, "http://127.0.0.1:54329");
   if (url.pathname === "/health") {
     res.end("ok");
+    return;
+  }
+  if (req.method === "GET" && url.pathname === "/auth/v1/authorize") {
+    const callback = url.searchParams.get("redirect_to");
+    const challenge = url.searchParams.get("code_challenge");
+    if (
+      url.searchParams.get("provider") !== "custom:telegram" ||
+      callback !== "http://127.0.0.1:3000/auth/callback" ||
+      !challenge ||
+      url.searchParams.get("code_challenge_method") !== "s256"
+    ) {
+      json(res, 400, { code: "validation_failed", msg: "Invalid fixture OAuth start" });
+      return;
+    }
+    const code = randomUUID();
+    authCodes.set(code, challenge);
+    res.writeHead(302, {
+      Location: `${callback}?code=${code}`,
+      "Cache-Control": "no-store",
+    });
+    res.end();
+    return;
+  }
+  if (req.method === "POST" && url.pathname === "/auth/v1/token") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => {
+      const input = JSON.parse(body);
+      const grant = url.searchParams.get("grant_type");
+      let valid = false;
+      if (grant === "pkce") {
+        const expected = authCodes.get(input.auth_code);
+        const actual =
+          typeof input.code_verifier === "string"
+            ? createHash("sha256").update(input.code_verifier).digest("base64url")
+            : null;
+        valid = Boolean(expected && expected === actual);
+        // A mismatched browser must not consume another browser's code.
+        if (valid) authCodes.delete(input.auth_code);
+      } else if (grant === "refresh_token") {
+        const old = authRefreshTokens.get(input.refresh_token);
+        valid = Boolean(old);
+        if (old) {
+          authSessions.delete(old.access_token);
+          authRefreshTokens.delete(input.refresh_token);
+        }
+      }
+      json(
+        res,
+        valid ? 200 : 400,
+        valid
+          ? issueAuthSession()
+          : { code: "bad_code_verifier", msg: "Invalid fixture exchange" },
+      );
+    });
+    return;
+  }
+  if (url.pathname === "/auth/v1/user" || url.pathname === "/auth/v1/logout") {
+    const access = req.headers.authorization?.replace(/^Bearer /, "");
+    const session = authSessions.get(access);
+    if (!session) {
+      json(res, 401, { code: "bad_jwt", msg: "Invalid fixture session" });
+    } else if (req.method === "POST" && url.pathname === "/auth/v1/logout") {
+      authSessions.delete(access);
+      authRefreshTokens.delete(session.refresh_token);
+      res.writeHead(204);
+      res.end();
+    } else {
+      json(res, 200, authUser);
+    }
     return;
   }
   if (req.method === "POST" && url.pathname === "/rest/v1/rpc/save_roster") {

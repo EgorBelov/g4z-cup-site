@@ -166,8 +166,8 @@ try {
       problems.push("Нужен включённый OIDC-провайдер Telegram.");
     if (!provider.email_optional)
       problems.push("Для Telegram требуется email_optional=true.");
-    if (provider.pkce_enabled === false || provider.skip_nonce_check)
-      problems.push("PKCE и проверка nonce должны быть включены.");
+    if (provider.pkce_enabled !== true || provider.skip_nonce_check)
+      problems.push("Нужны pkce_enabled=true и skip_nonce_check=false.");
     if (
       !provider.scopes?.includes("profile") ||
       provider.scopes?.some((s) => !["openid", "profile"].includes(s))
@@ -207,13 +207,16 @@ try {
       target.searchParams.get("redirect_uri") !== providerCallback ||
       target.searchParams.get("code_challenge_method") !== "S256" ||
       !target.searchParams.get("state") ||
-      !target.searchParams.get("nonce")
+      !target.searchParams.get("code_challenge") ||
+      target.searchParams.get("response_type") !== "code"
     ) {
       throw new Error(
-        "Supabase не сформировал ожидаемый Telegram redirect с PKCE/state/nonce.",
+        "Supabase не сформировал ожидаемый Telegram redirect с code/PKCE/state.",
       );
     }
-    console.log("✓ Supabase направляет на Telegram с PKCE/state/nonce");
+    // Custom OIDC code flows do not automatically add a nonce. Do not claim
+    // that checking the provider's skip_nonce_check setting proves otherwise.
+    console.log("✓ Supabase направляет на Telegram с code/PKCE/state");
     console.log(
       "Далее нужен реальный вход в браузере: проверить callback, сессию и повторный вход без email. Этот preflight их не подтверждает.",
     );

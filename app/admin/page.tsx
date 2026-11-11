@@ -26,6 +26,9 @@ export default async function AdminDashboardPage() {
           <ButtonLink href="/admin/audit" variant="secondary" size="sm">
             Журнал
           </ButtonLink>
+          <ButtonLink href="/admin/telegram" variant="secondary" size="sm">
+            Проверка Telegram
+          </ButtonLink>
         </>
       }
     >

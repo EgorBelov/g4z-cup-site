@@ -7,12 +7,23 @@ import { expect, test } from "@playwright/test";
 
 const paths = ["/", "/archive"];
 
+test.beforeEach(async ({ page }) => {
+  if (!process.env.PLAYWRIGHT_BASE_URL) {
+    // next start has no Vercel telemetry endpoints. Keep local smoke checks
+    // isolated just like tournament.spec.ts; real previews still check them.
+    await page.route("**/_vercel/**", (route) =>
+      route.fulfill({ status: 200, contentType: "application/javascript", body: "" }),
+    );
+  }
+});
+
 for (const path of paths) {
   test(`${path} responds and renders without client errors`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
-      if (message.type() === "error") errors.push(message.text());
+      if (message.type() === "error")
+        errors.push(`${message.text()} (${message.location().url})`);
     });
 
     const response = await page.goto(path, { waitUntil: "domcontentloaded" });
