@@ -9,6 +9,7 @@
 
 \set ON_ERROR_STOP on
 
+begin;
 create or replace function assert_equals(
   expected anyelement,
   actual anyelement,
@@ -321,5 +322,163 @@ begin
   raise notice 'all database logic assertions passed';
 end;
 $$;
+
+commit;
+
+-- Stable roster IDs, optimistic concurrency and all-or-nothing writes.
+begin;
+create function public.test_reject_roster_player() returns trigger language plpgsql as $$
+begin
+  if new.nickname = 'reject-this-player' then
+    raise exception 'synthetic write failure' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+create trigger test_roster_failure before insert or update on public.players
+  for each row execute function public.test_reject_roster_player();
+
+do $$
+declare
+  tid bigint; teamid bigint; otherteam bigint; firstid bigint; secondid bigint; foreignid bigint;
+  stageid bigint; matchid bigint; gameid bigint; pickid bigint; awardid bigint;
+  version bigint; new_version bigint; payload jsonb; invalid jsonb; old_count bigint;
+begin
+  insert into tournaments(slug, name, status) values ('roster-identity-test', 'Roster', 'upcoming') returning id into tid;
+  insert into teams(tournament_id, slug, name) values (tid, 'one', 'One') returning id into teamid;
+  insert into teams(tournament_id, slug, name) values (tid, 'two', 'Two') returning id into otherteam;
+  insert into players(team_id, nickname, mmr, steam_url, dotabuff_url, real_name)
+    values (teamid, 'First', 5000, 'https://steamcommunity.com/id/private', 'https://www.dotabuff.com/players/123', 'Private Name') returning id into firstid;
+  insert into players(team_id, nickname, mmr) values (teamid, 'Second', null) returning id into secondid;
+  insert into players(team_id, nickname) values (otherteam, 'Other team') returning id into foreignid;
+  insert into stages(tournament_id, kind, name) values(tid, 'round_robin', 'Stage') returning id into stageid;
+  insert into matches(tournament_id, stage_id, team1_id, team2_id) values(tid, stageid, teamid, otherteam) returning id into matchid;
+  insert into games(match_id, game_number) values(matchid, 1) returning id into gameid;
+  insert into game_picks(game_id, team_id, hero, player_id, order_no) values(gameid, teamid, 'Puck', firstid, 1) returning id into pickid;
+  insert into awards(tournament_id, title, player_id) values(tid, 'MVP', secondid) returning id into awardid;
+  select roster_version into version from teams where id = teamid;
+  payload := jsonb_build_array(
+    jsonb_build_object('id', secondid, 'nickname', 'Second renamed', 'mmr', null, 'is_captain', true, 'is_standin', false, 'sort_order', 1),
+    jsonb_build_object('id', firstid, 'nickname', 'First renamed', 'mmr', 5100, 'is_captain', false, 'is_standin', true, 'sort_order', 2)
+  );
+  perform save_roster(teamid, version, payload);
+  perform assert_equals(firstid, (select player_id from game_picks where id = pickid), 'reordering preserves draft identity');
+  perform assert_equals(secondid, (select player_id from awards where id = awardid), 'reordering preserves award identity');
+  perform assert_equals(2, (select sort_order from players where id = firstid), 'display position changes independently');
+  perform assert_equals(true, (select is_standin from players where id = firstid), 'substitute flag is editable');
+  perform assert_equals(null::integer, (select mmr from players where id = secondid), 'missing MMR remains optional');
+  perform assert_equals('https://steamcommunity.com/id/private'::text, (select steam_url from players where id = firstid), 'editing roster preserves private links');
+  perform assert_equals(1::bigint, (select count(*) from audit_log where entity_id = teamid and action = 'roster.replace'), 'roster audit is written once');
+  begin
+    perform save_roster(teamid, version, payload);
+    raise exception 'FAIL stale roster overwrote current version';
+  exception when serialization_failure then raise notice 'ok — stale roster refused'; end;
+  select roster_version into new_version from teams where id = teamid;
+  invalid := jsonb_set(payload, '{0,id}', to_jsonb(foreignid));
+  begin
+    perform save_roster(teamid, new_version, invalid);
+    raise exception 'FAIL player from another team accepted';
+  exception when check_violation then raise notice 'ok — foreign player refused'; end;
+  invalid := jsonb_set(payload, '{0,id}', to_jsonb(firstid));
+  begin
+    perform save_roster(teamid, new_version, invalid);
+    raise exception 'FAIL duplicate player accepted';
+  exception when invalid_parameter_value then raise notice 'ok — duplicate identity refused'; end;
+  invalid := jsonb_set(payload, '{1,sort_order}', '1');
+  begin
+    perform save_roster(teamid, new_version, invalid);
+    raise exception 'FAIL duplicate position accepted';
+  exception when invalid_parameter_value then raise notice 'ok — duplicate position refused'; end;
+  invalid := jsonb_set(payload, '{1,is_captain}', 'true');
+  begin
+    perform save_roster(teamid, new_version, invalid);
+    raise exception 'FAIL two captains accepted';
+  exception when invalid_parameter_value then raise notice 'ok — duplicate captain refused'; end;
+  invalid := jsonb_set(payload, '{1,mmr}', '-1');
+  begin
+    perform save_roster(teamid, new_version, invalid);
+    raise exception 'FAIL invalid MMR accepted';
+  exception when invalid_parameter_value then raise notice 'ok — invalid rating refused'; end;
+  begin
+    perform save_roster(teamid, new_version, 'null'::jsonb);
+    raise exception 'FAIL malformed roster accepted';
+  exception when invalid_parameter_value then raise notice 'ok — malformed roster refused'; end;
+  -- Deletion happens before updates. A failing update must undo that deletion,
+  -- its version change and the ON DELETE SET NULL on draft references.
+  invalid := jsonb_build_array(jsonb_set(payload->0, '{nickname}', '"reject-this-player"'));
+  begin
+    perform save_roster(teamid, new_version, invalid);
+    raise exception 'FAIL synthetic failure was ignored';
+  exception when check_violation then raise notice 'ok — entire write rolled back'; end;
+  perform assert_equals(2::bigint, (select count(*) from players where team_id = teamid), 'failed write keeps removed players');
+  perform assert_equals(firstid, (select player_id from game_picks where id = pickid), 'failed deletion keeps draft references');
+  perform assert_equals(new_version, (select roster_version from teams where id = teamid), 'failed write keeps version');
+  perform assert_equals(1::bigint, (select count(*) from audit_log where entity_id = teamid and action = 'roster.replace'), 'failed write creates no audit entry');
+  -- A new row has no ID; removing a row never assigns its ID to a replacement.
+  payload := jsonb_build_array(payload->1, jsonb_build_object('id', null, 'nickname', 'New player', 'mmr', null,
+    'is_captain', false, 'is_standin', false, 'sort_order', 3));
+  perform save_roster(teamid, new_version, payload);
+  perform assert_equals(null::bigint, (select player_id from awards where id = awardid), 'removed player follows existing archive FK behavior');
+  perform assert_equals(firstid, (select player_id from game_picks where id = pickid), 'remaining player keeps draft');
+  perform assert_equals(true, (select id <> firstid and id <> secondid from players where team_id = teamid and nickname = 'New player'), 'new player gets a new identity');
+
+  perform assert_equals(false, has_function_privilege('anon', 'public.save_roster(bigint,bigint,jsonb,text)', 'EXECUTE'), 'guest cannot save roster');
+  perform assert_equals(false, has_function_privilege('authenticated', 'public.save_roster(bigint,bigint,jsonb,text)', 'EXECUTE'), 'player session cannot save administrative roster');
+  perform assert_equals(true, has_function_privilege('service_role', 'public.save_roster(bigint,bigint,jsonb,text)', 'EXECUTE'), 'service role can save roster');
+end;
+$$;
+
+-- Positive public read and negative private reads on the same nonempty fixture.
+set local role anon;
+do $$
+begin
+  perform assert_equals(1::bigint, (select count(*) from players where nickname = 'First renamed'), 'guest sees published nickname');
+  begin
+    perform steam_url from players limit 1;
+    raise exception 'FAIL guest read Steam';
+  exception when insufficient_privilege then raise notice 'ok — guest cannot read Steam'; end;
+  begin
+    perform dotabuff_url from players limit 1;
+    raise exception 'FAIL guest read Dotabuff';
+  exception when insufficient_privilege then raise notice 'ok — guest cannot read Dotabuff'; end;
+  begin
+    perform real_name from players limit 1;
+    raise exception 'FAIL guest read real name';
+  exception when insufficient_privilege then raise notice 'ok — guest cannot read real name'; end;
+  begin
+    perform save_roster(null, 0, '[]');
+    raise exception 'FAIL guest called save_roster';
+  exception when insufficient_privilege then raise notice 'ok — guest RPC denied'; end;
+end;
+$$;
+reset role;
+set local role authenticated;
+do $$
+begin
+  perform assert_equals(1::bigint, (select count(*) from players where nickname = 'First renamed'), 'other player sees published nickname');
+  begin
+    perform steam_url, dotabuff_url, real_name from players limit 1;
+    raise exception 'FAIL player read private columns';
+  exception when insufficient_privilege then raise notice 'ok — other player cannot read private columns'; end;
+  begin
+    perform save_roster(null, 0, '[]');
+    raise exception 'FAIL player called save_roster';
+  exception when insufficient_privilege then raise notice 'ok — player RPC denied'; end;
+end;
+$$;
+reset role;
+set local role service_role;
+do $$
+declare teamid bigint; version bigint; payload jsonb;
+begin
+  perform assert_equals(1::bigint, (select count(*) from players where steam_url = 'https://steamcommunity.com/id/private'), 'organizer retains private access');
+  select t.id, t.roster_version into teamid, version from teams t join tournaments r on r.id = t.tournament_id where r.slug = 'roster-identity-test' and t.slug = 'two';
+  payload := jsonb_build_array(jsonb_build_object('id', null, 'nickname', 'Service role write', 'is_captain', false, 'is_standin', false, 'sort_order', 1));
+  perform save_roster(teamid, version, payload);
+  perform assert_equals(1::bigint, (select count(*) from players where team_id = teamid), 'service role executes transactional save');
+end;
+$$;
+reset role;
+rollback;
 
 drop function assert_equals(anyelement, anyelement, text);

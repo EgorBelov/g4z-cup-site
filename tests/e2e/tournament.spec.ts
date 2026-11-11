@@ -276,6 +276,86 @@ test("tablet navigation fits without a horizontal page scroll", async ({ page })
   await fitsViewport(page);
 });
 
+test("roster edits preserve player IDs, reject stale tabs and keep private fields off public pages", async ({
+  page,
+  context,
+  baseURL,
+  request,
+}, info) => {
+  test.setTimeout(120_000);
+  const teamId = info.project.name === "mobile" ? 901 : 900;
+  const route = `/admin/t/orbit-dota/teams/${teamId}`;
+  await context.addCookies([
+    {
+      name: "g4z_session",
+      value: await createSessionToken(fixtureSecret),
+      url: baseURL!,
+    },
+  ]);
+  await page.goto(route, { waitUntil: "domcontentloaded" });
+  const stale = await context.newPage();
+  await stale.goto(route, { waitUntil: "domcontentloaded" });
+  try {
+    await page.getByLabel("Ник игрока 2", { exact: true }).fill("Переставленный игрок");
+    await page.getByRole("button", { name: "Поднять игрока 2", exact: true }).click();
+    await expect(page.getByLabel("Ник игрока 1", { exact: true })).toHaveValue(
+      "Переставленный игрок",
+    );
+    await expect(page.locator('[name="player_id"]').first()).toHaveValue(
+      String(teamId * 10 + 1),
+    );
+    await page.getByLabel("Слот игрока 1", { exact: true }).selectOption("true");
+    await page.getByLabel("Ник игрока 3", { exact: true }).fill("");
+    await page.getByRole("button", { name: "+ Добавить игрока", exact: true }).click();
+    await page.getByLabel("Ник игрока 8", { exact: true }).fill("Новый участник");
+    await fitsViewport(page);
+    await page.screenshot({
+      path: info.outputPath("roster-editor.png"),
+      fullPage: true,
+    });
+    await page.getByRole("button", { name: "Сохранить состав", exact: true }).click();
+    // A successful save consumes the version and remounts rows from the DB.
+    await expect(page.locator('[name="roster_version"]')).toHaveValue("1");
+    const result = await request.get(
+      `http://127.0.0.1:54329/rest/v1/players?team_id=eq.${teamId}&order=sort_order`,
+      {
+        headers: { apikey: "fixture-service-key" },
+      },
+    );
+    const saved = await result.json();
+    expect(saved[0]).toMatchObject({
+      id: teamId * 10 + 1,
+      nickname: "Переставленный игрок",
+      is_standin: true,
+      mmr: null,
+    });
+    expect(saved[1]).toMatchObject({
+      id: teamId * 10,
+      is_captain: true,
+      steam_url: "https://steamcommunity.com/id/PRIVATE_STEAM",
+    });
+    expect(saved.some((p: { id: number }) => p.id === teamId * 10 + 2)).toBe(false);
+    expect(saved.at(-1).nickname).toBe("Новый участник");
+
+    await stale.getByLabel("Ник игрока 1", { exact: true }).fill("Устаревшая правка");
+    await stale.getByRole("button", { name: "Сохранить состав", exact: true }).click();
+    await expect(stale.getByRole("status")).toContainText("Состав уже изменён");
+    const response = await page.goto(
+      `/t/orbit-dota/teams/roster-${info.project.name}`,
+      { waitUntil: "domcontentloaded" },
+    );
+    const html = await response!.text();
+    expect(html).not.toContain("PRIVATE_STEAM");
+    expect(html).not.toContain("PRIVATE_REAL_NAME");
+    await expect(page.getByText("Переставленный игрок")).toBeVisible();
+    await expect(page.getByText("Новый участник", { exact: true })).toBeVisible();
+    await expect(page.getByText("Устаревшая правка", { exact: true })).toBeHidden();
+    await fitsViewport(page);
+  } finally {
+    await stale.close();
+  }
+});
+
 test("keyboard users can skip navigation and close the mobile menu", async ({
   page,
   isMobile,

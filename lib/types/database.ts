@@ -63,6 +63,7 @@ export type Group = {
 
 export type Team = {
   id: number;
+  roster_version: number;
   tournament_id: number;
   slug: string;
   name: string;
@@ -86,6 +87,11 @@ export type Player = {
   sort_order: number;
   mmr: number | null;
 };
+
+/** Public snapshots never carry real names or private external links. */
+export type PublicPlayer = Omit<Player, "real_name" | "steam_url" | "dotabuff_url">;
+export const PUBLIC_PLAYER_COLUMNS =
+  "id,team_id,nickname,role,is_captain,is_standin,sort_order,mmr";
 
 export type Match = {
   id: number;

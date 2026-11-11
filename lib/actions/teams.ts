@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { assertAdmin } from "@/lib/auth/guard";
+import { assertAdmin, requestIp } from "@/lib/auth/guard";
 import { writeClient } from "@/lib/supabase/write";
 import { audit } from "@/lib/audit";
 import { invalidate } from "@/lib/actions/revalidate";
@@ -14,7 +14,7 @@ import {
   teamSchema,
 } from "@/lib/validation/schemas";
 import { slugify, uniqueSlug } from "@/lib/utils/slug";
-import type { Player, Team, Tournament } from "@/lib/types/database";
+import type { Team, Tournament } from "@/lib/types/database";
 
 async function tournamentSlug(id: number): Promise<string> {
   const { data, error } = await writeClient()
@@ -135,11 +135,8 @@ function parseMmr(value: string | undefined): number | null {
 }
 
 /**
- * Saves a roster by diffing against the stored one.
- *
- * The v1 panel deleted every player and re-inserted them, so a failure halfway
- * through lost the roster. Here existing rows are updated in place and only the
- * genuinely removed ones are deleted.
+ * Stable IDs identify players; row position only controls display order.
+ * The RPC checks ownership and version and saves the entire roster atomically.
  */
 export async function saveRosterAction(
   _state: ActionState,
@@ -150,7 +147,17 @@ export async function saveRosterAction(
   const parsed = parseForm(rosterSchema, formData);
   if (parsed.state) return parsed.state;
 
-  const { team_id: teamId, nickname, real_name, role, mmr, captain } = parsed.data;
+  const {
+    team_id: teamId,
+    roster_version,
+    player_id,
+    nickname,
+    real_name,
+    role,
+    mmr,
+    captain,
+    is_standin,
+  } = parsed.data;
   const client = writeClient();
 
   const teamResult = await client
@@ -165,54 +172,27 @@ export async function saveRosterAction(
 
   const rows = nickname
     .map((value, index) => ({
+      id: player_id[index],
       nickname: value.trim(),
       real_name: (real_name[index] ?? "").trim() || null,
       role: (role[index] ?? "").trim() || null,
       mmr: parseMmr(mmr[index]),
       is_captain: captain === index + 1,
+      is_standin: is_standin[index] === "true",
       sort_order: index + 1,
     }))
     .filter((row) => row.nickname !== "");
 
-  const existingResult = await client
-    .from("players")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("sort_order");
-
-  if (existingResult.error) return fail(existingResult.error.message);
-  const existing = existingResult.data as Player[];
-
-  const updates = rows.map((row, index) => {
-    const current = existing[index];
-    if (current) {
-      return client
-        .from("players")
-        .update({ ...row, sort_order: index + 1 })
-        .eq("id", current.id);
-    }
-    return client.from("players").insert({ ...row, team_id: teamId });
+  const { error } = await client.rpc("save_roster", {
+    p_team_id: teamId,
+    p_expected_version: roster_version,
+    p_players: rows,
+    p_ip: await requestIp(),
   });
+  if (error) return fail(`Не удалось сохранить состав: ${error.message}`);
 
-  const results = await Promise.all(updates);
-  const firstError = results.find((result) => result.error)?.error;
-  if (firstError) return fail(`Не удалось сохранить состав: ${firstError.message}`);
-
-  const removed = existing.slice(rows.length).map((player) => player.id);
-  if (removed.length > 0) {
-    const { error } = await client.from("players").delete().in("id", removed);
-    if (error) return fail(`Не удалось удалить лишних игроков: ${error.message}`);
-  }
-
-  await audit({
-    action: "roster.replace",
-    entity: "team",
-    entityId: teamId,
-    summary: `Состав ${team.name}: ${rows.length} игроков`,
-    payload: rows,
-  });
-
-  invalidate(tags.teams(slug));
+  // Match pages share the teams tag because they include rosters, too.
+  invalidate(tags.teams(slug), tags.results(slug));
   redirect(`/admin/t/${slug}/teams/${teamId}`);
 }
 

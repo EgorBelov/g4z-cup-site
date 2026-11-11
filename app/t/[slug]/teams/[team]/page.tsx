@@ -128,11 +128,6 @@ export default async function TeamPage({ params }: Props) {
                           </span>
                         ) : null}
                       </p>
-                      {player.real_name ? (
-                        <p className="truncate text-xs text-ink-faint">
-                          {player.real_name}
-                        </p>
-                      ) : null}
                     </div>
                     <span className="shrink-0 text-right text-xs text-ink-faint">
                       {isDota(tournament.game) && player.mmr !== null ? (

@@ -59,8 +59,10 @@ export default async function AdminTeamPage({ params }: Props) {
           />
           <div className="p-5">
             <RosterForm
+              key={data.team.roster_version}
               showMmr={isDota(tournament.game)}
               teamId={data.team.id}
+              rosterVersion={data.team.roster_version}
               players={data.players}
             />
           </div>

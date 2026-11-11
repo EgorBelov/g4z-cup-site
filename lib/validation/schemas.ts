@@ -106,23 +106,77 @@ export const teamSchema = z.object({
   logo_url: optionalUrl,
 });
 
-export const rosterSchema = z.object({
-  team_id: z.coerce.number().int().positive(),
-  nickname: z.union([z.string(), z.array(z.string())]).transform(toArray),
-  real_name: z
-    .union([z.string(), z.array(z.string())])
-    .optional()
-    .transform(toArray),
-  role: z
-    .union([z.string(), z.array(z.string())])
-    .optional()
-    .transform(toArray),
-  mmr: z
-    .union([z.string(), z.array(z.string())])
-    .optional()
-    .transform(toArray),
-  captain: optionalInt,
-});
+export const rosterSchema = z
+  .object({
+    team_id: z.coerce.number().int().positive(),
+    roster_version: z.coerce.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    player_id: z
+      .union([z.string(), z.array(z.string())])
+      .transform(toArray)
+      .pipe(
+        z
+          .array(
+            z
+              .string()
+              .regex(/^$|^[1-9]\d*$/)
+              .transform((id) => (id === "" ? null : Number(id)))
+              .refine((id) => id === null || Number.isSafeInteger(id)),
+          )
+          .max(64),
+      ),
+    nickname: z
+      .union([z.string(), z.array(z.string())])
+      .transform(toArray)
+      .pipe(z.array(trimmed.max(80)).max(64)),
+    real_name: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .transform(toArray),
+    role: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .transform(toArray),
+    mmr: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .transform(toArray),
+    captain: optionalInt,
+    is_standin: z
+      .union([z.string(), z.array(z.string())])
+      .transform(toArray)
+      .pipe(z.array(z.enum(["false", "true"]))),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      [data.player_id, data.is_standin, data.real_name, data.role, data.mmr].some(
+        (values) => values.length !== data.nickname.length,
+      )
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Некорректные строки состава",
+        path: ["player_id"],
+      });
+    }
+    const ids = data.player_id.filter((id) => id !== null);
+    if (new Set(ids).size !== ids.length) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Игрок повторяется в составе",
+        path: ["player_id"],
+      });
+    }
+    if (
+      data.captain !== null &&
+      (data.captain < 1 || data.captain > data.nickname.length)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Некорректная строка капитана",
+        path: ["captain"],
+      });
+    }
+  });
 
 function toArray(value: string | string[] | undefined): string[] {
   if (value === undefined) return [];

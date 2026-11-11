@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { FormFeedback, IconSubmit, SubmitButton } from "@/components/ui/Form";
 import { idle } from "@/lib/actions/state";
@@ -82,80 +83,146 @@ export function TeamForm({
 }
 
 /**
- * Roster editor. Rows are matched to existing players by position, so saving
- * updates in place instead of wiping and re-inserting the squad.
+ * React keys and submitted IDs follow players when rows are reordered.
  */
 export function RosterForm({
   teamId,
+  rosterVersion,
   players,
   showMmr = true,
 }: {
   teamId: number;
+  rosterVersion: number;
   players: Player[];
   showMmr?: boolean;
 }) {
   const [state, action] = useActionState(saveRosterAction, idle);
-  const captainIndex = players.findIndex((player) => player.is_captain);
+  const [rows, setRows] = useState(() =>
+    Array.from({ length: Math.max(ROSTER_SLOTS, players.length) }, (_, index) => ({
+      key: players[index] ? `player-${players[index].id}` : `new-${index}`,
+      player: players[index],
+    })),
+  );
+
+  function moveRow(index: number, direction: -1 | 1) {
+    setRows((current) => {
+      const next = current.slice();
+      [next[index], next[index + direction]] = [next[index + direction]!, next[index]!];
+      return next;
+    });
+  }
 
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="team_id" value={teamId} />
+      <input type="hidden" name="roster_version" value={rosterVersion} />
 
       <div className="space-y-2">
-        {Array.from({ length: ROSTER_SLOTS }, (_, index) => {
-          const player = players[index];
-
+        {rows.map(({ key, player }, index) => {
           return (
             <div
-              key={index}
-              className="grid gap-2 rounded-control border border-edge bg-surface-sunken/60 p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto]"
+              key={key}
+              data-roster-row
+              className="space-y-2 rounded-control border border-edge bg-surface-sunken/60 p-3"
             >
-              <Input
-                name="nickname"
-                defaultValue={player?.nickname ?? ""}
-                placeholder={`Ник игрока ${index + 1}`}
-                aria-label={`Ник игрока ${index + 1}`}
-              />
-              <Input
-                name="real_name"
-                defaultValue={player?.real_name ?? ""}
-                placeholder="Имя (необязательно)"
-                aria-label={`Имя игрока ${index + 1}`}
-              />
-              <Input
-                name="role"
-                defaultValue={player?.role ?? ""}
-                placeholder="Роль"
-                aria-label={`Роль игрока ${index + 1}`}
-              />
-              <Input
-                className={showMmr ? undefined : "hidden"}
-                name="mmr"
-                type="number"
-                min={0}
-                max={20000}
-                defaultValue={player?.mmr ?? ""}
-                placeholder="MMR"
-                aria-label={`MMR игрока ${index + 1}`}
-              />
-              <label className="flex items-center justify-center gap-2 text-xs text-ink-faint">
-                <input
-                  type="radio"
-                  name="captain"
-                  value={index + 1}
-                  defaultChecked={captainIndex === index}
-                  className="accent-accent"
+              <input type="hidden" name="player_id" value={player?.id ?? ""} />
+              <div className="flex items-center justify-between gap-2">
+                <span className="eyebrow">Игрок {index + 1}</span>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={index === 0}
+                    aria-label={`Поднять игрока ${index + 1}`}
+                    onClick={() => moveRow(index, -1)}
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={index === rows.length - 1}
+                    aria-label={`Опустить игрока ${index + 1}`}
+                    onClick={() => moveRow(index, 1)}
+                  >
+                    ↓
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Input
+                  name="nickname"
+                  defaultValue={player?.nickname ?? ""}
+                  maxLength={80}
+                  placeholder={`Ник игрока ${index + 1}`}
+                  aria-label={`Ник игрока ${index + 1}`}
                 />
-                капитан
-              </label>
+                <Input
+                  name="real_name"
+                  defaultValue={player?.real_name ?? ""}
+                  placeholder="Имя (необязательно)"
+                  aria-label={`Имя игрока ${index + 1}`}
+                />
+                <Input
+                  name="role"
+                  defaultValue={player?.role ?? ""}
+                  placeholder="Роль"
+                  aria-label={`Роль игрока ${index + 1}`}
+                />
+                <Input
+                  className={showMmr ? undefined : "hidden"}
+                  name="mmr"
+                  type="number"
+                  min={0}
+                  max={20000}
+                  defaultValue={player?.mmr ?? ""}
+                  placeholder="MMR"
+                  aria-label={`MMR игрока ${index + 1}`}
+                />
+                <label className="flex items-center justify-center gap-2 text-xs text-ink-faint">
+                  <input
+                    type="radio"
+                    name="captain"
+                    value={index + 1}
+                    defaultChecked={player?.is_captain ?? false}
+                    className="accent-accent"
+                  />
+                  капитан
+                </label>
+                <Select
+                  name="is_standin"
+                  defaultValue={String(player?.is_standin ?? false)}
+                  aria-label={`Слот игрока ${index + 1}`}
+                >
+                  <option value="false">Основной состав</option>
+                  <option value="true">Запасной</option>
+                </Select>
+              </div>
             </div>
           );
         })}
       </div>
 
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        disabled={rows.length >= 64}
+        onClick={() =>
+          setRows((current) => [
+            ...current,
+            { key: `new-${current.length}`, player: undefined },
+          ])
+        }
+      >
+        + Добавить игрока
+      </Button>
+
       <p className="text-xs text-ink-faint">
-        Пустые строки игнорируются. Игроки, которых вы убрали, удаляются только после
-        успешного сохранения остальных.
+        Чтобы убрать игрока, очистите его ник. Перестановка строк сохраняет связи с
+        драфтами и наградами. Весь состав сохраняется одним действием.
       </p>
 
       <FormFeedback state={state} />

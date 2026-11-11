@@ -6,6 +6,7 @@ import {
   unwrap,
 } from "@/lib/supabase/read";
 import { tags } from "@/lib/cache/tags";
+import { PUBLIC_PLAYER_COLUMNS } from "@/lib/types/database";
 import type {
   Award,
   Game,
@@ -14,7 +15,7 @@ import type {
   GamePick,
   MatchDetails,
   Placement,
-  Player,
+  PublicPlayer,
   StandingRow,
   Stage,
   Team,
@@ -120,7 +121,7 @@ export async function getTeams(slug: string): Promise<Team[]> {
 
 /** Rosters and groups for the teams listing, in one cached round trip. */
 export async function getRosters(slug: string): Promise<{
-  players: Player[];
+  players: PublicPlayer[];
   groups: Group[];
 }> {
   "use cache";
@@ -136,8 +137,12 @@ export async function getRosters(slug: string): Promise<{
 
   const [players, groups] = await Promise.all([
     teamIds.length
-      ? client.from("players").select("*").in("team_id", teamIds).order("sort_order")
-      : Promise.resolve({ data: [] as Player[], error: null }),
+      ? client
+          .from("players")
+          .select(PUBLIC_PLAYER_COLUMNS)
+          .in("team_id", teamIds)
+          .order("sort_order")
+      : Promise.resolve({ data: [] as PublicPlayer[], error: null }),
     client
       .from("groups")
       .select("*")
@@ -146,14 +151,14 @@ export async function getRosters(slug: string): Promise<{
   ]);
 
   return {
-    players: unwrap(players, "getRosters.players") as Player[],
+    players: unwrap(players, "getRosters.players") as PublicPlayer[],
     groups: unwrap(groups, "getRosters.groups") as Group[],
   };
 }
 
 export type TeamPage = {
   team: Team;
-  players: Player[];
+  players: PublicPlayer[];
   matches: MatchDetails[];
 };
 
@@ -183,7 +188,11 @@ export async function getTeamPage(
   const typedTeam = team as Team;
 
   const [players, matches] = await Promise.all([
-    client.from("players").select("*").eq("team_id", typedTeam.id).order("sort_order"),
+    client
+      .from("players")
+      .select(PUBLIC_PLAYER_COLUMNS)
+      .eq("team_id", typedTeam.id)
+      .order("sort_order"),
     client
       .from("match_details")
       .select(MATCH_COLUMNS)
@@ -195,7 +204,7 @@ export async function getTeamPage(
 
   return {
     team: typedTeam,
-    players: unwrap(players, "getTeamPage.players") as Player[],
+    players: unwrap(players, "getTeamPage.players") as PublicPlayer[],
     matches: unwrap(matches, "getTeamPage.matches") as MatchDetails[],
   };
 }
@@ -267,7 +276,7 @@ export type MatchPage = {
   games: Game[];
   picks: GamePick[];
   bans: GameBan[];
-  rosters: { team1: Player[]; team2: Player[] };
+  rosters: { team1: PublicPlayer[]; team2: PublicPlayer[] };
 };
 
 export async function getMatchPage(matchId: number): Promise<MatchPage | null> {
@@ -289,6 +298,7 @@ export async function getMatchPage(matchId: number): Promise<MatchPage | null> {
   if (!match) return null;
 
   const typed = match as MatchDetails;
+  cacheTag(tags.teams(typed.tournament_slug));
 
   const gamesResult = await client
     .from("games")
@@ -309,17 +319,17 @@ export async function getMatchPage(matchId: number): Promise<MatchPage | null> {
     typed.team1_id
       ? client
           .from("players")
-          .select("*")
+          .select(PUBLIC_PLAYER_COLUMNS)
           .eq("team_id", typed.team1_id)
           .order("sort_order")
-      : Promise.resolve({ data: [] as Player[], error: null }),
+      : Promise.resolve({ data: [] as PublicPlayer[], error: null }),
     typed.team2_id
       ? client
           .from("players")
-          .select("*")
+          .select(PUBLIC_PLAYER_COLUMNS)
           .eq("team_id", typed.team2_id)
           .order("sort_order")
-      : Promise.resolve({ data: [] as Player[], error: null }),
+      : Promise.resolve({ data: [] as PublicPlayer[], error: null }),
   ]);
 
   return {
@@ -328,8 +338,8 @@ export async function getMatchPage(matchId: number): Promise<MatchPage | null> {
     picks: unwrap(picks, "getMatchPage.picks") as GamePick[],
     bans: unwrap(bans, "getMatchPage.bans") as GameBan[],
     rosters: {
-      team1: unwrap(roster1, "getMatchPage.roster1") as Player[],
-      team2: unwrap(roster2, "getMatchPage.roster2") as Player[],
+      team1: unwrap(roster1, "getMatchPage.roster1") as PublicPlayer[],
+      team2: unwrap(roster2, "getMatchPage.roster2") as PublicPlayer[],
     },
   };
 }

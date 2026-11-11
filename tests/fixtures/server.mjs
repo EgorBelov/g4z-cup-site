@@ -121,18 +121,32 @@ const teams = [1, 2, 3].flatMap((id) => [
     description: null,
   },
 ]);
-const players = teams.flatMap((team) =>
+for (const [index, viewport] of ["desktop", "mobile"].entries()) {
+  teams.push({
+    id: 900 + index,
+    tournament_id: 1,
+    slug: `roster-${viewport}`,
+    name: `Состав ${viewport}`,
+    tag: "TEST",
+    group_id: null,
+    seed: null,
+    logo_url: null,
+    description: null,
+  });
+}
+for (const team of teams) team.roster_version = 0;
+let players = teams.flatMap((team) =>
   Array.from({ length: 7 }, (_, n) => ({
     id: team.id * 10 + n,
     team_id: team.id,
     nickname: n === 0 ? "ОченьДлинныйНикИгрокаБезПробелов123456" : `player_${n + 1}`,
-    real_name: null,
+    real_name: team.id >= 900 ? "PRIVATE_REAL_NAME" : null,
     role: "Support",
     is_captain: n === 0,
     is_standin: n >= 5,
     mmr: n === 1 ? null : 4000 + n * 100,
-    steam_url: null,
-    dotabuff_url: null,
+    steam_url: team.id >= 900 ? "https://steamcommunity.com/id/PRIVATE_STEAM" : null,
+    dotabuff_url: team.id >= 900 ? "https://www.dotabuff.com/players/123456789" : null,
     sort_order: n + 1,
   })),
 );
@@ -347,6 +361,58 @@ createServer((req, res) => {
     res.end("ok");
     return;
   }
+  if (req.method === "POST" && url.pathname === "/rest/v1/rpc/save_roster") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => {
+      const input = JSON.parse(body);
+      const team = teams.find((t) => t.id === input.p_team_id);
+      if (
+        ![900, 901].includes(team?.id) ||
+        req.headers.apikey !== "fixture-service-key"
+      ) {
+        res.writeHead(405);
+        res.end("Read-only fixture");
+        return;
+      }
+      let error;
+      if (team.roster_version !== input.p_expected_version)
+        error = {
+          code: "40001",
+          message: "Состав уже изменён. Обновите страницу перед сохранением.",
+        };
+      else if (
+        input.p_players.some(
+          (p) =>
+            p.id !== null &&
+            !players.some((old) => old.id === p.id && old.team_id === team.id),
+        )
+      )
+        error = { code: "23514", message: "Игрок не принадлежит этой команде" };
+      if (error) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(error));
+        return;
+      }
+      const roster = input.p_players.map((p, index) => ({
+        ...(players.find((old) => old.id === p.id) ?? {
+          steam_url: null,
+          dotabuff_url: null,
+        }),
+        ...p,
+        id: p.id ?? team.id * 1000 + team.roster_version * 100 + index,
+        team_id: team.id,
+      }));
+      players = players.filter((p) => p.team_id !== team.id).concat(roster);
+      data.players = players;
+      team.roster_version++;
+      res.writeHead(204);
+      res.end();
+    });
+    return;
+  }
   if (req.method === "POST" && url.pathname === "/rest/v1/rpc/set_match_lifecycle") {
     let body = "";
     req.on("data", (chunk) => {
@@ -437,6 +503,18 @@ createServer((req, res) => {
     res.end(JSON.stringify({ message: `Unknown fixture relation ${relation}` }));
     return;
   }
+  const columns = url.searchParams.get("select") ?? "*";
+  if (
+    relation === "players" &&
+    req.headers.apikey !== "fixture-service-key" &&
+    (columns === "*" || /(?:real_name|steam_url|dotabuff_url)/.test(columns))
+  ) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({ code: "42501", message: "permission denied for table players" }),
+    );
+    return;
+  }
   let rows = data[relation].slice();
   for (const [field, expression] of url.searchParams) {
     if (["select", "order", "limit", "offset"].includes(field)) continue;
@@ -484,6 +562,10 @@ createServer((req, res) => {
   if (url.searchParams.has("limit"))
     rows = rows.slice(0, Number(url.searchParams.get("limit")));
   const object = req.headers.accept?.includes("application/vnd.pgrst.object+json");
+  if (columns !== "*")
+    rows = rows.map((row) =>
+      Object.fromEntries(columns.split(",").map((column) => [column, row[column]])),
+    );
   res.writeHead(object && rows.length > 1 ? 406 : 200, {
     "Content-Type": "application/json",
     "Content-Range": `0-${Math.max(0, rows.length - 1)}/${total}`,

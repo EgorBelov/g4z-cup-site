@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { averageMmr, formatMmr } from "@/lib/format/mmr";
-import type { Player, Team } from "@/lib/types/database";
+import type { PublicPlayer, Team } from "@/lib/types/database";
 
 export function TeamCard({
   team,
@@ -13,7 +13,7 @@ export function TeamCard({
 }: {
   team: Team;
   groupName?: string | null;
-  players: Player[];
+  players: PublicPlayer[];
   href: string;
   showMmr?: boolean;
 }) {

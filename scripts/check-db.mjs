@@ -80,7 +80,12 @@ const problems = [];
 for (const [relation, migration] of required) {
   const { error } = await client
     .from(relation)
-    .select("*", { head: true, count: "exact" });
+    .select(
+      relation === "players"
+        ? "id,team_id,nickname,role,is_captain,is_standin,sort_order,mmr"
+        : "*",
+      { head: true, count: "exact" },
+    );
 
   if (error) {
     problems.push({ relation, migration, message: error.message });
@@ -90,24 +95,26 @@ for (const [relation, migration] of required) {
   }
 }
 
-// The operational tables must NOT be readable with the anon key.
-for (const relation of ["audit_log", "login_attempts"]) {
-  const { data, error } = await client.from(relation).select("id").limit(1);
-
-  if (error && isNetworkError(error.message)) {
-    console.log(`? ${relation.padEnd(22)} проверить не удалось: ${error.message}`);
-    continue;
-  }
-
-  if (!error && data && data.length > 0) {
+// A denied query proves more than an empty table. Include private columns of
+// published snapshots: hiding them only in the UI would leave REST readable.
+for (const [relation, columns, migration] of [
+  ["audit_log", "id", "0004_rls.sql"],
+  ["login_attempts", "id", "0004_rls.sql"],
+  ["players", "steam_url", "0011_player_privacy.sql"],
+  ["players", "dotabuff_url", "0011_player_privacy.sql"],
+  ["players", "real_name", "0011_player_privacy.sql"],
+]) {
+  const { error } = await client.from(relation).select(columns).limit(1);
+  const label = `${relation}.${columns}`;
+  if (error?.code !== "42501") {
     problems.push({
-      relation,
-      migration: "0004_rls.sql",
-      message: "таблица читается публичным ключом — RLS или права не применены",
+      relation: label,
+      migration,
+      message: error?.message ?? "запрос не запрещён публичной роли",
     });
-    console.log(`✗ ${relation.padEnd(22)} доступна анонимно, чего быть не должно`);
+    console.log(`✗ ${label}: запрет доступа не подтверждён`);
   } else {
-    console.log(`✓ ${relation} закрыта для публичного ключа`);
+    console.log(`✓ ${label} закрыто для публичного ключа`);
   }
 }
 
@@ -140,6 +147,32 @@ if (env.SUPABASE_SERVICE_ROLE_KEY) {
   } else {
     console.log("✓ set_match_lifecycle закрыта для публичного ключа");
   }
+  const rosterInput = { p_team_id: null, p_expected_version: 0, p_players: [] };
+  const { error: rosterError } = await service.rpc("save_roster", rosterInput);
+  const { error: rosterPublicError } = await client.rpc("save_roster", rosterInput);
+  if (
+    rosterError?.code !== "P0002" ||
+    !["42501", "PGRST202"].includes(rosterPublicError?.code ?? "")
+  ) {
+    problems.push({
+      relation: "save_roster",
+      migration: "0010_roster_identity.sql",
+      message: "не подтверждены функция сохранения состава и её права",
+    });
+    console.log("✗ save_roster: функция или права не готовы");
+  } else {
+    console.log("✓ save_roster доступна только серверу");
+  }
+  const { error: versionError } = await service
+    .from("teams")
+    .select("roster_version")
+    .limit(1);
+  if (versionError)
+    problems.push({
+      relation: "teams.roster_version",
+      migration: "0010_roster_identity.sql",
+      message: versionError.message,
+    });
 }
 
 const { data: tournaments, error: listError } = await client
