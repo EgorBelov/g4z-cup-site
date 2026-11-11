@@ -12,8 +12,10 @@ const serverReady = () => false;
 
 export function TournamentExplorer({
   tournaments,
+  featured = false,
 }: {
   tournaments: TournamentSummary[];
+  featured?: boolean;
 }) {
   const [game, setGame] = useState<string | null>(null);
   const ready = useSyncExternalStore(subscribe, clientReady, serverReady);
@@ -60,7 +62,7 @@ export function TournamentExplorer({
       <p role="status" className="sr-only">
         Показано турниров: {visible.length}
       </p>
-      <TournamentList tournaments={visible} />
+      <TournamentList tournaments={visible} featured={featured} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./orbit.css";
 
 /* «Орбита». All shared colours and radii live here. */
 @theme {
@@ -30,7 +31,12 @@
   --radius-card: 1.25rem;
   --radius-control: 0.875rem;
   --radius-pill: 999px;
+  --radius-bracket: 8px;
+  --radius-bracket-mark: 4px;
   --font-sans: Arial, Helvetica, sans-serif;
+  --font-display: "Orbit Display", "Arial Narrow", Arial, sans-serif;
+  --font-orbit-text: "Orbit Text", Arial, sans-serif;
+  --radius-orbit: 0.25rem 1.35rem 0.25rem 1.35rem;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 :root {

@@ -36,7 +36,7 @@ export function CardHeader({
   icon?: IconName;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 px-5 pb-5 pt-7">
+    <div className="orbit-card-heading flex flex-wrap items-start justify-between gap-4 px-5 pb-5 pt-7">
       <div className="flex min-w-0 items-start gap-3">
         {icon ? (
           <span className="grid size-10 shrink-0 place-items-center rounded-control bg-accent-soft text-accent">
@@ -57,14 +57,16 @@ export function EmptyState({
   title,
   hint,
   action,
+  icon = "game",
 }: {
   title: string;
   hint?: string;
   action?: ReactNode;
+  icon?: IconName;
 }) {
   return (
-    <div className="rounded-control border border-dashed border-edge bg-surface/40 px-5 py-10 text-center">
-      <Icon name="game" className="mx-auto mb-4 size-8 text-ink-faint" />
+    <div className="orbit-empty rounded-control border border-dashed border-edge bg-surface/40 px-5 py-10 text-center">
+      <Icon name={icon} className="mx-auto mb-4 size-8 text-ink-faint" />
       <p className="font-medium text-ink-muted">{title}</p>
       {hint ? <p className="mt-2 text-sm text-ink-faint">{hint}</p> : null}
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}

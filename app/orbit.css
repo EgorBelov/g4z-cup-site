@@ -1,0 +1,1469 @@
+@font-face {
+  font-family: Orbit Display;
+  src: url("/brand/fonts/Oswald-Variable.ttf") format("truetype");
+  font-weight: 200 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: Orbit Text;
+  src: url("/brand/fonts/Manrope-Variable.ttf") format("truetype");
+  font-weight: 200 800;
+  font-display: swap;
+}
+.orbit-community,
+.orbit-tournament {
+  font-family: var(--font-orbit-text);
+}
+.orbit-community main,
+.orbit-tournament main {
+  min-width: 0;
+}
+.orbit-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font: 11px/1.6 var(--font-mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+.orbit-eyebrow:before {
+  content: "";
+  width: 26px;
+  height: 2px;
+  flex: none;
+  background: var(--color-accent);
+}
+.orbit-frame {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(125deg, var(--color-panel), var(--color-surface));
+  clip-path: polygon(
+    20px 0,
+    calc(100% - 20px) 0,
+    100% 20px,
+    100% calc(100% - 20px),
+    calc(100% - 20px) 100%,
+    20px 100%,
+    0 calc(100% - 20px),
+    0 20px
+  );
+}
+.orbit-frame:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--color-edge-strong);
+  pointer-events: none;
+  opacity: 0.7;
+  clip-path: polygon(
+    evenodd,
+    20px 0,
+    calc(100% - 20px) 0,
+    100% 20px,
+    100% calc(100% - 20px),
+    calc(100% - 20px) 100%,
+    20px 100%,
+    0 calc(100% - 20px),
+    0 20px,
+    20px 0,
+    20px 1px,
+    1px 20px,
+    1px calc(100% - 20px),
+    20px calc(100% - 1px),
+    calc(100% - 20px) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - 20px),
+    calc(100% - 1px) 20px,
+    calc(100% - 20px) 1px,
+    20px 1px
+  );
+}
+.orbit-frame:focus-visible {
+  outline-offset: -5px;
+}
+.orbit-site-header {
+  position: relative;
+  background: var(--color-surface);
+  backdrop-filter: none;
+}
+.orbit-site-header .nav-link {
+  border-radius: 0;
+  font-size: 13px;
+  padding-inline: 4px;
+}
+.orbit-site-header .nav-link[aria-current="page"] {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: transparent;
+  border-bottom-color: var(--color-accent);
+}
+.orbit-header-actions > button,
+.orbit-header-actions > a[href*="t.me"] {
+  display: none;
+}
+.orbit-header-actions > a[href="/me"] {
+  order: 2;
+}
+.orbit-header-actions > a[target] {
+  order: 1;
+}
+.orbit-footer > div > div {
+  padding-top: 28px;
+}
+.orbit-footer nav {
+  gap: 20px;
+  font-size: 11px;
+}
+.orbit-footer .eyebrow {
+  font-size: 10px;
+}
+.orbit-home-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: 640px;
+  overflow: hidden;
+}
+.orbit-home-hero:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: url("/brand/orbit-stone.png") center/cover;
+  animation: orbit-drift 26s ease-in-out infinite alternate;
+}
+.orbit-home-hero:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-surface) 65%, transparent),
+      transparent 64%
+    ),
+    linear-gradient(0deg, var(--color-surface), transparent 18%);
+}
+.orbit-home-copy {
+  padding-block: 60px;
+  max-width: 640px;
+}
+.orbit-home-title {
+  font: 700 clamp(72px, 8.3vw, 120px)/1.04 var(--font-display);
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  margin: 23px 0 22px;
+  text-wrap: balance;
+}
+.orbit-home-title span:not(.sr-only) {
+  color: var(--color-accent);
+}
+.orbit-home-description {
+  font-size: clamp(17px, 1.6vw, 22px);
+  color: var(--color-ink-muted);
+}
+.orbit-home-copy .mt-8 {
+  margin-top: 30px;
+}
+.orbit-home-copy a,
+.orbit-masthead a.rounded-pill,
+.orbit-community-band a {
+  min-height: 46px;
+  padding: 11px 25px;
+  font-size: 13px;
+  font-weight: 650;
+  border-radius: var(--radius-pill);
+}
+.orbit-hero-caption {
+  position: absolute;
+  right: 5%;
+  bottom: 27px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+}
+.orbit-section-title {
+  font: 700 clamp(30px, 4.1vw, 58px)/1.12 var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+.orbit-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.orbit-section-heading > .orbit-section-title {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.orbit-section-heading > .orbit-section-title:before {
+  content: "";
+  flex: none;
+  width: 28px;
+  height: 2px;
+  background: var(--color-accent);
+}
+.orbit-section-heading > a {
+  padding: 3px 0;
+  min-height: 30px;
+  font-size: 12px;
+  border-radius: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--color-edge);
+  white-space: nowrap;
+}
+.orbit-home-section {
+  margin-top: 62px;
+}
+.orbit-community #tournaments > .orbit-section-heading {
+  display: none;
+}
+.orbit-featured-tournament {
+  display: block;
+  min-height: 290px;
+  padding: 34px 40px;
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-surface),
+      color-mix(in srgb, var(--color-surface) 30%, transparent)
+    ),
+    url("/brand/orbit-banner.png") center/cover;
+}
+.orbit-featured-tournament h3 {
+  font: 700 clamp(47px, 6vw, 80px)/1.1 var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  margin-top: 22px;
+  max-width: 85%;
+  overflow-wrap: anywhere;
+}
+.orbit-featured-tournament .mt-4 {
+  margin-top: 17px;
+}
+.orbit-featured-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 26px;
+  border: 1px solid var(--color-edge-strong);
+  border-radius: var(--radius-pill);
+  padding: 10px 23px;
+  font-size: 13px;
+}
+.orbit-edition-watermark {
+  position: absolute;
+  right: 28px;
+  bottom: -12px;
+  z-index: -1;
+  font: 700 clamp(170px, 22vw, 270px)/1 var(--font-display);
+  color: color-mix(in srgb, var(--color-ink) 7%, transparent);
+  pointer-events: none;
+}
+.orbit-editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.orbit-editorial-card {
+  display: block;
+  min-height: 222px;
+  padding: 24px;
+  transition: background 0.2s;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-panel),
+      color-mix(in srgb, var(--color-surface) 85%, transparent)
+    ),
+    url("/brand/orbit-stone.png") left bottom/240%;
+}
+.orbit-editorial-card:nth-child(2) {
+  background-position: right bottom;
+}
+.orbit-editorial-card:nth-child(3) {
+  background-position: right top;
+}
+.orbit-editorial-card:hover {
+  background-color: var(--color-accent-soft);
+}
+.orbit-editorial-card > .my-6 {
+  margin: 24px 0 16px;
+}
+.orbit-editorial-card h3 {
+  font: 600 33px/1.15 var(--font-display);
+}
+.orbit-editorial-card p {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+  margin-top: 8px;
+}
+.orbit-card-arrow {
+  position: absolute;
+  right: 25px;
+  bottom: 25px;
+  color: var(--color-accent);
+}
+.orbit-home-archive {
+  margin-top: 28px;
+  border-bottom: 1px solid var(--color-edge);
+  padding-bottom: 10px;
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+.orbit-home-archive summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.orbit-home-archive[open] > .orbit-section-heading {
+  margin-top: 25px;
+}
+.orbit-community .tournament-cover {
+  color: var(--color-accent);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-surface) 75%, transparent),
+      transparent
+    ),
+    url("/brand/orbit-banner.png") center/cover;
+}
+.orbit-community .tournament-cover + div h3 {
+  font: 600 30px/1.2 var(--font-display);
+  text-transform: uppercase;
+}
+.orbit-community-band {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+  margin-top: 62px;
+  padding: 38px 30px 55px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-surface),
+      color-mix(in srgb, var(--color-surface) 50%, transparent)
+    ),
+    url("/brand/orbit-stone.png") center bottom/cover;
+}
+.orbit-community-band .orbit-section-title {
+  font-size: clamp(28px, 3.4vw, 48px);
+  max-width: 650px;
+}
+.orbit-community-band > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.orbit-community-band > div:first-child > .orbit-eyebrow {
+  display: none;
+}
+.orbit-community-band > div:first-child > .mt-5 {
+  margin-top: 0;
+}
+.orbit-community-band > div:first-child > p:not(.orbit-eyebrow) {
+  font-size: 11px;
+  max-width: 500px;
+  margin-top: 14px;
+}
+.orbit-community-band a[href="/register"] {
+  padding: 0;
+  min-height: 28px;
+  border: 0;
+  border-radius: 0;
+  font-size: 11px;
+  flex-basis: 100%;
+  justify-content: end;
+  color: var(--color-ink-muted);
+}
+.orbit-masthead {
+  padding: 27px 35px 32px;
+  margin-top: 24px;
+  min-height: 300px;
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-surface),
+      color-mix(in srgb, var(--color-surface) 80%, transparent) 33%,
+      transparent
+    ),
+    url("/brand/orbit-banner.png") center/cover;
+}
+.orbit-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+.orbit-breadcrumb a:hover {
+  color: var(--color-accent);
+}
+.orbit-masthead-name {
+  font: 700 clamp(49px, 6.5vw, 88px)/1.1 var(--font-display);
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  margin-top: 22px;
+  max-width: 90%;
+  overflow-wrap: anywhere;
+}
+.orbit-masthead .mt-5 {
+  margin-top: 15px;
+}
+.orbit-masthead > p.text-sm {
+  font-size: 15px;
+  margin-top: 15px;
+  max-width: 600px;
+}
+.orbit-masthead .mt-6 {
+  margin-top: 23px;
+}
+.orbit-season-status[data-status="upcoming"] > span {
+  color: var(--color-surface);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 13px;
+}
+.orbit-season-status[data-status="upcoming"] svg {
+  display: none;
+}
+.orbit-game-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+.orbit-tournament-tabs {
+  display: flex;
+  gap: 30px;
+  border-bottom: 1px solid var(--color-edge);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-edge-strong) transparent;
+}
+.orbit-tournament-tabs > a {
+  flex: none;
+  padding: 20px 6px 17px;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  color: var(--color-ink-muted);
+}
+.orbit-tournament-tabs > a[aria-current="page"] {
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.orbit-tournament-tabs > a:hover {
+  color: var(--color-accent);
+}
+.orbit-overview {
+  padding-top: 28px;
+  padding-bottom: 36px;
+}
+.orbit-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 24px 0;
+  background: linear-gradient(125deg, var(--color-panel), var(--color-surface));
+}
+.orbit-facts > div {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 30px;
+  border-right: 1px solid var(--color-edge);
+}
+.orbit-facts > div:last-child {
+  border-right: 0;
+}
+.orbit-facts svg {
+  width: 30px;
+  height: 30px;
+  color: var(--color-accent);
+  flex: none;
+}
+.orbit-facts dt {
+  font: 10px/1.5 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+.orbit-facts dd {
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.3;
+  margin-top: 6px;
+}
+.orbit-overview-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 31%);
+  gap: 27px;
+  align-items: start;
+  margin-top: 30px;
+}
+.orbit-overview-main > section {
+  min-width: 0;
+}
+.orbit-overview .orbit-section-title {
+  font-size: clamp(28px, 3.7vw, 50px);
+}
+.orbit-match-panel {
+  padding: 10px 20px;
+  min-height: 225px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--color-panel), var(--color-surface));
+}
+.orbit-match-panel .orbit-empty {
+  border: 0;
+  background: none;
+  min-height: 205px;
+  padding: 30px 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.orbit-match-panel .orbit-empty > svg {
+  width: 40px;
+  height: 40px;
+  color: var(--color-accent);
+  margin-bottom: 20px;
+}
+.orbit-match-panel .orbit-empty > p:first-of-type {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--color-ink);
+}
+.orbit-match-panel .orbit-empty > p + p {
+  font-size: 13px;
+}
+.orbit-about {
+  padding: 25px 25px 28px;
+  background: linear-gradient(145deg, var(--color-panel), var(--color-surface));
+}
+.orbit-about .orbit-section-title {
+  font-size: clamp(28px, 3.5vw, 46px);
+}
+.orbit-about dl {
+  margin-top: 24px;
+}
+.orbit-about dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-edge);
+  font-size: 12px;
+}
+.orbit-about dt {
+  color: var(--color-ink-muted);
+}
+.orbit-about dd {
+  max-width: 65%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.orbit-about-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 22px;
+}
+.orbit-about-actions > a {
+  width: 100%;
+  font-size: 12px;
+}
+.orbit-format-details {
+  font-size: 11px;
+  margin-top: 14px;
+  color: var(--color-ink-muted);
+}
+.orbit-format-details summary {
+  padding: 6px 0;
+  cursor: pointer;
+}
+.orbit-format-details p {
+  margin-top: 10px;
+  line-height: 1.7;
+}
+.orbit-format-details ol {
+  padding-left: 16px;
+  margin-top: 10px;
+}
+.orbit-format-details li {
+  margin-top: 10px;
+}
+.orbit-format-details li > span {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.orbit-path-section,
+.orbit-teams-section {
+  margin-top: 36px;
+}
+.orbit-phase-rail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+.orbit-phase {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding: 23px 25px;
+  font-size: 17px;
+  background: linear-gradient(110deg, var(--color-panel), var(--color-surface));
+}
+.orbit-phase > svg {
+  color: var(--color-accent);
+  width: 27px;
+  height: 27px;
+  flex: none;
+}
+.orbit-overview-teams {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.orbit-team-compact {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 22px;
+  min-width: 0;
+  font-size: 13px;
+}
+.orbit-team-compact > span {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  flex: none;
+}
+.orbit-team-compact > strong {
+  overflow-wrap: anywhere;
+}
+.orbit-team-pending {
+  text-align: center;
+  padding: 33px 25px 38px;
+  min-height: 170px;
+  background: linear-gradient(170deg, var(--color-panel), var(--color-surface));
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+.orbit-pending-marks {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.orbit-pending-marks > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 43px;
+  border: 1px solid var(--color-edge-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-muted);
+}
+.orbit-pending-marks svg {
+  width: 18px;
+  height: 18px;
+}
+.orbit-roster-count {
+  text-align: right;
+  font-size: 10px;
+  color: var(--color-ink-faint);
+  margin-top: 16px;
+}
+.orbit-extra-results {
+  margin-top: 20px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--color-edge);
+  padding-bottom: 10px;
+}
+.orbit-extra-results summary {
+  padding: 8px 0;
+  cursor: pointer;
+  color: var(--color-ink-muted);
+}
+.orbit-extra-results summary span {
+  float: right;
+}
+.orbit-extra-results[open] > div {
+  margin-top: 16px;
+}
+.orbit-standings-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 25px;
+}
+.orbit-standings-summary h3 {
+  font-weight: 650;
+  margin-bottom: 14px;
+}
+.orbit-standings-summary table {
+  width: 100%;
+  font-size: 12px;
+  text-align: left;
+}
+.orbit-standings-summary th,
+.orbit-standings-summary td {
+  padding: 10px 5px;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-live-section {
+  margin-top: 22px;
+  border: 1px solid var(--color-edge);
+  padding: 20px;
+}
+.orbit-bracket-scroll {
+  overflow-x: auto;
+  padding: 26px 22px 20px;
+  scrollbar-color: var(--color-edge-strong) var(--color-surface);
+  border-top: 1px solid var(--color-edge);
+  border-bottom: 1px solid var(--color-edge);
+  background: none;
+}
+.orbit-bracket-board {
+  position: relative;
+}
+.orbit-bracket-rounds {
+  display: flex;
+  gap: 56px;
+  min-width: max-content;
+}
+.orbit-bracket-column {
+  width: 260px;
+  flex: none;
+}
+.orbit-bracket-column > .eyebrow {
+  height: 43px;
+  letter-spacing: 0.18em;
+  font-size: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-edge);
+  margin-bottom: 0;
+}
+.orbit-bracket-cells {
+  position: relative;
+}
+.orbit-bracket-cell {
+  position: absolute;
+  width: 100%;
+  left: 0;
+}
+.orbit-bracket-connections {
+  position: absolute;
+  top: 43px;
+  left: 0;
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-width: 1;
+  max-width: none;
+  pointer-events: none;
+}
+.orbit-bracket-card {
+  display: flex;
+  flex-direction: column;
+  height: 128px;
+  min-height: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--color-edge-strong);
+  border-radius: var(--radius-bracket);
+  background: linear-gradient(145deg, var(--color-panel), var(--color-surface));
+  overflow: hidden;
+}
+.orbit-bracket-card > div:first-child {
+  margin-bottom: 3px;
+  font-size: 8px;
+  gap: 4px;
+  flex-wrap: nowrap;
+  height: 16px;
+}
+.orbit-bracket-card > div:first-child > span:first-child {
+  max-width: 50%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.orbit-bracket-card > div:first-child > span:last-child {
+  font-size: 8px;
+  padding: 0 5px;
+  line-height: 1.5;
+}
+.orbit-bracket-card > .space-y-1\.5 {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.orbit-bracket-card > .space-y-1\.5 > * + * {
+  margin-top: 0;
+}
+.orbit-bracket-team {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  border: 0;
+  font-size: 11px;
+  height: 28px;
+  min-width: 0;
+}
+.orbit-bracket-team > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.orbit-bracket-logo {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-bracket-mark);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font: 500 11px var(--font-display);
+  overflow: hidden;
+}
+.orbit-bracket-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.orbit-bracket-score {
+  font: 600 21px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+.orbit-bracket-team[data-winner="true"] .orbit-bracket-score {
+  color: var(--color-accent);
+}
+.orbit-bracket-meta {
+  font-size: 8px;
+  line-height: 1.3;
+  border-top: 1px solid var(--color-edge);
+  padding-top: 5px;
+  margin-top: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.orbit-bracket-winner {
+  width: 190px;
+  flex: none;
+}
+.orbit-bracket-winner > p {
+  height: 43px;
+  border-bottom: 1px solid var(--color-edge);
+  font: 10px var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding-bottom: 18px;
+}
+.orbit-bracket-winner-card {
+  position: absolute;
+  width: 190px;
+  min-height: 100px;
+  padding: 20px;
+  border: 1px solid var(--color-edge-strong);
+  border-radius: var(--radius-bracket);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 13px;
+  background: var(--color-panel);
+}
+.orbit-bracket-winner-card > svg {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  color: var(--color-accent);
+}
+.orbit-tournament .page-title {
+  font: 700 clamp(32px, 4vw, 50px)/1.1 var(--font-display);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+.orbit-tournament .page-title + div {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.orbit-tournament .orbit-bracket-page {
+  padding-top: 26px;
+}
+.orbit-third-place {
+  margin-top: 26px;
+  width: min(100%, 400px);
+}
+.orbit-third-place > h3 {
+  font: 600 22px var(--font-display);
+  text-transform: uppercase;
+  margin-bottom: 15px;
+}
+@keyframes orbit-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.025);
+  }
+}
+html[data-motion="off"] .orbit-home-hero:before {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit-home-hero:before {
+    animation: none;
+  }
+  .orbit-editorial-card {
+    transition: none;
+  }
+}
+@media (min-width: 860px) {
+  .orbit-site-header nav[aria-label="Основная навигация"] {
+    display: flex;
+    gap: 22px;
+  }
+  .orbit-site-header .orbit-header-actions {
+    display: flex;
+    gap: 20px;
+  }
+  .orbit-site-header details.mobile-menu {
+    display: none;
+  }
+}
+@media (min-width: 1200px) {
+  .orbit-home-hero {
+    min-height: 790px;
+  }
+  .orbit-home-copy {
+    max-width: 790px;
+  }
+  .orbit-featured-tournament {
+    min-height: 330px;
+    padding: 40px 48px;
+  }
+  .orbit-home-section {
+    margin-top: 68px;
+  }
+  .orbit-editorial-card {
+    min-height: 260px;
+    padding: 28px;
+  }
+  .orbit-editorial-card h3 {
+    font-size: 40px;
+  }
+  .orbit-masthead {
+    min-height: 380px;
+    padding: 34px 40px 36px;
+  }
+  .orbit-overview-main {
+    gap: 32px;
+    margin-top: 40px;
+  }
+  .orbit-match-panel {
+    min-height: 285px;
+  }
+  .orbit-match-panel .orbit-empty {
+    min-height: 265px;
+  }
+  .orbit-team-pending {
+    min-height: 220px;
+    padding: 42px 30px;
+  }
+  .orbit-path-section,
+  .orbit-teams-section {
+    margin-top: 48px;
+  }
+  .orbit-community-band {
+    margin-top: 68px;
+    min-height: 200px;
+  }
+  .orbit-masthead-name {
+    margin-top: 24px;
+  }
+}
+@media (max-width: 1023px) {
+  .orbit-overview-main {
+    grid-template-columns: minmax(0, 1fr) 285px;
+    gap: 22px;
+  }
+  .orbit-overview .orbit-section-title {
+    font-size: 32px;
+  }
+  .orbit-about {
+    padding: 23px;
+  }
+  .orbit-facts > div {
+    padding: 0 22px;
+    gap: 15px;
+  }
+  .orbit-phase {
+    padding: 22px 17px;
+    gap: 12px;
+    font-size: 16px;
+  }
+  .orbit-community-band {
+    flex-wrap: wrap;
+  }
+  .orbit-community-band > div:last-child {
+    gap: 10px;
+  }
+}
+@media (max-width: 859px) {
+  .orbit-home-hero {
+    min-height: 620px;
+  }
+  .orbit-home-title {
+    font-size: clamp(62px, 9vw, 80px);
+  }
+  .orbit-overview-main {
+    grid-template-columns: 1fr;
+  }
+  .orbit-about {
+    max-width: none;
+  }
+  .orbit-about dl {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .orbit-about dl > div {
+    display: block;
+  }
+  .orbit-about dd {
+    max-width: 100%;
+    text-align: left;
+    margin-top: 10px;
+  }
+  .orbit-about-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .orbit-about-actions > a {
+    width: auto;
+  }
+  .orbit-editorial-card {
+    padding: 22px;
+  }
+  .orbit-section-title {
+    font-size: 35px;
+  }
+  .orbit-featured-tournament h3 {
+    font-size: 49px;
+  }
+  .orbit-masthead-name {
+    font-size: 57px;
+  }
+  .orbit-overview-teams {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 639px) {
+  .orbit-home-hero {
+    min-height: 575px;
+  }
+  .orbit-home-hero:before {
+    background-position: 60% center;
+  }
+  .orbit-home-hero:after {
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-surface) 90%, transparent),
+        color-mix(in srgb, var(--color-surface) 30%, transparent)
+      ),
+      linear-gradient(0deg, var(--color-surface), transparent 35%);
+  }
+  .orbit-home-copy {
+    padding: 65px 0;
+  }
+  .orbit-home-title {
+    font-size: clamp(52px, 13vw, 74px);
+    margin-top: 24px;
+    letter-spacing: -0.02em;
+  }
+  .orbit-home-description {
+    font-size: 16px;
+  }
+  .orbit-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+  }
+  .orbit-hero-caption {
+    font-size: 8px;
+  }
+  .orbit-home-section {
+    margin-top: 38px;
+  }
+  .orbit-featured-tournament {
+    padding: 26px;
+    min-height: 270px;
+  }
+  .orbit-featured-tournament h3 {
+    font-size: 43px;
+    max-width: 100%;
+  }
+  .orbit-edition-watermark {
+    font-size: 170px;
+    right: 15px;
+  }
+  .orbit-editorial-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .orbit-editorial-card {
+    min-height: 192px;
+  }
+  .orbit-editorial-card h3 {
+    font-size: 32px;
+  }
+  .orbit-section-heading {
+    gap: 14px;
+    align-items: start;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .orbit-section-heading > .orbit-section-title {
+    gap: 12px;
+  }
+  .orbit-section-heading > .orbit-section-title:before {
+    width: 20px;
+  }
+  .orbit-section-title {
+    font-size: 30px;
+  }
+  .orbit-community-band {
+    padding: 28px 22px 40px;
+    margin-top: 38px;
+  }
+  .orbit-community-band .orbit-section-title {
+    font-size: 31px;
+  }
+  .orbit-community-band a {
+    padding: 9px 15px;
+    font-size: 11px;
+    min-height: 40px;
+  }
+  .orbit-masthead {
+    margin-top: 20px;
+    padding: 24px;
+    min-height: 310px;
+  }
+  .orbit-masthead-name {
+    font-size: 45px;
+    max-width: 100%;
+  }
+  .orbit-breadcrumb {
+    font-size: 9px;
+    gap: 7px;
+  }
+  .orbit-masthead > p.text-sm {
+    font-size: 12px;
+    max-width: 245px;
+  }
+  .orbit-masthead a.rounded-pill {
+    font-size: 12px;
+    padding: 10px 17px;
+    min-height: 43px;
+  }
+  .orbit-tournament-tabs {
+    gap: 20px;
+  }
+  .orbit-tournament-tabs > a {
+    font-size: 12px;
+    padding: 17px 3px 13px;
+  }
+  .orbit-overview {
+    padding-top: 22px;
+  }
+  .orbit-facts {
+    grid-template-columns: 1fr;
+    padding: 4px 23px;
+  }
+  .orbit-facts > div {
+    padding: 17px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-edge);
+  }
+  .orbit-facts > div:last-child {
+    border-bottom: 0;
+  }
+  .orbit-facts dd {
+    font-size: 21px;
+  }
+  .orbit-overview-main {
+    margin-top: 27px;
+  }
+  .orbit-overview .orbit-section-title {
+    font-size: 31px;
+  }
+  .orbit-about dl {
+    display: block;
+  }
+  .orbit-about dl > div {
+    display: flex;
+  }
+  .orbit-about dd {
+    margin-top: 0;
+    text-align: right;
+    max-width: 65%;
+  }
+  .orbit-match-panel {
+    padding: 8px 14px;
+    min-height: 235px;
+  }
+  .orbit-match-panel .orbit-empty > p:first-of-type {
+    font-size: 16px;
+  }
+  .orbit-match-panel .orbit-empty > p + p {
+    font-size: 12px;
+  }
+  .orbit-phase-rail {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .orbit-phase {
+    padding: 22px 25px;
+  }
+  .orbit-teams-section,
+  .orbit-path-section {
+    margin-top: 30px;
+  }
+  .orbit-pending-marks {
+    gap: 14px;
+  }
+  .orbit-pending-marks > span {
+    width: 29px;
+    height: 35px;
+  }
+  .orbit-overview-teams {
+    grid-template-columns: 1fr;
+  }
+  .orbit-standings-summary {
+    grid-template-columns: 1fr;
+  }
+  .orbit-roster-count {
+    text-align: left;
+  }
+  .orbit-bracket-scroll {
+    padding: 20px 0 15px;
+  }
+  .orbit-bracket-card {
+    height: 128px;
+  }
+  .orbit-footer nav {
+    gap: 12px;
+  }
+  .orbit-footer > div > div {
+    gap: 20px;
+  }
+}
+
+/* Fine alignment at the approved reference viewport widths. */
+.orbit-footer {
+  margin-top: 0;
+  padding-top: 20px;
+}
+.orbit-footer-brand {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-ink);
+}
+.orbit-footer nav {
+  font-size: 14px;
+  gap: 32px;
+}
+.orbit-footer-motto {
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+.orbit-footer-extra {
+  margin-top: 10px;
+  color: var(--color-ink-faint);
+  font-size: 11px;
+}
+.orbit-footer-extra summary {
+  width: fit-content;
+  padding-block: 8px;
+}
+.orbit-footer-extra nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 12px;
+}
+.orbit-editorial-card h3 {
+  font-family: var(--font-orbit-text);
+  font-size: 30px;
+  font-weight: 700;
+}
+.orbit-editorial-card p {
+  font-size: 15px;
+}
+.orbit-community-band > div:first-child > p:not(.orbit-eyebrow) {
+  display: none;
+}
+.orbit-overview {
+  padding-bottom: 12px;
+}
+.orbit-site-header .nav-link {
+  font-size: 15px;
+}
+.orbit-bracket-team {
+  font-size: 13px;
+}
+.orbit-bracket-card > div:first-child {
+  font-size: 9px;
+}
+.orbit-bracket-card > div:last-child {
+  font-size: 10px;
+}
+@media (min-width: 860px) {
+  .orbit-community-band {
+    margin-top: 40px;
+  }
+  .orbit-footer > div > div {
+    padding-top: 23px;
+  }
+  .orbit-footer > div > div > a {
+    flex-shrink: 0;
+  }
+}
+@media (min-width: 1200px) {
+  .orbit-tournament div[class*="max-w-[1440px]"] {
+    max-width: 1536px;
+    padding-inline: 48px;
+  }
+  .orbit-masthead {
+    min-height: 232px;
+    padding: 20px 40px;
+  }
+  .orbit-masthead-name {
+    font-size: 64px;
+    margin-top: 12px;
+    line-height: 1;
+  }
+  .orbit-masthead .mt-5 {
+    margin-top: 12px;
+  }
+  .orbit-masthead > p.text-sm {
+    margin-top: 6px;
+  }
+  .orbit-masthead .mt-6 {
+    margin-top: 12px;
+  }
+  .orbit-masthead .mt-6 a {
+    min-height: 38px;
+    padding-block: 7px;
+  }
+  .orbit-site-header > div > div {
+    min-height: 76px;
+  }
+}
+@media (min-width: 860px) and (max-width: 1199px) {
+  .orbit-home-hero {
+    min-height: 556px;
+  }
+  .orbit-home-copy {
+    padding-top: 50px;
+    padding-bottom: 78px;
+  }
+  .orbit-home-hero > div {
+    padding-inline: 4.65vw;
+  }
+  .orbit-home-title {
+    transform: scaleX(0.86);
+    transform-origin: left center;
+  }
+  .orbit-community #tournaments {
+    margin-top: 44px;
+  }
+  .orbit-featured-tournament {
+    min-height: 306px;
+  }
+  .orbit-featured-tournament h3 {
+    font-size: 8.8vw;
+    transform: scaleX(0.9);
+    transform-origin: left center;
+    margin-top: 18px;
+  }
+  .orbit-section-title {
+    font-size: 6vw;
+  }
+  .orbit-section-heading > .orbit-section-title {
+    gap: 25px;
+  }
+  .orbit-overview .orbit-section-title {
+    font-size: 4.7vw;
+  }
+  .orbit-about .orbit-section-title {
+    font-size: 4.7vw;
+  }
+  .orbit-masthead-name {
+    font-size: 7.2vw;
+  }
+  .orbit-masthead {
+    min-height: 304px;
+    padding-top: 27px;
+    padding-bottom: 27px;
+  }
+  .orbit-masthead > p.text-sm {
+    margin-top: 12px;
+  }
+  .orbit-masthead .mt-6 {
+    margin-top: 19px;
+  }
+  .orbit-community-band {
+    flex-wrap: nowrap;
+    min-height: 170px;
+    padding-top: 30px;
+    padding-bottom: 40px;
+  }
+  .orbit-community-band > div:first-child {
+    flex: 1;
+    min-width: 0;
+    max-width: 55%;
+  }
+  .orbit-community-band > div:last-child {
+    flex: none;
+    gap: 10px;
+  }
+  .orbit-community-band .orbit-section-title {
+    font-size: 3.4vw;
+  }
+  .orbit-community-band a {
+    font-size: 11px;
+    min-height: 40px;
+    padding: 8px 15px;
+  }
+}

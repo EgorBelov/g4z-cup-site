@@ -41,11 +41,10 @@ export default async function BracketPage({ params }: Props) {
   );
 
   return (
-    <Container className="py-8 sm:py-12">
+    <Container className="orbit-bracket-page pb-8 sm:pb-12">
       <PageHeader
-        eyebrow={tournament.name}
-        title="Ближе к кубку."
-        description="Плей-офф. Сетка строится по связям матчей: победитель попадает в следующий матч сам."
+        title="Плей-офф"
+        description="Результаты и переходы команд — по фактическим матчам турнира."
         actions={window ? <Badge tone="info">{window}</Badge> : null}
       />
 

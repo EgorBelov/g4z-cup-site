@@ -34,13 +34,15 @@ export function SiteHeader({
 }) {
   const pathname = usePathname();
   const menu = useRef<HTMLDetailsElement>(null);
-  const active = links
-    .filter(
-      ({ href }) =>
-        !href.includes("#") &&
-        (href === pathname || (href !== "/" && pathname.startsWith(`${href}/`))),
-    )
-    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const active =
+    links
+      .filter(
+        ({ href }) =>
+          !href.includes("#") &&
+          (href === pathname || (href !== "/" && pathname.startsWith(`${href}/`))),
+      )
+      .sort((a, b) => b.href.length - a.href.length)[0]?.href ??
+    (pathname.startsWith("/t/") ? "/#tournaments" : undefined);
   const telegram = telegramUrl || community.telegram;
   const stream = streamUrl || community.stream;
   const navLinks = links.map((link) => (
@@ -75,7 +77,7 @@ export function SiteHeader({
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-edge bg-surface/95 backdrop-blur-xl">
+    <header className="orbit-site-header sticky top-0 z-40 border-b border-edge bg-surface/95 backdrop-blur-xl">
       <a
         href="#main-content"
         className="skip-link rounded-pill bg-ink px-5 py-3 text-sm text-surface"
@@ -109,7 +111,7 @@ export function SiteHeader({
           >
             {navLinks}
           </nav>
-          <div className="hidden shrink-0 items-center gap-5 xl:flex">
+          <div className="orbit-header-actions hidden shrink-0 items-center gap-5 xl:flex">
             <MotionToggle />
             {socials}
           </div>

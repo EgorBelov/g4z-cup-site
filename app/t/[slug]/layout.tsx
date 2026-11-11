@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { SiteHeader, type NavLink } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { LiveRefresher } from "@/components/live/LiveRefresher";
-import { Skeleton } from "@/components/ui/PageHeader";
+import { Container, Skeleton } from "@/components/ui/PageHeader";
+import { TournamentMasthead } from "@/components/layout/TournamentMasthead";
+import { TournamentTabs } from "@/components/layout/TournamentTabs";
 import { getTournament } from "@/lib/queries/public";
 import { tournamentSlugParams } from "@/lib/queries/params";
 
@@ -19,7 +21,7 @@ export default function TournamentLayout({
   params: Promise<{ slug: string }>;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="orbit-tournament flex min-h-screen flex-col">
       <Suspense
         fallback={<Skeleton className="h-16 rounded-none border-x-0 border-t-0" />}
       >
@@ -56,14 +58,13 @@ async function TournamentChrome({ slug }: { slug: string }) {
   return (
     <>
       <SiteHeader
-        titleHref={base}
-        title={tournament.name}
-        subtitle={tournament.game}
-        badge={tournament.edition ? String(tournament.edition) : "G4Z"}
-        links={links}
         streamUrl={tournament.stream_url}
         telegramUrl={tournament.telegram_url}
       />
+      <Container>
+        <TournamentMasthead tournament={tournament} />
+        <TournamentTabs links={links} />
+      </Container>
       <LiveRefresher
         tournamentId={tournament.id}
         enabled={tournament.status === "live"}
