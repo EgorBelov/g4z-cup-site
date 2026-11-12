@@ -3771,3 +3771,156 @@ html[data-motion="off"] .orbit-home-hero:before {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ── Мой профиль ───────────────────────────────────────── */
+.orbit-profile-page {
+  padding-bottom: 24px;
+}
+.orbit-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 26px;
+}
+.orbit-profile-main,
+.orbit-profile-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.orbit-profile-card {
+  padding: 22px 24px 20px;
+}
+.orbit-profile-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-profile-card-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+.orbit-profile-card-head span {
+  font: 9px/1.4 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  text-align: right;
+}
+
+/* форма профиля: только вид, поля и имена не меняются */
+.orbit-profile-form form {
+  margin-top: 18px;
+}
+.orbit-profile-form form > .grid {
+  gap: 18px;
+}
+.orbit-profile-form label > span {
+  margin-bottom: 8px;
+  font: 9px/1.4 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.orbit-profile-form input {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-color: var(--color-edge);
+  background: color-mix(in srgb, var(--color-panel) 70%, transparent);
+  font-size: 14px;
+}
+.orbit-profile-form input:focus {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-edge));
+}
+.orbit-profile-form details {
+  margin-top: 22px;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid var(--color-edge);
+  border-radius: 0;
+  background: none;
+}
+.orbit-profile-form details summary {
+  font: 9px/1.4 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+.orbit-profile-form details summary span {
+  letter-spacing: 0.14em;
+  color: var(--color-ink-faint);
+}
+.orbit-profile-form details > .grid {
+  gap: 18px;
+}
+.orbit-profile-form form > p:last-of-type {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-edge);
+  font-size: 11px;
+  color: var(--color-ink-faint);
+}
+.orbit-profile-form button[type="submit"] {
+  margin-top: 18px;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-weight: 650;
+}
+.orbit-profile-form button[type="submit"]:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-accent) 85%, var(--color-ink));
+  background: color-mix(in srgb, var(--color-accent) 85%, var(--color-ink));
+}
+
+.orbit-profile-vis {
+  display: flex;
+  flex-direction: column;
+}
+.orbit-profile-vis > div {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-profile-vis > div:last-child {
+  border-bottom: 0;
+}
+.orbit-profile-vis .dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+}
+.orbit-profile-vis .dot[data-open="false"] {
+  border-color: var(--color-ink-faint);
+}
+.orbit-profile-vis b {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+}
+.orbit-profile-vis span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--color-ink-faint);
+}
+
+@media (max-width: 1023px) {
+  .orbit-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
