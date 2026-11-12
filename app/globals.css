@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./orbit.css";
+@import "./reference-type.css";
 
 /* «Орбита». All shared colours and radii live here. */
 @theme {
