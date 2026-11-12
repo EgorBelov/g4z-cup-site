@@ -175,11 +175,9 @@ async function ArchiveView() {
                       {tournament.edition ? `Сезон ${tournament.edition}` : "Сезон"}
                     </p>
                     <h2 className="orbit-archive-name">
-                      {decided ? (
-                        baseName
-                      ) : (
-                        <Link href={href}>{baseName}</Link>
-                      )}
+                      <Link href={href} className="orbit-archive-hit">
+                        {baseName}
+                      </Link>
                       {tournament.edition ? (
                         <span> / S{tournament.edition}</span>
                       ) : null}
@@ -238,18 +236,14 @@ async function ArchiveView() {
                 </>
               );
 
-              return decided ? (
-                <Link
-                  key={tournament.id}
-                  href={href}
-                  className="orbit-archive-season orbit-frame"
-                >
-                  {card}
-                </Link>
-              ) : (
+              return (
                 <div
                   key={tournament.id}
-                  className="orbit-archive-season orbit-archive-current orbit-frame"
+                  className={
+                    decided
+                      ? "orbit-archive-season orbit-frame"
+                      : "orbit-archive-season orbit-archive-current orbit-frame"
+                  }
                 >
                   {card}
                 </div>

@@ -2201,6 +2201,13 @@ html[data-motion="off"] .orbit-home-hero:before {
 .orbit-archive-name a:hover {
   color: var(--color-accent);
 }
+/* вся карточка кликабельна одной ссылкой */
+.orbit-archive-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
 .orbit-archive-name span {
   color: var(--color-accent);
 }
@@ -2272,6 +2279,8 @@ html[data-motion="off"] .orbit-home-hero:before {
   flex: none;
 }
 .orbit-archive-cta {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 8px;
