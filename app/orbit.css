@@ -1730,12 +1730,12 @@ html[data-motion="off"] .orbit-home-hero:before {
     padding-bottom: 18px;
   }
   .orbit-schedule-row {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 18px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-areas:
-      "time time meta arrow"
-      "a score b b";
+      "time time meta"
+      "a score b";
     row-gap: 10px;
-    column-gap: 12px;
+    column-gap: 10px;
     padding: 14px 16px;
   }
   .orbit-schedule-time {
@@ -1748,6 +1748,15 @@ html[data-motion="off"] .orbit-home-hero:before {
   .orbit-schedule-time em {
     display: inline;
     margin: 0;
+  }
+  .orbit-schedule-team {
+    align-items: flex-start;
+    overflow: hidden;
+  }
+  .orbit-schedule-team > span:not(.orbit-schedule-mark) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
   }
   .orbit-schedule-team--a {
     grid-area: a;
@@ -1767,7 +1776,7 @@ html[data-motion="off"] .orbit-home-hero:before {
     align-items: center;
   }
   .orbit-schedule-arrow {
-    grid-area: arrow;
+    display: none;
   }
   .orbit-schedule-mark {
     display: none;
