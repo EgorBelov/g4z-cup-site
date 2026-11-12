@@ -83,6 +83,9 @@ export default async function TeamPage({ params }: Props) {
       ? Math.round(eloMain.reduce((sum, p) => sum + p.elo!, 0) / eloMain.length)
       : null;
 
+  const whenLabel = (value: string | null) =>
+    value ? formatDateTime(value, tournament.time_zone) : "—";
+
   const facts: { label: string; value: string }[] = [
     { label: "Побед", value: String(wins) },
     { label: "Поражений", value: String(losses) },
@@ -192,7 +195,7 @@ export default async function TeamPage({ params }: Props) {
               const score =
                 match.status === "finished"
                   ? `${ownScore}:${otherScore}`
-                  : formatDateTime(match.scheduled_at, tournament.time_zone) ?? "—";
+                  : whenLabel(match.scheduled_at);
 
               return (
                 <Link
@@ -201,9 +204,7 @@ export default async function TeamPage({ params }: Props) {
                   href={`/t/${slug}/matches/${match.id}`}
                   className="orbit-team-match"
                 >
-                  <span className="when">
-                    {formatDateTime(match.scheduled_at, tournament.time_zone) ?? "дата —"}
-                  </span>
+                  <span className="when">{whenLabel(match.scheduled_at)}</span>
                   <span className="who">
                     <i aria-hidden="true">{initials(team.name)}</i>
                     <span>{team.name}</span>
