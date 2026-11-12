@@ -57,12 +57,8 @@ function BracketMatch({ match, timeZone }: { match: MatchDetails; timeZone: stri
   return (
     <Link
       href={`/t/${match.tournament_slug}/matches/${match.id}`}
-      className={cn(
-        "orbit-bracket-card block rounded-card border p-3 transition hover:border-accent/40",
-        match.status === "live"
-          ? "border-live/40 bg-live-soft/30"
-          : "border-edge bg-panel",
-      )}
+      className="orbit-bracket-card orbit-frame block"
+      data-status={match.status}
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-faint">
         <span className="truncate">{match.round_label ?? `Раунд ${match.round}`}</span>
@@ -188,7 +184,7 @@ function BracketColumns({
               <p>Победитель</p>
               <div style={{ height, position: "relative" }}>
                 <div
-                  className="orbit-bracket-winner-card"
+                  className="orbit-bracket-winner-card orbit-frame"
                   style={{ top: (terminalPoint?.y ?? height / 2) - 50 }}
                 >
                   <Icon name="trophy" />
