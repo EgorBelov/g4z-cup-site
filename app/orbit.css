@@ -4996,3 +4996,55 @@ html[data-motion="off"] .orbit-home-hero:before {
     font-size: 120px;
   }
 }
+
+/* ── Появление блоков заявки ───────────────────────────── */
+@keyframes orbit-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes orbit-drift {
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(-14px) scale(1.03);
+  }
+}
+html[data-motion="on"] .orbit-rise {
+  animation: orbit-rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+html[data-motion="on"] .orbit-rise:nth-child(2) {
+  animation-delay: 0.08s;
+}
+html[data-motion="on"] .orbit-rise:nth-child(3) {
+  animation-delay: 0.16s;
+}
+html[data-motion="on"] .orbit-rise:nth-child(4) {
+  animation-delay: 0.24s;
+}
+html[data-motion="on"] .orbit-reg-hero .num {
+  animation: orbit-drift 9s ease-in-out infinite alternate;
+}
+.orbit-reg-step {
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.orbit-reg-step:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-edge-strong);
+  background: color-mix(in srgb, var(--color-panel) 70%, transparent);
+}
+.orbit-reg-hero .label::before {
+  transition: width 0.3s ease;
+}
+.orbit-reg-hero:hover .label::before {
+  width: 44px;
+}

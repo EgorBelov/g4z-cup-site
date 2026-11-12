@@ -39,7 +39,7 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
 
   return (
     <>
-      <section className="orbit-reg-hero orbit-frame">
+      <section className="orbit-reg-hero orbit-frame orbit-rise">
         <p className="label">{open ? "приём заявок открыт" : "приём заявок закрыт"}</p>
         <h1>Заявка на турнир</h1>
         <p className="meta">
@@ -72,48 +72,38 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
       </section>
 
       <div className="orbit-reg-steps">
-        <div className="orbit-reg-step orbit-frame">
+        <div className="orbit-reg-step orbit-frame orbit-rise">
           <span className="n">01</span>
           <b>Аккаунт</b>
-          <span>Один на игрока, вход через Telegram — контакт подтверждается сам.</span>
+          <span>Вход через Telegram, контакт подтверждается сам.</span>
         </div>
-        <div className="orbit-reg-step orbit-frame">
+        <div className="orbit-reg-step orbit-frame orbit-rise">
           <span className="n">02</span>
           <b>Состав</b>
           <span>
-            Капитан собирает {t.roster_size} основных и до {t.max_substitutes} запасных и
-            подаёт командную заявку.
+            {t.roster_size} основных и до {t.max_substitutes} запасных — собирает капитан.
           </span>
         </div>
-        <div className="orbit-reg-step orbit-frame">
+        <div className="orbit-reg-step orbit-frame orbit-rise">
           <span className="n">03</span>
           <b>Подтверждение</b>
-          <span>Организатор проверяет состав и допускает команду в сетку.</span>
+          <span>Организатор проверяет состав и допускает в сетку.</span>
         </div>
       </div>
 
       <div className="orbit-reg-grid">
-        <div className="orbit-reg-main">
+        <div className="orbit-reg-main orbit-rise">
           {!player ? (
             <section className="orbit-register-card orbit-frame">
               <div className="orbit-register-card-head">
                 <h2>Что нужно для заявки</h2>
               </div>
               <ul className="orbit-reg-check">
+                <li>Аккаунт с ником и контактами.</li>
                 <li>
-                  Аккаунт на сайте — он же ваша карточка игрока: ник, контакты, рейтинги.
+                  Команда из {t.roster_size} игроков, запасные по желанию.
                 </li>
-                <li>
-                  Команда из {t.roster_size} игроков; до {t.max_substitutes} запасных
-                  разрешены, но не обязательны.
-                </li>
-                <li>
-                  Капитан подаёт заявку от имени команды — остальным ничего заполнять не
-                  нужно.
-                </li>
-                <li>
-                  Рейтинг указывать не обязательно: он не влияет на допуск к турниру.
-                </li>
+                <li>Заявку подаёт капитан — остальным ничего заполнять не нужно.</li>
               </ul>
             </section>
           ) : (
@@ -127,7 +117,7 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
           )}
         </div>
 
-        <aside className="orbit-register-aside">
+        <aside className="orbit-register-aside orbit-rise">
           <dl className="orbit-register-facts orbit-frame">
             <div>
               <dt>Состав</dt>
@@ -275,8 +265,7 @@ async function PlayerParticipation({
           <h2>Пока без команды?</h2>
         </div>
         <p className="orbit-register-note" style={{ marginTop: 16 }}>
-          Оставьте пожелание «Хочу участвовать» — организатор увидит его и поможет собрать
-          состав. Это не заявка на турнир и не зачисление в команду.
+          Пожелание «Хочу участвовать» видит организатор — он поможет собрать состав.
         </p>
         <div className="orbit-register-actions">
           {open || interest.data?.active ? (
@@ -298,8 +287,8 @@ async function PlayerParticipation({
             Создать команду ↗
           </ButtonLink>
         </div>
-        <p className="orbit-register-note" style={{ marginTop: 16 }}>
-          Полный состав: {rosterSize} основных и до {maxSubstitutes} запасных.
+        <p className="orbit-register-note" style={{ marginTop: 14 }}>
+          Состав: {rosterSize} + до {maxSubstitutes} запасных.
         </p>
       </section>
     </>
