@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/PageHeader";
@@ -20,17 +19,13 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="orbit-community orbit-err orbit-err--full">
+    <div className="orbit-community orbit-err">
       <span className="orbit-err-glow" aria-hidden="true" />
       <span className="orbit-err-zoom" aria-hidden="true">
         404
       </span>
 
       <Container>
-        <Link href="/" className="orbit-err-brand" aria-label="G4Z CUP — на главную">
-          <BrandMark className="size-20" />
-        </Link>
-
         <div className="orbit-err-body">
           <p className="orbit-err-label">Сбой загрузки</p>
           <h1 className="orbit-err-title">Потеряли сигнал.</h1>

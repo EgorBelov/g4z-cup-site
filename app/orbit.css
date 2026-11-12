@@ -3533,13 +3533,6 @@ html[data-motion="off"] .orbit-home-hero:before {
   isolation: isolate;
   overflow: hidden;
 }
-.orbit-err--full {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 40px 0;
-}
 .orbit-err-glow {
   position: absolute;
   left: 50%;
@@ -3568,21 +3561,11 @@ html[data-motion="off"] .orbit-home-hero:before {
   pointer-events: none;
   user-select: none;
 }
-.orbit-err-brand {
-  display: inline-flex;
-  color: var(--color-ink);
-}
-.orbit-err-brand:hover {
-  color: var(--color-accent);
-}
 .orbit-err-body {
   position: relative;
   z-index: 1;
   max-width: 760px;
   padding: 72px 0 40px;
-}
-.orbit-err--full .orbit-err-body {
-  padding: 34px 0 0;
 }
 .orbit-err-label {
   display: flex;
