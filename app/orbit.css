@@ -2035,10 +2035,34 @@ html[data-motion="off"] .orbit-home-hero:before {
   }
   .orbit-group {
     padding: 18px 16px 16px;
+    overflow: hidden;
+  }
+  .orbit-group table {
+    table-layout: fixed;
   }
   .orbit-group th,
   .orbit-group td {
-    padding-inline: 5px;
+    padding-inline: 4px;
+  }
+  .orbit-group th:nth-child(1),
+  .orbit-group td:nth-child(1) {
+    width: 24px;
+  }
+  .orbit-group th:nth-child(n + 3),
+  .orbit-group td:nth-child(n + 3) {
+    width: 27px;
+  }
+  .orbit-team-cell {
+    gap: 8px;
+  }
+  .orbit-team-cell i {
+    width: 22px;
+    height: 22px;
+  }
+  .orbit-team-cell span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .orbit-facts {
     grid-template-columns: minmax(0, 1fr);
