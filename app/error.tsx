@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/Button";
-import { Container, PageHeader } from "@/components/ui/PageHeader";
+import { Container } from "@/components/ui/PageHeader";
+import { community } from "@/lib/community";
 
 export default function GlobalError({
   error,
@@ -17,25 +20,42 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main className="flex min-h-screen items-center">
-      <Container className="py-16">
-        <PageHeader
-          eyebrow="Ошибка"
-          title="Потеряли сигнал. Но не игру."
-          description="Не удалось загрузить страницу. Попробуйте ещё раз — результаты турнира сохраняются независимо от этой ошибки."
-          actions={
-            <>
-              <Button onClick={reset}>Обновить</Button>
-              <ButtonLink href="/" variant="secondary">
-                На главную
-              </ButtonLink>
-            </>
-          }
-        />
-        {error.digest ? (
-          <p className="mt-6 text-xs text-ink-faint">Код ошибки: {error.digest}</p>
-        ) : null}
+    <div className="orbit-community orbit-err orbit-err--full">
+      <span className="orbit-err-glow" aria-hidden="true" />
+      <span className="orbit-err-zoom" aria-hidden="true">
+        404
+      </span>
+
+      <Container>
+        <Link href="/" className="orbit-err-brand" aria-label="G4Z CUP — на главную">
+          <BrandMark className="size-20" />
+        </Link>
+
+        <div className="orbit-err-body">
+          <p className="orbit-err-label">Сбой загрузки</p>
+          <h1 className="orbit-err-title">Потеряли сигнал.</h1>
+          <p className="orbit-err-lead">
+            Страница не загрузилась. Попробуйте ещё раз — результаты и сетка турниров
+            сохраняются независимо от этой ошибки.
+          </p>
+          {error.digest ? <p className="orbit-err-code">код: {error.digest}</p> : null}
+
+          <div className="orbit-err-actions">
+            <Button onClick={reset}>Обновить</Button>
+            <ButtonLink href="/" variant="secondary">
+              На главную
+            </ButtonLink>
+          </div>
+
+          <div className="orbit-err-hint">
+            <span>Если не помогает:</span>
+            <a href={community.telegram} target="_blank" rel="noreferrer">
+              Написать в Telegram ↗
+            </a>
+            <Link href="/archive">Архив турниров ↗</Link>
+          </div>
+        </div>
       </Container>
-    </main>
+    </div>
   );
 }
