@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { Container, PageHeader } from "@/components/ui/PageHeader";
-import { getResults, getTournament } from "@/lib/queries/public";
+import { ButtonLink } from "@/components/ui/Button";
+import { Container } from "@/components/ui/PageHeader";
+import { Icon } from "@/components/ui/Icon";
+import { community } from "@/lib/community";
+import { getResults, getTournament, type ResultsPage } from "@/lib/queries/public";
 
 type Props = { params: Promise<{ slug: string }> };
+
+type PlacementView = ResultsPage["placements"][number];
+type AwardView = ResultsPage["awards"][number];
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   "use cache";
@@ -18,127 +23,200 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function plural(count: number, one: string, few: string, many: string): string {
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  if (mod100 >= 11 && mod100 <= 14) return many;
+  if (mod10 === 1) return one;
+  if (mod10 >= 2 && mod10 <= 4) return few;
+  return many;
+}
+
+function placeNumber(place: number): string {
+  return String(place).padStart(2, "0");
+}
+
+function TeamName({
+  placement,
+  slug,
+  className,
+}: {
+  placement: PlacementView;
+  slug: string;
+  className?: string;
+}) {
+  const name = placement.team_name ?? "—";
+  if (!placement.team_slug) return <span className={className}>{name}</span>;
+  return (
+    <Link href={`/t/${slug}/teams/${placement.team_slug}`} className={className}>
+      {name}
+    </Link>
+  );
+}
+
+const awardTones = ["accent", "violet", "ember"] as const;
+
+function Awards({ awards }: { awards: AwardView[] }) {
+  return (
+    <div className="orbit-results-awards">
+      {awards.map((award, index) => (
+        <div
+          key={award.id}
+          className="orbit-results-award orbit-frame"
+          data-tone={awardTones[index % awardTones.length]}
+        >
+          <b>{award.title}</b>
+          <strong>{award.nickname ?? "—"}</strong>
+          {award.team_label ? <span>{award.team_label}</span> : null}
+          {award.note ? <span>{award.note}</span> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function ResultsPage({ params }: Props) {
   const { slug } = await params;
   const tournament = await getTournament(slug);
   if (!tournament) notFound();
 
   const { placements, awards } = await getResults(slug);
-  const top3 = placements.filter((placement) => placement.place <= 3);
+  const sorted = [...placements].sort((a, b) => a.place - b.place);
+
+  const champion = sorted.find((item) => item.place === 1) ?? null;
+  const silver = sorted.find((item) => item.place === 2) ?? null;
+  const bronze = sorted.find((item) => item.place === 3) ?? null;
+  const rest = sorted.filter((item) => item.place > 3);
+  const empty = sorted.length === 0 && awards.length === 0;
 
   return (
-    <Container className="py-8 sm:py-12">
-      <PageHeader
-        eyebrow={tournament.name}
-        title="Последнее GG."
-        description="Финальное распределение мест и индивидуальные награды."
-      />
+    <Container className="orbit-results">
+      <div className="orbit-page-head">
+        <div>
+          <h1 className="orbit-page-title">Итоги</h1>
+          <p className="orbit-page-sub">
+            {sorted.length > 0
+              ? `${sorted.length} ${plural(sorted.length, "команда", "команды", "команд")} · финальное распределение`
+              : "Финальное распределение мест"}
+          </p>
+        </div>
+      </div>
 
-      {placements.length === 0 && awards.length === 0 ? (
-        <div className="mt-8">
-          <EmptyState
-            title="Итоги ещё не подведены"
-            hint="Они появятся сразу после финала."
-          />
+      {empty ? (
+        <div className="orbit-page-empty orbit-frame">
+          <Icon name="trophy" />
+          <h2>Итоги ещё не подведены</h2>
+          <p>
+            Они появятся сразу после финала: места, призёры и индивидуальные награды
+            турнира.
+          </p>
+          {tournament.registration_open || community.telegram ? (
+            <div>
+              {tournament.registration_open ? (
+                <ButtonLink href={`/t/${slug}/register`} variant="live">
+                  Подать заявку ↗
+                </ButtonLink>
+              ) : null}
+              {community.telegram ? (
+                <ButtonLink href={community.telegram} variant="secondary" external>
+                  Следить в Telegram
+                </ButtonLink>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {top3.length > 0 ? (
-        <section className="mt-8 grid gap-4 sm:grid-cols-3">
-          {top3.map((placement) => (
-            <div key={placement.id} className="border-t border-edge py-7">
-              <p className="text-xs uppercase tracking-[0.2em] opacity-80">
-                {placement.place} место
-              </p>
-              <p className="my-6 text-7xl font-normal tracking-[-0.06em] text-accent">
-                {String(placement.place).padStart(2, "0")}
-              </p>
-              <p className="mt-3 break-words text-2xl font-normal tracking-tight text-ink">
-                {placement.team_slug ? (
-                  <Link
-                    href={`/t/${slug}/teams/${placement.team_slug}`}
-                    className="hover:underline"
-                  >
-                    {placement.team_name}
-                  </Link>
-                ) : (
-                  (placement.team_name ?? "—")
-                )}
-              </p>
-              {placement.note ? (
-                <p className="mt-2 text-sm text-ink-muted">{placement.note}</p>
+      {champion ? (
+        <section className="orbit-results-champ orbit-frame">
+          <div className="orbit-results-champ-body">
+            <p className="orbit-results-champ-label">Чемпион</p>
+            <h2>
+              <TeamName placement={champion} slug={slug} />
+            </h2>
+            <div className="orbit-results-champ-line">
+              {champion.prize ? (
+                <span className="orbit-results-money">{champion.prize}</span>
               ) : null}
-              {placement.prize ? (
-                <p className="mt-1 text-sm text-ink-faint">{placement.prize}</p>
-              ) : null}
+              {champion.note ? <span>{champion.note}</span> : null}
+              <span className="orbit-results-chip">золото</span>
             </div>
-          ))}
-        </section>
-      ) : null}
-
-      {awards.length > 0 ? (
-        <section className="mt-8 grid gap-4 sm:grid-cols-2">
-          {awards.map((award) => (
-            <Card key={award.id} className="py-7">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent">
-                {award.title}
-              </p>
-              <p className="mt-3 text-2xl font-normal tracking-tight">
-                {award.nickname ?? "—"}
-              </p>
-              {award.team_label ? (
-                <p className="mt-2 text-sm text-ink-muted">{award.team_label}</p>
-              ) : null}
-              {award.note ? (
-                <p className="mt-1 text-sm text-ink-faint">{award.note}</p>
-              ) : null}
-            </Card>
-          ))}
-        </section>
-      ) : null}
-
-      {placements.length > 0 ? (
-        <Card className="mt-8">
-          <CardHeader title="Все места" hint={`Команд: ${placements.length}`} />
-          <div className="overflow-x-auto p-5">
-            {/* No min width: three text columns wrap perfectly well, and forcing
-                one only bought a sideways scroll on a phone. */}
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-ink-faint">
-                <tr>
-                  <th className="px-2 py-2.5 font-medium sm:px-3">Место</th>
-                  <th className="px-2 py-2.5 font-medium sm:px-3">Команда</th>
-                  <th className="px-2 py-2.5 font-medium sm:px-3">Примечание</th>
-                </tr>
-              </thead>
-              <tbody>
-                {placements.map((placement) => (
-                  <tr key={placement.id} className="border-t border-edge">
-                    <td className="px-2 py-3 font-semibold tabular-nums sm:px-3">
-                      {placement.place}
-                    </td>
-                    <td className="px-2 py-3 sm:px-3">
-                      {placement.team_slug ? (
-                        <Link
-                          href={`/t/${slug}/teams/${placement.team_slug}`}
-                          className="font-medium hover:text-accent"
-                        >
-                          {placement.team_name}
-                        </Link>
-                      ) : (
-                        (placement.team_name ?? "—")
-                      )}
-                    </td>
-                    <td className="px-2 py-3 text-ink-faint sm:px-3">
-                      {placement.note ?? placement.prize ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
-        </Card>
+          <svg className="orbit-results-cup" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 3h8v6a4 4 0 0 1-8 0V3ZM8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 13v5m-4 3h8m-7-3h6v3" />
+          </svg>
+          <span className="orbit-results-num" aria-hidden="true">
+            {placeNumber(champion.place)}
+          </span>
+        </section>
       ) : null}
+
+      {silver || bronze ? (
+        <div className="orbit-results-medals">
+          {silver ? (
+            <section className="orbit-results-medal orbit-frame" data-metal="silver">
+              <div className="orbit-results-medal-top">
+                <span className="orbit-results-medal-place">
+                  {placeNumber(silver.place)} место · серебро
+                </span>
+                {silver.prize ? (
+                  <span className="orbit-results-money">{silver.prize}</span>
+                ) : null}
+              </div>
+              <h3>
+                <TeamName placement={silver} slug={slug} />
+              </h3>
+              {silver.note ? <p>{silver.note}</p> : null}
+              <span className="orbit-results-medal-num" aria-hidden="true">
+                {placeNumber(silver.place)}
+              </span>
+            </section>
+          ) : null}
+
+          {bronze ? (
+            <section className="orbit-results-medal orbit-frame" data-metal="bronze">
+              <div className="orbit-results-medal-top">
+                <span className="orbit-results-medal-place">
+                  {placeNumber(bronze.place)} место · бронза
+                </span>
+                {bronze.prize ? (
+                  <span className="orbit-results-money">{bronze.prize}</span>
+                ) : null}
+              </div>
+              <h3>
+                <TeamName placement={bronze} slug={slug} />
+              </h3>
+              {bronze.note ? <p>{bronze.note}</p> : null}
+              <span className="orbit-results-medal-num" aria-hidden="true">
+                {placeNumber(bronze.place)}
+              </span>
+            </section>
+          ) : null}
+        </div>
+      ) : null}
+
+      {rest.length > 0 ? (
+        <div className="orbit-results-rest">
+          {rest.map((placement) => (
+            <Link
+              key={placement.id}
+              href={
+                placement.team_slug
+                  ? `/t/${slug}/teams/${placement.team_slug}`
+                  : `/t/${slug}`
+              }
+            >
+              <span className="n">{placeNumber(placement.place)}</span>
+              <span className="name">{placement.team_name ?? "—"}</span>
+              <span className="arrow" aria-hidden="true">
+                ↗
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      {awards.length > 0 ? <Awards awards={awards} /> : null}
     </Container>
   );
 }
