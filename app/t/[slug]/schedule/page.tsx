@@ -1,11 +1,15 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Card, CardHeader, EmptyState } from "@/components/ui/Card";
-import { Container, PageHeader, Skeleton } from "@/components/ui/PageHeader";
-import { MatchRow } from "@/components/match/MatchRow";
+import { Container, Skeleton } from "@/components/ui/PageHeader";
+import {
+  ScheduleBoard,
+  type ScheduleDayView,
+  type ScheduleRowView,
+} from "@/components/schedule/ScheduleBoard";
 import { getSchedule, getTournament } from "@/lib/queries/public";
-import { dayKey, formatDayLabel } from "@/lib/format/date";
+import { dayKey, formatDayLabel, formatTime } from "@/lib/format/date";
+import { community } from "@/lib/community";
 import type { MatchDetails } from "@/lib/types/database";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -27,10 +31,41 @@ async function metadataFor(slug: string): Promise<Metadata> {
   };
 }
 
+function mark(name: string | null, tag: string | null): string {
+  if (tag) return tag.slice(0, 3).toUpperCase();
+  if (name) {
+    return name
+      .replace(/^Team\s+/i, "")
+      .slice(0, 2)
+      .toUpperCase();
+  }
+  return "?";
+}
+
+function toRow(match: MatchDetails, timeZone: string, slug: string): ScheduleRowView {
+  const stage = match.group_name ?? match.round_label ?? match.stage_name;
+
+  return {
+    id: match.id,
+    href: `/t/${slug}/matches/${match.id}`,
+    time: formatTime(match.scheduled_at, timeZone),
+    team1: match.team1_name ?? match.team1_source ?? "TBD",
+    team2: match.team2_name ?? match.team2_source ?? "TBD",
+    mark1: mark(match.team1_name, match.team1_tag),
+    mark2: mark(match.team2_name, match.team2_tag),
+    score1: match.score1,
+    score2: match.score2,
+    played: match.status === "live" || match.status === "finished",
+    status: match.status,
+    meta: [`BO${match.best_of}`, stage].filter(Boolean).join(" · "),
+  };
+}
+
 function groupByDay(
   matches: MatchDetails[],
   timeZone: string,
-): { key: string; label: string; matches: MatchDetails[] }[] {
+  slug: string,
+): ScheduleDayView[] {
   const buckets = new Map<string, MatchDetails[]>();
 
   for (const match of matches) {
@@ -49,14 +84,14 @@ function groupByDay(
       label:
         key === "tbd"
           ? "Время уточняется"
-          : formatDayLabel(items[0]?.scheduled_at ?? null, timeZone),
-      matches: items,
+          : formatDayLabel(items[0]?.scheduled_at ?? null, timeZone).replace(", ", " · "),
+      matches: items.map((match) => toRow(match, timeZone, slug)),
     }));
 }
 
 export default function SchedulePage({ params }: Props) {
   return (
-    <Container className="py-8 sm:py-12">
+    <Container className="orbit-schedule">
       <Suspense fallback={<Skeleton className="h-96" />}>
         {params.then(({ slug }) => (
           <ScheduleView slug={slug} />
@@ -73,46 +108,17 @@ async function ScheduleView({ slug }: { slug: string }) {
   if (!tournament) notFound();
 
   const matches = await getSchedule(slug);
-  const days = groupByDay(matches, tournament.time_zone);
+  const days = groupByDay(matches, tournament.time_zone, slug);
 
   return (
-    <>
-      <PageHeader
-        eyebrow={tournament.name}
-        title="Расписание"
-        description={`Все матчи турнира. Время указано в ${tournament.time_zone}.`}
-      />
-
-      {days.length === 0 ? (
-        <div className="mt-8">
-          <EmptyState
-            title="Матчей пока нет"
-            hint="Расписание появится, как только организаторы сгенерируют этапы."
-          />
-        </div>
-      ) : (
-        <div className="mt-8 space-y-6">
-          {days.map((day) => (
-            <Card key={day.key}>
-              <CardHeader
-                title={<span className="capitalize">{day.label}</span>}
-                hint={`Матчей: ${day.matches.length}`}
-              />
-              <div className="px-5 pb-5">
-                {day.matches.map((match) => (
-                  <MatchRow
-                    key={match.id}
-                    layout="schedule"
-                    match={match}
-                    timeZone={tournament.time_zone}
-                    href={`/t/${slug}/matches/${match.id}`}
-                  />
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-    </>
+    <ScheduleBoard
+      days={days}
+      timeZone={tournament.time_zone}
+      empty={{
+        registrationOpen: tournament.registration_open,
+        registerHref: `/t/${slug}/register`,
+        telegram: tournament.telegram_url || community.telegram || null,
+      }}
+    />
   );
 }
