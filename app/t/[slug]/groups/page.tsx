@@ -180,7 +180,7 @@ export default async function GroupsPage({ params }: Props) {
         </>
       )}
 
-      <dl className="orbit-facts orbit-frame">
+      <dl className="orbit-facts-row orbit-frame">
         <div>
           <dt>Формат</dt>
           <dd>{format ?? "Уточняется"}</dd>

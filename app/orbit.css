@@ -1825,6 +1825,7 @@ html[data-motion="off"] .orbit-home-hero:before {
 .orbit-group table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   margin-top: 4px;
 }
 .orbit-group th {
@@ -1835,6 +1836,14 @@ html[data-motion="off"] .orbit-home-hero:before {
   text-transform: uppercase;
   text-align: right;
   color: var(--color-ink-faint);
+}
+.orbit-group th:nth-child(1),
+.orbit-group td:nth-child(1) {
+  width: 34px;
+}
+.orbit-group th:nth-child(n + 3),
+.orbit-group td:nth-child(n + 3) {
+  width: 34px;
 }
 .orbit-group th:nth-child(2) {
   text-align: left;
@@ -1876,6 +1885,11 @@ html[data-motion="off"] .orbit-home-hero:before {
   gap: 10px;
   font-size: 14px;
   color: var(--color-ink);
+}
+.orbit-team-cell > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .orbit-team-cell i {
   display: grid;
@@ -1920,26 +1934,26 @@ html[data-motion="off"] .orbit-home-hero:before {
   text-transform: uppercase;
   color: var(--color-ink-faint);
 }
-.orbit-facts {
+.orbit-facts-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 24px;
   padding: 22px 0;
 }
-.orbit-facts > div {
+.orbit-facts-row > div {
   padding: 0 30px;
   border-right: 1px solid var(--color-edge);
 }
-.orbit-facts > div:last-child {
+.orbit-facts-row > div:last-child {
   border-right: 0;
 }
-.orbit-facts dt {
+.orbit-facts-row dt {
   font: 10px/1.5 var(--font-mono);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-ink-muted);
 }
-.orbit-facts dd {
+.orbit-facts-row dd {
   margin: 6px 0 0;
   font-size: 20px;
   font-weight: 700;
@@ -2021,10 +2035,10 @@ html[data-motion="off"] .orbit-home-hero:before {
   .orbit-teams-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .orbit-facts {
+  .orbit-facts-row {
     margin-top: 20px;
   }
-  .orbit-facts > div {
+  .orbit-facts-row > div {
     padding: 0 18px;
   }
 }
@@ -2055,7 +2069,12 @@ html[data-motion="off"] .orbit-home-hero:before {
   .orbit-team-cell {
     gap: 8px;
   }
-  .orbit-team-cell i {
+  .orbit-team-cell > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.orbit-team-cell i {
     width: 22px;
     height: 22px;
   }
@@ -2064,16 +2083,16 @@ html[data-motion="off"] .orbit-home-hero:before {
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .orbit-facts {
+  .orbit-facts-row {
     grid-template-columns: minmax(0, 1fr);
     padding: 4px 22px;
   }
-  .orbit-facts > div {
+  .orbit-facts-row > div {
     padding: 16px 0;
     border-right: 0;
     border-bottom: 1px solid var(--color-edge);
   }
-  .orbit-facts > div:last-child {
+  .orbit-facts-row > div:last-child {
     border-bottom: 0;
   }
 }
