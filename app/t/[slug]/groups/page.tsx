@@ -177,26 +177,23 @@ export default async function GroupsPage({ params }: Props) {
             ))}
           </div>
 
-          <dl className="orbit-facts orbit-frame">
-            <div>
-              <dt>Формат</dt>
-              <dd>{format ?? "Уточняется"}</dd>
-            </div>
-            <div>
-              <dt>Групп</dt>
-              <dd>{groups.length}</dd>
-            </div>
-            <div>
-              <dt>В плей-офф</dt>
-              <dd>
-                {advance > 0
-                  ? `по ${advance} из группы`
-                  : "Уточняется"}
-              </dd>
-            </div>
-          </dl>
         </>
       )}
+
+      <dl className="orbit-facts orbit-frame">
+        <div>
+          <dt>Формат</dt>
+          <dd>{format ?? "Уточняется"}</dd>
+        </div>
+        <div>
+          <dt>Групп</dt>
+          <dd>{groups.length > 0 ? groups.length : "—"}</dd>
+        </div>
+        <div>
+          <dt>В плей-офф</dt>
+          <dd>{advance > 0 ? `по ${advance} из группы` : "Уточняется"}</dd>
+        </div>
+      </dl>
     </Container>
   );
 }
