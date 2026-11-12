@@ -4844,13 +4844,16 @@ html[data-motion="off"] .orbit-home-hero:before {
   isolation: isolate;
   padding: 26px 30px 24px;
   background:
-    linear-gradient(
-      95deg,
-      color-mix(in srgb, var(--color-surface) 96%, transparent) 34%,
-      color-mix(in srgb, var(--color-surface) 74%, transparent) 62%,
-      transparent 92%
+    radial-gradient(
+      120% 140% at 88% 0%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
+      transparent 58%
     ),
-    url("/brand/orbit-banner.png") right center / 58% auto no-repeat;
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--color-accent) 5%, var(--color-panel)),
+      var(--color-surface) 62%
+    );
 }
 .orbit-reg-hero .label {
   display: flex;
