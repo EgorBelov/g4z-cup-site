@@ -27,7 +27,7 @@ export default async function ProfilePage() {
               <h2>Профиль игрока</h2>
               <span>{verified ? "вход подтверждён" : "контакт вручную"}</span>
             </div>
-            <div className="orbit-profile-form">
+            <div className="orbit-form-scope">
               <ProfileForm values={player} editing />
             </div>
           </section>
