@@ -1,9 +1,9 @@
 import { ButtonLink } from "@/components/ui/Button";
-import { Card, CardHeader } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Field";
 import { CommandForm, PlayerSearch } from "@/components/player/TeamForms";
 import { applicationLabels } from "@/lib/types/registration";
 import type { applicationDetail } from "@/lib/queries/registration";
+import type { ApplicationStatus } from "@/lib/types/registration";
 
 const eventNames: Record<string, string> = {
   application_create: "Создана командная заявка",
@@ -32,6 +32,16 @@ const eventNames: Record<string, string> = {
   profile_update: "Обновлён профиль игрока",
 };
 
+function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
+  if (status === "accepted") return "ok";
+  if (status === "submitted" || status === "waitlisted" || status === "draft") return "wait";
+  return "neutral";
+}
+
+function initials(value: string): string {
+  return value.replace(/^Team\s+/i, "").slice(0, 2).toUpperCase();
+}
+
 export function ApplicationPanel({
   data,
   admin = false,
@@ -58,241 +68,302 @@ export function ApplicationPanel({
   const editable = admin || (captain && !locked);
   const fields = { application_id: r.id, version: r.version };
   const main = members.filter((m) => m.slot === "main").length;
+  const selfInRoster = Boolean(player && members.some((m) => m.profile_id === player.id));
+
   return (
-    <div className="space-y-5">
-      <Card className="p-5 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="eyebrow">{t.name}</p>
-            <h2 className="mt-2 text-2xl">{team.name}</h2>
-            <p className="mt-3 inline-flex rounded-pill bg-accent-soft px-4 py-2 text-sm text-accent">
-              {applicationLabels[r.status]}
-            </p>
-          </div>
-          <ButtonLink href={`/teams/${team.slug}`} variant="secondary" size="sm">
-            Страница команды ↗
-          </ButtonLink>
+    <div className="orbit-app">
+      <dl className="orbit-app-facts orbit-frame">
+        <div>
+          <dt>Основные</dt>
+          <dd>
+            {main} <small>/ {t.roster_size}</small>
+          </dd>
         </div>
-        <div className="mt-5 flex flex-wrap gap-3 text-sm">
-          <span className="rounded-control border border-edge px-4 py-3">
-            Основные: {main}/{t.roster_size}
-          </span>
-          <span className="rounded-control border border-edge px-4 py-3">
-            Запасные: {members.length - main}/{t.max_substitutes}
-          </span>
-          <span className="rounded-control border border-edge px-4 py-3">
-            {t.registration_open ? "Приём открыт" : "Приём закрыт"}
-          </span>
+        <div>
+          <dt>Запасные</dt>
+          <dd>
+            {members.length - main} <small>/ {t.max_substitutes}</small>
+          </dd>
         </div>
-        {r.reason ? (
-          <p className="mt-5 rounded-control border border-edge bg-panel p-4 text-sm">
-            Решение организатора: {r.reason}
-          </p>
-        ) : null}
-        {locked && !admin ? (
-          <p className="mt-5 text-sm text-ink-muted">
-            Самостоятельное изменение состава сейчас недоступно. Изменения проводит
-            организатор.
-          </p>
-        ) : null}
-        {captain ? (
-          <ButtonLink
-            className="mt-5"
-            href={`/me/teams/${team.id}`}
-            size="sm"
-            variant="secondary"
-          >
-            Управление командой
-          </ButtonLink>
-        ) : null}
-      </Card>
-      <Card>
-        <CardHeader
-          title="Состав"
-          hint="Приглашение не занимает место. Игрок вступает после подтверждения."
-        />
-        <div className="space-y-3 p-5">
-          {!members.length ? (
-            <p className="text-sm text-ink-muted">
-              Пока никого. Пригласите игроков или займите слот сами.
-            </p>
-          ) : (
-            members.map((m) => (
-              <div
-                key={m.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-control border border-edge bg-panel p-4"
-              >
-                <div>
-                  <p className="font-medium">
-                    {m.nickname}{" "}
-                    <span className="text-xs text-ink-muted">P{m.code}</span>
-                  </p>
-                  <p className="mt-2 text-xs text-ink-muted">
-                    {m.slot === "main" ? "Основной" : "Запасной"}
-                    {t.discipline === "dota2" && m.dota_mmr != null
-                      ? ` · ${m.dota_mmr} MMR`
-                      : t.discipline === "cs2" && m.cs_elo != null
-                        ? ` · ${m.cs_elo} Elo`
-                        : " · рейтинг не указан"}
-                  </p>
-                </div>
-                {editable ? (
-                  <div className="flex flex-wrap gap-2">
-                    <CommandForm
-                      admin={admin}
-                      label={m.slot === "main" ? "В запас" : "В основные"}
-                      fields={{
-                        ...fields,
-                        action: "member_slot",
-                        profile_id: m.profile_id,
-                        slot: m.slot === "main" ? "substitute" : "main",
-                      }}
-                    />
-                    <CommandForm
-                      admin={admin}
-                      label="Исключить"
-                      variant="danger"
-                      fields={{
-                        ...fields,
-                        action: "member_remove",
-                        profile_id: m.profile_id,
-                      }}
-                    />
+        <div>
+          <dt>Приём заявок</dt>
+          <dd style={{ fontSize: 18 }}>{t.registration_open ? "открыт" : "закрыт"}</dd>
+        </div>
+      </dl>
+
+      <div className="orbit-app-grid">
+        <div className="orbit-app-main">
+          <section className="orbit-app-card orbit-frame">
+            <div className="orbit-app-card-head">
+              <h2>Состав</h2>
+              <span>приглашение не занимает место</span>
+            </div>
+
+            {members.length ? (
+              members.map((m) => (
+                <div className="orbit-member" key={m.id}>
+                  <span className="mark" aria-hidden="true">
+                    {initials(m.nickname)}
+                  </span>
+                  <div className="min-w-0">
+                    <b>{m.nickname}</b>
+                    <small>
+                      P{m.code} ·{" "}
+                      {m.slot === "main" ? <em>основной</em> : "запасной"} ·{" "}
+                      {t.discipline === "dota2" && m.dota_mmr != null
+                        ? `${m.dota_mmr} MMR`
+                        : t.discipline === "cs2" && m.cs_elo != null
+                          ? `${m.cs_elo} Elo`
+                          : "рейтинг не указан"}
+                    </small>
                   </div>
-                ) : null}
-              </div>
-            ))
-          )}
-          {captain && !locked && !members.some((m) => m.profile_id === player?.id) ? (
-            <CommandForm
-              label="Занять слот самому"
-              fields={{ ...fields, action: "self_join" }}
-            />
-          ) : null}
-          {!locked && player && members.some((m) => m.profile_id === player.id) ? (
-            <CommandForm
-              label="Выйти из состава"
-              variant="ghost"
-              fields={{ ...fields, action: "member_leave" }}
-            />
-          ) : null}
-        </div>
-      </Card>
-      {editable ? (
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Card className="p-5">
-            <h2 className="mb-5 text-xl">
-              {admin ? "Добавить или переместить игрока" : "Пригласить игрока"}
-            </h2>
-            <PlayerSearch
-              teamId={team.id}
-              applicationId={r.id}
-              version={r.version}
-              admin={admin}
-              replaceMembers={members.map((m) => ({
-                id: m.profile_id,
-                nickname: m.nickname,
-              }))}
-            />
-            {admin ? (
-              <p className="mt-4 text-xs text-ink-muted">
-                Если игрок уже в другом составе этого кубка, организатор переместит его
-                одной операцией. Подтверждение игрока не требуется.
+                  {editable ? (
+                    <div className="orbit-app-row-actions">
+                      <span className="orbit-app-mini">
+                        <CommandForm
+                          admin={admin}
+                          label={m.slot === "main" ? "В запас" : "В основные"}
+                          fields={{
+                            ...fields,
+                            action: "member_slot",
+                            profile_id: m.profile_id,
+                            slot: m.slot === "main" ? "substitute" : "main",
+                          }}
+                        />
+                      </span>
+                      <span className="orbit-app-mini" data-danger="true">
+                        <CommandForm
+                          admin={admin}
+                          label="Исключить"
+                          variant="danger"
+                          fields={{
+                            ...fields,
+                            action: "member_remove",
+                            profile_id: m.profile_id,
+                          }}
+                        />
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <p className="orbit-app-note">
+                Пока никого. Пригласите игроков или займите слот сами.
               </p>
+            )}
+
+            {captain && !locked && !selfInRoster ? (
+              <div className="orbit-app-slot-actions">
+                <span className="orbit-app-mini">
+                  <CommandForm
+                    label="Занять слот самому"
+                    fields={{ ...fields, action: "self_join" }}
+                  />
+                </span>
+                {player && selfInRoster ? null : null}
+              </div>
             ) : null}
-          </Card>
-          {!admin ? (
-            <Card className="p-5">
-              <h2 className="mb-5 text-xl">Пригласить по ссылке</h2>
-              <CommandForm
-                label="Создать новую ссылку"
-                fields={{ ...fields, action: "invite_create" }}
-              />
-              <p className="mt-4 text-xs text-ink-muted">
+
+            {!locked && selfInRoster ? (
+              <div className="orbit-app-slot-actions">
+                <span className="orbit-app-mini" data-danger="true">
+                  <CommandForm
+                    label="Выйти из состава"
+                    variant="ghost"
+                    fields={{ ...fields, action: "member_leave" }}
+                  />
+                </span>
+              </div>
+            ) : null}
+          </section>
+
+          {editable ? (
+            <section className="orbit-app-card orbit-frame">
+              <div className="orbit-app-card-head">
+                <h2>
+                  {admin ? "Добавить или переместить игрока" : "Пригласить игрока"}
+                </h2>
+              </div>
+              <div className="orbit-app-search">
+                <PlayerSearch
+                  teamId={team.id}
+                  applicationId={r.id}
+                  version={r.version}
+                  admin={admin}
+                  replaceMembers={members.map((m) => ({
+                    id: m.profile_id,
+                    nickname: m.nickname,
+                  }))}
+                />
+              </div>
+              {admin ? (
+                <p className="orbit-app-note">
+                  Если игрок уже в другом составе этого кубка, организатор переместит его
+                  одной операцией. Подтверждение игрока не требуется.
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+
+          {editable && !admin ? (
+            <section className="orbit-app-card orbit-frame">
+              <div className="orbit-app-card-head">
+                <h2>Приглашения</h2>
+                <span>ссылка живёт 7 дней</span>
+              </div>
+
+              <div className="orbit-app-slot-actions" style={{ borderTop: 0, paddingTop: 0 }}>
+                <span className="orbit-app-mini" data-accent="true">
+                  <CommandForm
+                    label="Создать новую ссылку"
+                    fields={{ ...fields, action: "invite_create" }}
+                  />
+                </span>
+              </div>
+
+              <p className="orbit-app-note">
                 Ссылка многоразовая, действует 7 дней. Новая отключает предыдущую;
                 свободные места проверяются при каждом вступлении.
               </p>
+
               {invites.map((i) => (
-                <div key={i.id} className="mt-4 rounded-control border border-edge p-4">
-                  <p className="mb-3 text-sm">
-                    {i.recipient_id ? "Персональное приглашение" : "Ссылка в состав"} ·
-                    до{" "}
-                    {new Date(i.expires_at as string).toLocaleDateString("ru-RU", {
-                      timeZone: t.time_zone,
-                    })}
-                  </p>
-                  <CommandForm
-                    label="Отозвать"
-                    fields={{
-                      ...fields,
-                      action: "invite_revoke",
-                      invite_id: i.id as number,
-                    }}
-                  />
+                <div className="orbit-app-invite" key={i.id}>
+                  <div className="min-w-0">
+                    <b>
+                      {i.recipient_id ? "Персональное приглашение" : "Ссылка в состав"}
+                    </b>
+                    <small>
+                      до{" "}
+                      {new Date(i.expires_at as string).toLocaleDateString("ru-RU", {
+                        timeZone: t.time_zone,
+                      })}
+                    </small>
+                  </div>
+                  <span className="orbit-app-mini">
+                    <CommandForm
+                      label="Отозвать"
+                      fields={{
+                        ...fields,
+                        action: "invite_revoke",
+                        invite_id: i.id as number,
+                      }}
+                    />
+                  </span>
                 </div>
               ))}
-            </Card>
+            </section>
           ) : null}
         </div>
-      ) : null}
-      {captain && r.status !== "accepted" && r.status !== "withdrawn" ? (
-        <Card className="flex flex-wrap gap-4 p-5">
-          {!locked ? (
-            <CommandForm
-              label="Подать заявку"
-              variant="primary"
-              fields={{ ...fields, action: "submit" }}
-            />
+
+        <aside className="orbit-app-aside">
+          <section className="orbit-app-card orbit-frame">
+            <div className="orbit-app-card-head">
+              <h2>Статус</h2>
+            </div>
+
+            <span className="orbit-app-status" data-tone={statusTone(r.status)}>
+              {applicationLabels[r.status]}
+            </span>
+
+            {r.reason ? (
+              <p className="orbit-app-reason">Решение организатора: {r.reason}</p>
+            ) : null}
+
+            {locked && !admin ? (
+              <p className="orbit-app-note">
+                Самостоятельное изменение состава сейчас недоступно. Изменения проводит
+                организатор.
+              </p>
+            ) : null}
+
+            <div className="orbit-app-actions">
+              {captain && r.status !== "accepted" && r.status !== "withdrawn" ? (
+                <>
+                  {!locked ? (
+                    <span className="orbit-app-mini" data-accent="true" data-block="true">
+                      <CommandForm
+                        label="Подать заявку"
+                        variant="primary"
+                        fields={{ ...fields, action: "submit" }}
+                      />
+                    </span>
+                  ) : null}
+                  <span
+                    className="orbit-app-mini orbit-app-withdraw"
+                    data-block="true"
+                  >
+                    <CommandForm
+                      label="Отозвать заявку"
+                      variant="danger"
+                      fields={{ ...fields, action: "withdraw" }}
+                    />
+                  </span>
+                </>
+              ) : null}
+              {captain ? (
+                <ButtonLink href={`/me/teams/${team.id}`} size="sm" variant="secondary">
+                  Управление командой
+                </ButtonLink>
+              ) : null}
+            </div>
+          </section>
+
+          {admin && ["submitted", "waitlisted", "rejected"].includes(r.status) ? (
+            <section className="orbit-app-card orbit-frame">
+              <div className="orbit-app-card-head">
+                <h2>Решение организатора</h2>
+              </div>
+              <div className="orbit-app-search">
+                <CommandForm
+                  admin
+                  label="Сохранить решение"
+                  variant="primary"
+                  fields={{ ...fields, action: "review" }}
+                >
+                  <Select name="status" aria-label="Решение по заявке">
+                    <option value="accepted">Принять</option>
+                    <option value="waitlisted">Лист ожидания</option>
+                    <option value="rejected">Отклонить</option>
+                  </Select>
+                  <Input
+                    name="reason"
+                    aria-label="Причина решения"
+                    maxLength={1000}
+                    placeholder="Причина — обязательна при отказе"
+                  />
+                </CommandForm>
+              </div>
+            </section>
           ) : null}
-          <CommandForm
-            label="Отозвать заявку"
-            variant="danger"
-            fields={{ ...fields, action: "withdraw" }}
-          />
-        </Card>
-      ) : null}
-      {admin && ["submitted", "waitlisted", "rejected"].includes(r.status) ? (
-        <Card className="p-5">
-          <h2 className="mb-5 text-xl">Решение организатора</h2>
-          <CommandForm
-            admin
-            label="Сохранить решение"
-            variant="primary"
-            fields={{ ...fields, action: "review" }}
-          >
-            <Select name="status" aria-label="Решение по заявке">
-              <option value="accepted">Принять</option>
-              <option value="waitlisted">Лист ожидания</option>
-              <option value="rejected">Отклонить</option>
-            </Select>
-            <Input
-              name="reason"
-              aria-label="Причина решения"
-              maxLength={1000}
-              placeholder="Причина — обязательна при отказе"
-            />
-          </CommandForm>
-        </Card>
-      ) : null}
-      {events.length ? (
-        <Card className="p-5">
-          <h2 className="text-xl">История изменений</h2>
-          <ul className="mt-4 space-y-3">
-            {events.map((e) => (
-              <li
-                key={e.id as number}
-                className="rounded-control border border-edge p-3 text-sm"
-              >
-                <span className="text-ink-muted">
-                  {e.actor_kind === "admin" ? "Организатор" : "Участник"} ·{" "}
-                  {eventNames[String(e.action)] ?? "Данные заявки изменены"}
+
+          {events.length ? (
+            <section className="orbit-app-card orbit-frame">
+              <div className="orbit-app-card-head">
+                <h2>История</h2>
+                <span>
+                  {events.length}{" "}
+                  {events.length === 1 ? "событие" : events.length < 5 ? "события" : "событий"}
                 </span>
-                {e.reason ? <p className="mt-2">{String(e.reason)}</p> : null}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      ) : null}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                {events.map((e) => (
+                  <div className="orbit-app-event" key={e.id as number}>
+                    <span className="dot" aria-hidden="true" />
+                    <div>
+                      <b>{eventNames[String(e.action)] ?? "Данные заявки изменены"}</b>
+                      <span>
+                        {e.actor_kind === "admin" ? "организатор" : "участник"}
+                        {e.reason ? ` · ${String(e.reason)}` : ""}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </aside>
+      </div>
     </div>
   );
 }
