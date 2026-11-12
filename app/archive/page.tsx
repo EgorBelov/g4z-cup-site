@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/Icon";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { listTournaments } from "@/lib/queries/public";
-import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
+import { DEFAULT_TIME_ZONE, formatDateRange } from "@/lib/format/date";
 import type { TournamentSummary } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -24,22 +24,41 @@ function plural(count: number, one: string, few: string, many: string): string {
   return many;
 }
 
-function monthYear(value: string | null, timeZone: string): string | null {
+const MONTHS_GENITIVE = [
+  "января",
+  "февраля",
+  "марта",
+  "апреля",
+  "мая",
+  "июня",
+  "июля",
+  "августа",
+  "сентября",
+  "октября",
+  "ноября",
+  "декабря",
+];
+
+/** «с августа 2026» — месяц в родительном падеже после предлога. */
+function sinceLabel(value: string | null, timeZone: string): string | null {
   if (!value) return null;
-  return new Intl.DateTimeFormat("ru-RU", {
-    month: "long",
+  const parts = new Intl.DateTimeFormat("ru-RU", {
+    month: "numeric",
     year: "numeric",
     timeZone,
-  })
-    .format(new Date(value))
-    .replace(" г.", "");
+  }).formatToParts(new Date(value));
+  const month = Number(parts.find((part) => part.type === "month")?.value ?? "1");
+  const year = parts.find((part) => part.type === "year")?.value;
+  return `${MONTHS_GENITIVE[month - 1] ?? ""} ${year}`.trim();
 }
 
 function dateLine(tournament: TournamentSummary, timeZone: string): string {
   const parts: string[] = [];
   const when =
-    monthYear(tournament.starts_at, timeZone) ?? monthYear(tournament.ends_at, timeZone);
+    formatDateRange(tournament.starts_at, tournament.ends_at, timeZone) ??
+    sinceLabel(tournament.starts_at ?? tournament.ends_at, timeZone);
   if (when) parts.push(when);
+  else parts.push("даты уточняются");
   if (tournament.game) parts.push(tournament.game);
   if (tournament.team_count > 0) {
     parts.push(
@@ -84,7 +103,7 @@ async function ArchiveView() {
     .map((item) => item.starts_at)
     .filter((value): value is string => Boolean(value))
     .sort()[0];
-  const since = monthYear(earliest ?? null, timeZone);
+  const since = sinceLabel(earliest ?? null, timeZone);
 
   return (
     <>
@@ -137,6 +156,7 @@ async function ArchiveView() {
                 ? tournament.name.replace(new RegExp(`\\s*${tournament.edition}$`), "")
                 : tournament.name;
               const decided = Boolean(tournament.champion_name);
+              const finished = tournament.status === "finished";
 
               const card = (
                 <>
@@ -163,6 +183,16 @@ async function ArchiveView() {
                           <Icon name="trophy" />
                           <span>
                             <strong>{tournament.champion_name}</strong> — чемпион
+                          </span>
+                          <span className="orbit-archive-arrow" aria-hidden="true">
+                            ↗
+                          </span>
+                        </>
+                      ) : finished ? (
+                        <>
+                          <span className="orbit-archive-state">
+                            <i aria-hidden="true" />
+                            итоги не подведены
                           </span>
                           <span className="orbit-archive-arrow" aria-hidden="true">
                             ↗
