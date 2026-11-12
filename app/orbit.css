@@ -2146,33 +2146,6 @@ html[data-motion="off"] .orbit-home-hero:before {
   padding-top: 34px;
   padding-bottom: 40px;
 }
-.orbit-archive-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 20px 30px;
-}
-.orbit-archive-stats > div {
-  padding-right: 30px;
-  border-right: 1px solid var(--color-edge);
-}
-.orbit-archive-stats > div + div {
-  padding-left: 30px;
-}
-.orbit-archive-stats > div:last-child {
-  border-right: 0;
-}
-.orbit-archive-stats dt {
-  font: 10px/1.5 var(--font-mono);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-ink-muted);
-}
-.orbit-archive-stats dd {
-  margin: 6px 0 0;
-  font-size: 26px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-}
 .orbit-archive-seasons {
   display: flex;
   flex-direction: column;
@@ -2343,21 +2316,6 @@ html[data-motion="off"] .orbit-home-hero:before {
 @media (max-width: 639px) {
   .orbit-archive {
     padding-top: 26px;
-  }
-  .orbit-archive-stats {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 4px 22px;
-  }
-  .orbit-archive-stats > div {
-    padding: 16px 0;
-    border-right: 0;
-    border-bottom: 1px solid var(--color-edge);
-  }
-  .orbit-archive-stats > div + div {
-    padding-left: 0;
-  }
-  .orbit-archive-stats > div:last-child {
-    border-bottom: 0;
   }
   .orbit-archive-season,
   .orbit-archive-body {

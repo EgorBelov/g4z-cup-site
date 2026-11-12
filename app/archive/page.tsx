@@ -128,10 +128,6 @@ async function ArchiveView() {
   const tournaments = await listTournaments();
   const timeZone = DEFAULT_TIME_ZONE;
 
-  const played = tournaments.filter((item) => item.status === "finished");
-  const teams = tournaments.reduce((sum, item) => sum + item.team_count, 0);
-  const matches = tournaments.reduce((sum, item) => sum + item.match_count, 0);
-
   const earliest = tournaments
     .map((item) => item.starts_at)
     .filter((value): value is string => Boolean(value))
@@ -147,10 +143,6 @@ async function ArchiveView() {
             История сообщества{since ? ` · с ${since}` : ""}
           </p>
         </div>
-        <span className="orbit-groups-window">
-          {tournaments.length}{" "}
-          {plural(tournaments.length, "сезон", "сезона", "сезонов")}
-        </span>
       </div>
 
       {tournaments.length === 0 ? (
@@ -164,21 +156,6 @@ async function ArchiveView() {
         </div>
       ) : (
         <>
-          <dl className="orbit-archive-stats orbit-frame">
-            <div>
-              <dt>Сезонов сыграно</dt>
-              <dd>{played.length}</dd>
-            </div>
-            <div>
-              <dt>Команд</dt>
-              <dd>{teams}</dd>
-            </div>
-            <div>
-              <dt>Матчей</dt>
-              <dd>{matches}</dd>
-            </div>
-          </dl>
-
           <div className="orbit-archive-seasons">
             {tournaments.map((tournament) => {
               const href = `/t/${tournament.slug}`;
