@@ -85,6 +85,22 @@ export default async function MyAccountPage() {
     (t) => t.registration_open && t.status !== "finished",
   );
   const inviteCount = invitations.length + incoming.requests.length;
+  // нули в шапке только шумят: показываем то, что у игрока реально есть
+  const counters = [
+    {
+      value: activeTeams.length,
+      label: plural(activeTeams.length, "команда", "команды", "команд"),
+    },
+    {
+      value: applications.length,
+      label: plural(applications.length, "заявка", "заявки", "заявок"),
+    },
+    {
+      value: inviteCount,
+      label: plural(inviteCount, "приглашение", "приглашения", "приглашений"),
+    },
+  ].filter((counter) => counter.value > 0);
+
   const teamName = (id: number) =>
     (otherTeams.data as Pick<CommunityTeam, "id" | "name" | "slug">[] | null)?.find(
       (t) => t.id === id,
@@ -98,18 +114,11 @@ export default async function MyAccountPage() {
           <h1>{player.nickname}</h1>
           <p className="orbit-sh-meta">
             <span>P{player.code}</span>
-            <span>
-              <b>{activeTeams.length}</b>{" "}
-              {plural(activeTeams.length, "команда", "команды", "команд")}
-            </span>
-            <span>
-              <b>{applications.length}</b>{" "}
-              {plural(applications.length, "заявка", "заявки", "заявок")}
-            </span>
-            <span>
-              <b>{inviteCount}</b>{" "}
-              {plural(inviteCount, "приглашение", "приглашения", "приглашений")}
-            </span>
+            {counters.map((counter) => (
+              <span key={counter.label}>
+                <b>{counter.value}</b> {counter.label}
+              </span>
+            ))}
           </p>
         </div>
         <div className="orbit-sh-actions">
