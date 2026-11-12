@@ -50,8 +50,8 @@ export default async function BracketPage({ params }: Props) {
     bracketStages[0]?.starts_on ?? null,
     bracketStages.at(-1)?.ends_on ?? null,
   );
-  const format =
-    bracketStages.length === 1 ? `BO${bracketStages[0]?.best_of ?? 3}` : null;
+  const bestOf = matches.reduce((top, match) => Math.max(top, match.best_of), 0);
+  const format = bestOf > 0 ? `BO${bestOf}` : null;
   const rounds = new Set(matches.map((match) => `${match.stage_id}-${match.round}`)).size;
 
   return (

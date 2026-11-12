@@ -12,7 +12,15 @@ import type { BracketSide, MatchDetails } from "@/lib/types/database";
  * winner/loser links — no guessing from round names.
  */
 
-function BracketMatch({ match, timeZone }: { match: MatchDetails; timeZone: string }) {
+function BracketMatch({
+  match,
+  timeZone,
+  showLabel = true,
+}: {
+  match: MatchDetails;
+  timeZone: string;
+  showLabel?: boolean;
+}) {
   const showScore = match.status === "live" || match.status === "finished";
 
   const side = (
@@ -60,8 +68,15 @@ function BracketMatch({ match, timeZone }: { match: MatchDetails; timeZone: stri
       className="orbit-bracket-card orbit-frame block"
       data-status={match.status}
     >
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-faint">
-        <span className="truncate">{match.round_label ?? `Раунд ${match.round}`}</span>
+      <div
+        className={cn(
+          "mb-2 flex flex-wrap items-center gap-2 text-xs text-ink-faint",
+          showLabel ? "justify-between" : "justify-end",
+        )}
+      >
+        {showLabel ? (
+          <span className="truncate">{match.round_label ?? `Раунд ${match.round}`}</span>
+        ) : null}
         <MatchStatusBadge status={match.status} />
       </div>
 
@@ -272,7 +287,7 @@ export function BracketView({
         {placementMatches.map((match) => (
           <section className="orbit-third-place" key={match.id}>
             <h3>{match.round_label ?? "Матч за место"}</h3>
-            <BracketMatch match={match} timeZone={timeZone} />
+            <BracketMatch match={match} timeZone={timeZone} showLabel={false} />
           </section>
         ))}
       </>
