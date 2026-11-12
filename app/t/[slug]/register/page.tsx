@@ -39,95 +39,96 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
 
   return (
     <>
-      <section className="orbit-reg-hero orbit-frame">
-        <p className="label">{open ? "приём заявок открыт" : "приём заявок закрыт"}</p>
-        <h1>Заявка на турнир</h1>
-        <p className="meta">
-          <span>{t.name}</span>
-          <span>{t.game}</span>
-          <span>
-            {t.roster_size} + до {t.max_substitutes} запасных
-          </span>
-        </p>
-
-        {!player ? (
-          <div className="actions">
-            <ButtonLink href={`/register?next=${encodeURIComponent(next)}`} variant="live">
-              Создать аккаунт ↗
-            </ButtonLink>
-            <ButtonLink
-              href={`/login?next=${encodeURIComponent(next)}`}
-              variant="secondary"
-            >
-              Уже есть аккаунт · войти
-            </ButtonLink>
-          </div>
-        ) : null}
-
-        {t.edition ? (
-          <span className="num" aria-hidden="true">
-            {t.edition}
-          </span>
-        ) : null}
-      </section>
-
-      <div className="orbit-reg-steps">
-        <div className="orbit-reg-step orbit-frame">
-          <span className="n">01</span>
-          <b>Аккаунт</b>
-          <span>Один на игрока, вход через Telegram — контакт подтверждается сам.</span>
+      <div className="orbit-page-head">
+        <div>
+          <h1 className="orbit-page-title">Заявка на турнир</h1>
+          <p className="orbit-page-sub">
+            {t.name} · {open ? "приём заявок открыт" : "приём заявок закрыт"}
+          </p>
         </div>
-        <div className="orbit-reg-step orbit-frame">
-          <span className="n">02</span>
-          <b>Состав</b>
-          <span>
-            Капитан собирает {t.roster_size} основных и до {t.max_substitutes} запасных и
-            подаёт командную заявку.
-          </span>
-        </div>
-        <div className="orbit-reg-step orbit-frame">
-          <span className="n">03</span>
-          <b>Подтверждение</b>
-          <span>Организатор проверяет состав и допускает команду в сетку.</span>
-        </div>
+        <span className="orbit-groups-window">
+          {open ? "до жеребьёвки" : "приём закрыт"}
+        </span>
       </div>
 
-      <div className="orbit-reg-grid">
-        <div className="orbit-reg-main">
+      <div className="orbit-register-grid">
+        <div className="orbit-register-main">
           {!player ? (
-            <section className="orbit-register-card orbit-frame">
-              <div className="orbit-register-card-head">
-                <h2>Что нужно для заявки</h2>
-              </div>
-              <ul className="orbit-reg-check">
-                <li>
-                  Аккаунт на сайте — он же ваша карточка игрока: ник, контакты, рейтинги.
-                </li>
-                <li>
-                  Команда из {t.roster_size} игроков; до {t.max_substitutes} запасных
-                  разрешены, но не обязательны.
-                </li>
-                <li>
-                  Капитан подаёт заявку от имени команды — остальным ничего заполнять не
-                  нужно.
-                </li>
-                <li>
-                  Рейтинг указывать не обязательно: он не влияет на допуск к турниру.
-                </li>
-              </ul>
-            </section>
+            <>
+              <section className="orbit-register-card orbit-frame">
+                <div className="orbit-register-card-head">
+                  <h2>Начните с аккаунта</h2>
+                </div>
+                <p className="orbit-register-note" style={{ marginTop: 16 }}>
+                  Аккаунт нужен каждому игроку — это ещё не заявка на турнир. Войдите
+                  через Telegram, потом создайте команду или примите приглашение
+                  капитана.
+                </p>
+                <div className="orbit-register-actions">
+                  <ButtonLink
+                    href={`/register?next=${encodeURIComponent(next)}`}
+                    variant="live"
+                  >
+                    Создать аккаунт ↗
+                  </ButtonLink>
+                  <ButtonLink
+                    href={`/login?next=${encodeURIComponent(next)}`}
+                    variant="secondary"
+                  >
+                    Уже есть аккаунт · войти
+                  </ButtonLink>
+                </div>
+              </section>
+
+              <section className="orbit-register-card orbit-frame">
+                <div className="orbit-register-card-head">
+                  <h2>Что дальше</h2>
+                </div>
+                <p className="orbit-register-note" style={{ marginTop: 16 }}>
+                  Капитан собирает {t.roster_size} основных игроков и до{" "}
+                  {t.max_substitutes} запасных, затем подаёт командную заявку. Участие
+                  подтверждает организатор — после этого команда попадает в жеребьёвку.
+                </p>
+              </section>
+            </>
           ) : (
             <PlayerParticipation
               playerId={player.id}
               tournamentId={t.id}
               open={open}
-              rosterSize={t.roster_size}
-              maxSubstitutes={t.max_substitutes}
             />
           )}
         </div>
 
         <aside className="orbit-register-aside">
+          <section className="orbit-register-steps orbit-frame">
+            <h2>Как это работает</h2>
+            <div className="orbit-register-step">
+              <span className="n">01</span>
+              <div>
+                <b>Аккаунт</b>
+                <span>Один на игрока, вход через Telegram</span>
+              </div>
+            </div>
+            <div className="orbit-register-step">
+              <span className="n">02</span>
+              <div>
+                <b>Состав</b>
+                <span>
+                  {t.roster_size} основных и до {t.max_substitutes} запасных, капитан
+                  подаёт заявку
+                </span>
+              </div>
+            </div>
+            <div className="orbit-register-step">
+              <span className="n">03</span>
+              <div>
+                <b>Подтверждение</b>
+                <span>Организатор проверяет состав и допускает в сетку</span>
+              </div>
+            </div>
+          </section>
+
           <dl className="orbit-register-facts orbit-frame">
             <div>
               <dt>Состав</dt>
@@ -158,14 +159,10 @@ async function PlayerParticipation({
   playerId,
   tournamentId,
   open,
-  rosterSize,
-  maxSubstitutes,
 }: {
   playerId: string;
   tournamentId: number;
   open: boolean;
-  rosterSize: number;
-  maxSubstitutes: number;
 }) {
   const teams = await playerTeams(playerId);
   const applications = (await playerApplications(playerId, teams)).filter(
@@ -298,10 +295,8 @@ async function PlayerParticipation({
             Создать команду ↗
           </ButtonLink>
         </div>
-        <p className="orbit-register-note" style={{ marginTop: 16 }}>
-          Полный состав: {rosterSize} основных и до {maxSubstitutes} запасных.
-        </p>
       </section>
+
     </>
   );
 }
