@@ -65,7 +65,10 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
                   капитана.
                 </p>
                 <div className="orbit-register-actions">
-                  <ButtonLink href={`/register?next=${encodeURIComponent(next)}`}>
+                  <ButtonLink
+                    href={`/register?next=${encodeURIComponent(next)}`}
+                    variant="live"
+                  >
                     Создать аккаунт ↗
                   </ButtonLink>
                   <ButtonLink
