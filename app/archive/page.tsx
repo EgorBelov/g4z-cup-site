@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/Icon";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { listTournaments } from "@/lib/queries/public";
-import { DEFAULT_TIME_ZONE, formatDateRange } from "@/lib/format/date";
+import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
 import type { TournamentSummary } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -39,6 +39,41 @@ const MONTHS_GENITIVE = [
   "декабря",
 ];
 
+function monthYear(value: string, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("ru-RU", {
+    month: "numeric",
+    year: "numeric",
+    timeZone,
+  }).formatToParts(new Date(value));
+  const month = Number(parts.find((part) => part.type === "month")?.value ?? "1");
+  const year = parts.find((part) => part.type === "year")?.value;
+  return `${MONTHS_GENITIVE[month - 1] ?? ""} ${year}`.trim();
+}
+
+function dayNumber(value: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", timeZone }).format(
+    new Date(value),
+  );
+}
+
+/** «3 — 9 августа 2026» или «3 августа — 9 сентября 2026». */
+function rangeLabel(
+  from: string | null,
+  to: string | null,
+  timeZone: string,
+): string | null {
+  if (!from && !to) return null;
+  if (from && !to) return `${dayNumber(from, timeZone)} ${monthYear(from, timeZone)}`;
+  if (!from && to) return monthYear(to, timeZone);
+  const startMonth = monthYear(from!, timeZone);
+  const endMonth = monthYear(to!, timeZone);
+  const startDay = dayNumber(from!, timeZone);
+  const endDay = dayNumber(to!, timeZone);
+  return startMonth === endMonth
+    ? `${startDay} — ${endDay} ${endMonth}`.trim()
+    : `${startDay} ${startMonth} — ${endDay} ${endMonth}`.trim();
+}
+
 /** «с августа 2026» — месяц в родительном падеже после предлога. */
 function sinceLabel(value: string | null, timeZone: string): string | null {
   if (!value) return null;
@@ -54,9 +89,7 @@ function sinceLabel(value: string | null, timeZone: string): string | null {
 
 function dateLine(tournament: TournamentSummary, timeZone: string): string {
   const parts: string[] = [];
-  const when =
-    formatDateRange(tournament.starts_at, tournament.ends_at, timeZone) ??
-    sinceLabel(tournament.starts_at ?? tournament.ends_at, timeZone);
+  const when = rangeLabel(tournament.starts_at, tournament.ends_at, timeZone);
   if (when) parts.push(when);
   else parts.push("даты уточняются");
   if (tournament.game) parts.push(tournament.game);
@@ -192,7 +225,7 @@ async function ArchiveView() {
                         <>
                           <span className="orbit-archive-state">
                             <i aria-hidden="true" />
-                            итоги не подведены
+                            чемпион не указан
                           </span>
                           <span className="orbit-archive-arrow" aria-hidden="true">
                             ↗
