@@ -161,7 +161,6 @@ export function ApplicationPanel({
                     fields={{ ...fields, action: "self_join" }}
                   />
                 </span>
-                {player && selfInRoster ? null : null}
               </div>
             ) : null}
 
