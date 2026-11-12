@@ -1608,7 +1608,7 @@ html[data-motion="off"] .orbit-home-hero:before {
 .orbit-schedule-score i {
   font-style: normal;
   font-size: 18px;
-  color: var(--color-edge-strong);
+  color: var(--color-ink-faint);
 }
 .orbit-schedule-meta {
   display: flex;
