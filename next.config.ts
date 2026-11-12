@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // Keep the existing prefetch behavior while upgrading the application.
   // node_modules/next/dist/docs/01-app/02-guides/adopting-partial-prefetching.md
-  partialPrefetching: false,
+  partialPrefetching: true,
 };
 
 export default nextConfig;
