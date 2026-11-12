@@ -2864,3 +2864,221 @@ html[data-motion="off"] .orbit-home-hero:before {
     justify-content: flex-start;
   }
 }
+
+/* ── Кабинет ───────────────────────────────────────────── */
+.orbit-cabinet {
+  padding-bottom: 32px;
+}
+.orbit-cabinet-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.orbit-cabinet-summary {
+  margin: 0;
+  font: 10px/1.5 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.orbit-cabinet-summary b {
+  color: var(--color-ink);
+  font-weight: 400;
+}
+.orbit-cabinet-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 26px;
+}
+.orbit-cabinet-main,
+.orbit-cabinet-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.orbit-cabinet-card {
+  padding: 22px 24px 18px;
+}
+.orbit-cabinet-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-cabinet-card-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+.orbit-cabinet-teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.orbit-cabinet-team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--color-edge);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-panel) 60%, transparent);
+  transition: border-color 150ms;
+}
+.orbit-cabinet-team:hover {
+  border-color: var(--color-edge-strong);
+}
+.orbit-cabinet-team .mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-edge);
+  border-radius: 4px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+.orbit-cabinet-team b {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.orbit-cabinet-team span {
+  display: block;
+  margin-top: 4px;
+  font: 9px/1.3 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.orbit-cabinet-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-cabinet-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 2px;
+}
+.orbit-cabinet-row b {
+  display: block;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.orbit-cabinet-row small {
+  display: block;
+  margin-top: 4px;
+  font: 9px/1.3 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.orbit-cabinet-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.orbit-cabinet-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-pill);
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-ink-muted);
+}
+.orbit-cabinet-status[data-tone="wait"] {
+  border-color: color-mix(in srgb, var(--color-warn) 40%, var(--color-edge));
+  background: color-mix(in srgb, var(--color-warn) 10%, transparent);
+  color: var(--color-warn);
+}
+.orbit-cabinet-status[data-tone="ok"] {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-edge));
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
+}
+.orbit-cabinet-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.orbit-cabinet-actions button {
+  min-height: 30px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  border: 1px solid var(--color-edge-strong);
+  background: none;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.orbit-cabinet-actions button:hover:not(:disabled) {
+  background: var(--color-panel);
+}
+.orbit-cabinet-accept button {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-weight: 700;
+}
+.orbit-cabinet-accept button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 85%, var(--color-ink));
+}
+.orbit-cabinet-empty {
+  margin: 14px 0 2px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+}
+.orbit-cabinet-cup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-edge);
+  font-size: 14px;
+}
+.orbit-cabinet-cup:last-child {
+  border-bottom: 0;
+}
+.orbit-cabinet-cup span {
+  font-size: 13px;
+  color: var(--color-ink-faint);
+}
+
+@media (max-width: 1023px) {
+  .orbit-cabinet-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .orbit-cabinet-teams {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

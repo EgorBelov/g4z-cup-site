@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { CommandForm } from "@/components/player/TeamForms";
 import { playerLogoutAction } from "@/lib/actions/player-auth";
 import {
@@ -11,7 +10,35 @@ import {
 } from "@/lib/queries/player";
 import { listTournaments } from "@/lib/queries/public";
 import { writeClient } from "@/lib/supabase/write";
-import { applicationLabels, type CommunityTeam } from "@/lib/types/registration";
+import {
+  applicationLabels,
+  type ApplicationStatus,
+  type CommunityTeam,
+} from "@/lib/types/registration";
+
+function teamMark(name: string, tag?: string | null): string {
+  if (tag) return tag.slice(0, 3).toUpperCase();
+  return name
+    .replace(/^Team\s+/i, "")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
+  if (status === "accepted") return "ok";
+  if (status === "submitted" || status === "waitlisted" || status === "draft") return "wait";
+  return "neutral";
+}
+
+function plural(count: number, one: string, few: string, many: string): string {
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  if (mod100 >= 11 && mod100 <= 14) return many;
+  if (mod10 === 1) return one;
+  if (mod10 >= 2 && mod10 <= 4) return few;
+  return many;
+}
+
 export default async function MyAccountPage() {
   const player = await requirePlayer();
   const teams = await playerTeams(player.id);
@@ -52,181 +79,216 @@ export default async function MyAccountPage() {
           tournaments.find((t) => t.id === app.data.tournament_id)?.name ?? "Турнир",
       });
   }
+
+  const activeTeams = teams.filter((team) => !team.archived);
+  const openCups = tournaments.filter(
+    (t) => t.registration_open && t.status !== "finished",
+  );
+  const inviteCount = invitations.length + incoming.requests.length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="orbit-cabinet">
+      <div className="orbit-page-head">
         <div>
-          <p className="eyebrow">Личный кабинет · P{player.code}</p>
-          <h1 className="page-title mt-3">{player.nickname}</h1>
+          <h1 className="orbit-page-title">Кабинет</h1>
+          <p className="orbit-page-sub">
+            {player.nickname} · P{player.code}
+          </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/me/profile" variant="secondary" size="sm">
+        <div className="orbit-cabinet-head-actions">
+          <ButtonLink href="/me/profile" variant="secondary">
             Мой профиль
           </ButtonLink>
           <form action={playerLogoutAction}>
             <button
-              className="min-h-11 rounded-pill border border-edge px-4 text-sm"
+              className="inline-flex min-h-11 items-center justify-center rounded-pill border border-edge px-5 text-sm text-ink transition hover:border-edge-strong hover:bg-panel"
               type="submit"
             >
-              Выйти из аккаунта
+              Выйти
             </button>
           </form>
         </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[
-          {
-            label: "Команды под управлением",
-            count: teams.filter((t) => !t.archived).length,
-          },
-          { label: "Турнирные заявки", count: applications.length },
-          {
-            label: "Приглашения и роли",
-            count: invitations.length + incoming.requests.length,
-          },
-        ].map((s) => (
-          <Card key={s.label} className="p-5">
-            <p className="text-sm text-ink-muted">{s.label}</p>
-            <p className="mt-3 text-3xl text-accent">{s.count}</p>
-          </Card>
-        ))}
-      </div>
-      <Card className="p-5 sm:p-7">
-        <div className="mb-5 flex flex-wrap justify-between gap-3">
-          <h2 className="text-2xl">Мои команды</h2>
-          <ButtonLink href="/me/teams/new" size="sm">
-            Создать команду
-          </ButtonLink>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {teams.map((t) => (
-            <Link
-              prefetch={false}
-              key={t.id}
-              href={`/me/teams/${t.id}`}
-              className="interactive-card rounded-control border border-edge bg-panel p-5"
-            >
-              <p className="font-medium">
-                {t.name}{" "}
-                {t.tag ? <span className="text-xs text-accent">[{t.tag}]</span> : null}
-              </p>
-              <p className="mt-2 text-sm text-ink-muted">
-                {t.archived
-                  ? "Закрыта"
-                  : t.main_captain === player.id
-                    ? "Главный капитан"
-                    : "Второй капитан"}
-              </p>
-            </Link>
-          ))}
-        </div>
-        {!teams.length ? (
-          <p className="text-sm text-ink-muted">
-            Создайте свою команду или дождитесь приглашения в состав. Права капитана
-            сами по себе не занимают игровой слот.
-          </p>
-        ) : null}
-      </Card>
-      {invitations.length || incoming.requests.length ? (
-        <Card className="p-5 sm:p-7">
-          <h2 className="mb-5 text-2xl">Входящие приглашения</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {invitations.map((i) => (
-              <div
-                key={i.id}
-                className="rounded-control border border-edge bg-panel p-5"
-              >
-                <p className="font-medium">{i.teamName}</p>
-                <p className="mt-2 text-sm text-ink-muted">{i.cupName}</p>
-                <div className="mt-4 flex gap-3">
-                  <CommandForm
-                    label="Принять"
-                    variant="primary"
-                    fields={{ action: "invite_accept", invite_id: i.id }}
-                  />
-                  <CommandForm
-                    label="Отклонить"
-                    fields={{ action: "invite_decline", invite_id: i.id }}
-                  />
-                </div>
-              </div>
-            ))}
-            {incoming.requests.map((r) => (
-              <div
-                key={`role-${r.id}`}
-                className="rounded-control border border-edge bg-panel p-5"
-              >
-                <p className="font-medium">
-                  {otherTeams.data?.find((t) => t.id === r.community_team_id)?.name ??
-                    "Команда"}
-                </p>
-                <p className="mt-2 text-sm text-ink-muted">
-                  Предлагают роль:{" "}
-                  {r.role === "main" ? "главный капитан" : "второй капитан"}
-                </p>
-                <div className="mt-4 flex gap-3">
-                  <CommandForm
-                    label="Принять роль"
-                    variant="primary"
-                    fields={{ action: "captain_accept", request_id: r.id }}
-                  />
-                  <CommandForm
-                    label="Отклонить"
-                    fields={{ action: "captain_decline", request_id: r.id }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ) : null}
-      <Card className="p-5 sm:p-7">
-        <h2 className="mb-5 text-2xl">Мои участия</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {applications.map((a) => (
-            <Link
-              prefetch={false}
-              key={a.id}
-              href={`/me/applications/${a.id}`}
-              className="interactive-card rounded-control border border-edge bg-panel p-5"
-            >
-              <p className="text-xs text-ink-muted">
-                {tournaments.find((t) => t.id === a.tournament_id)?.name ?? "Турнир"}
-              </p>
-              <p className="mt-2 font-medium">
-                {(
-                  otherTeams.data as
-                    | Pick<CommunityTeam, "id" | "name" | "slug">[]
-                    | null
-                )?.find((t) => t.id === a.community_team_id)?.name ?? "Команда"}
-              </p>
-              <span className="mt-3 inline-block rounded-pill bg-accent-soft px-3 py-1 text-xs text-accent">
-                {applicationLabels[a.status]}
-              </span>
-              {a.reason ? (
-                <p className="mt-3 text-sm text-ink-muted">{a.reason}</p>
-              ) : null}
-            </Link>
-          ))}
-        </div>
-        {!applications.length ? (
-          <p className="text-sm text-ink-muted">
-            Вы пока не в турнирном составе. Командную заявку подаёт капитан.
-          </p>
-        ) : null}
-      </Card>
-      <Card className="p-5 sm:p-7">
-        <h2 className="mb-5 text-2xl">Следующие кубки</h2>
-        <div className="flex flex-wrap gap-3">
-          {tournaments
-            .filter((t) => t.registration_open && t.status !== "finished")
-            .map((t) => (
-              <ButtonLink key={t.id} href={`/t/${t.slug}/register`} variant="secondary">
-                {t.name} · участие ↗
+
+      <p className="orbit-cabinet-summary">
+        <b>{activeTeams.length}</b> {plural(activeTeams.length, "команда", "команды", "команд")}{" "}
+        · <b>{applications.length}</b>{" "}
+        {plural(applications.length, "заявка", "заявки", "заявок")} ·{" "}
+        <b>{inviteCount}</b> {plural(inviteCount, "приглашение", "приглашения", "приглашений")}
+      </p>
+
+      <div className="orbit-cabinet-grid">
+        <div className="orbit-cabinet-main">
+          <section className="orbit-cabinet-card orbit-frame">
+            <div className="orbit-cabinet-card-head">
+              <h2>Мои команды</h2>
+              <ButtonLink href="/me/teams/new" size="sm" variant="secondary">
+                Создать команду
               </ButtonLink>
-            ))}
+            </div>
+            {teams.length ? (
+              <div className="orbit-cabinet-teams">
+                {teams.map((team) => (
+                  <Link
+                    prefetch={false}
+                    key={team.id}
+                    href={`/me/teams/${team.id}`}
+                    className="orbit-cabinet-team"
+                  >
+                    <span className="mark" aria-hidden="true">
+                      {teamMark(team.name, team.tag)}
+                    </span>
+                    <div className="min-w-0">
+                      <b>{team.name}</b>
+                      <span>
+                        {team.archived
+                          ? "закрыта"
+                          : team.main_captain === player.id
+                            ? "главный капитан"
+                            : "второй капитан"}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="orbit-cabinet-empty">
+                Создайте свою команду или дождитесь приглашения в состав. Права капитана
+                сами по себе не занимают игровой слот.
+              </p>
+            )}
+          </section>
+
+          <section className="orbit-cabinet-card orbit-frame">
+            <div className="orbit-cabinet-card-head">
+              <h2>Мои участия</h2>
+            </div>
+            {applications.length ? (
+              applications.map((application) => (
+                <div className="orbit-cabinet-row" key={application.id}>
+                  <div className="min-w-0">
+                    <small>
+                      {tournaments.find((t) => t.id === application.tournament_id)?.name ??
+                        "Турнир"}
+                    </small>
+                    <b>
+                      {(
+                        otherTeams.data as
+                          | Pick<CommunityTeam, "id" | "name" | "slug">[]
+                          | null
+                      )?.find((t) => t.id === application.community_team_id)?.name ??
+                        "Команда"}
+                    </b>
+                    {application.reason ? (
+                      <p className="orbit-cabinet-empty" style={{ marginTop: 6 }}>
+                        {application.reason}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="orbit-cabinet-side">
+                    <span
+                      className="orbit-cabinet-status"
+                      data-tone={statusTone(application.status)}
+                    >
+                      {applicationLabels[application.status]}
+                    </span>
+                    <ButtonLink
+                      href={`/me/applications/${application.id}`}
+                      size="sm"
+                      variant="secondary"
+                    >
+                      Открыть
+                    </ButtonLink>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="orbit-cabinet-empty">
+                Вы пока не в турнирном составе. Командную заявку подаёт капитан.
+              </p>
+            )}
+          </section>
         </div>
-      </Card>
+
+        <aside className="orbit-cabinet-aside">
+          {inviteCount > 0 ? (
+            <section className="orbit-cabinet-card orbit-frame">
+              <div className="orbit-cabinet-card-head">
+                <h2>Приглашения</h2>
+              </div>
+
+              {invitations.map((invite) => (
+                <div className="orbit-cabinet-row" key={invite.id}>
+                  <div className="min-w-0">
+                    <small>{invite.cupName}</small>
+                    <b>{invite.teamName}</b>
+                  </div>
+                  <div className="orbit-cabinet-actions">
+                    <span className="orbit-cabinet-accept">
+                      <CommandForm
+                        label="Принять"
+                        variant="primary"
+                        fields={{ action: "invite_accept", invite_id: invite.id }}
+                      />
+                    </span>
+                    <CommandForm
+                      label="Отклонить"
+                      fields={{ action: "invite_decline", invite_id: invite.id }}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {incoming.requests.map((request) => (
+                <div className="orbit-cabinet-row" key={`role-${request.id}`}>
+                  <div className="min-w-0">
+                    <small>
+                      роль ·{" "}
+                      {request.role === "main" ? "главный капитан" : "второй капитан"}
+                    </small>
+                    <b>
+                      {(otherTeams.data as Pick<CommunityTeam, "id" | "name" | "slug">[] | null)?.find(
+                        (t) => t.id === request.community_team_id,
+                      )?.name ?? "Команда"}
+                    </b>
+                  </div>
+                  <div className="orbit-cabinet-actions">
+                    <span className="orbit-cabinet-accept">
+                      <CommandForm
+                        label="Принять"
+                        variant="primary"
+                        fields={{ action: "captain_accept", request_id: request.id }}
+                      />
+                    </span>
+                    <CommandForm
+                      label="Отклонить"
+                      fields={{ action: "captain_decline", request_id: request.id }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </section>
+          ) : null}
+
+          {openCups.length > 0 ? (
+            <section className="orbit-cabinet-card orbit-frame">
+              <div className="orbit-cabinet-card-head">
+                <h2>Следующие кубки</h2>
+              </div>
+              {openCups.map((cup) => (
+                <Link
+                  key={cup.id}
+                  href={`/t/${cup.slug}/register`}
+                  className="orbit-cabinet-cup"
+                >
+                  {cup.name}
+                  <span>участие ↗</span>
+                </Link>
+              ))}
+            </section>
+          ) : null}
+        </aside>
+      </div>
     </div>
   );
 }
