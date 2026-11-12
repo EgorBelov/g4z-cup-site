@@ -2434,6 +2434,17 @@ html[data-motion="off"] .orbit-home-hero:before {
   background: var(--color-gold);
   color: var(--color-surface);
 }
+/* вся плашка призёра кликабельна */
+.orbit-results-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.orbit-results-champ,
+.orbit-results-medal {
+  cursor: pointer;
+}
 .orbit-results-cup {
   position: absolute;
   right: 42px;
@@ -2614,7 +2625,18 @@ html[data-motion="off"] .orbit-home-hero:before {
     max-width: 100%;
     padding: 22px 20px 20px;
   }
-  .orbit-results-cup {
+  /* вся плашка призёра кликабельна */
+.orbit-results-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.orbit-results-champ,
+.orbit-results-medal {
+  cursor: pointer;
+}
+.orbit-results-cup {
     display: none;
   }
   .orbit-results-num {

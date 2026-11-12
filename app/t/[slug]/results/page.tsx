@@ -40,15 +40,19 @@ function TeamName({
   placement,
   slug,
   className,
+  hit = false,
 }: {
   placement: PlacementView;
   slug: string;
   className?: string;
+  /** Растягивает ссылку на всю карточку: кликается вся плашка, не только имя. */
+  hit?: boolean;
 }) {
   const name = placement.team_name ?? "—";
+  const classes = [className, hit ? "orbit-results-hit" : null].filter(Boolean).join(" ");
   if (!placement.team_slug) return <span className={className}>{name}</span>;
   return (
-    <Link href={`/t/${slug}/teams/${placement.team_slug}`} className={className}>
+    <Link href={`/t/${slug}/teams/${placement.team_slug}`} className={classes}>
       {name}
     </Link>
   );
@@ -132,7 +136,7 @@ export default async function ResultsPage({ params }: Props) {
           <div className="orbit-results-champ-body">
             <p className="orbit-results-champ-label">Чемпион</p>
             <h2>
-              <TeamName placement={champion} slug={slug} />
+              <TeamName placement={champion} slug={slug} hit />
             </h2>
             <div className="orbit-results-champ-line">
               {champion.prize ? (
@@ -164,7 +168,7 @@ export default async function ResultsPage({ params }: Props) {
                 ) : null}
               </div>
               <h3>
-                <TeamName placement={silver} slug={slug} />
+                <TeamName placement={silver} slug={slug} hit />
               </h3>
               {silver.note ? <p>{silver.note}</p> : null}
               <span className="orbit-results-medal-num" aria-hidden="true">
@@ -184,7 +188,7 @@ export default async function ResultsPage({ params }: Props) {
                 ) : null}
               </div>
               <h3>
-                <TeamName placement={bronze} slug={slug} />
+                <TeamName placement={bronze} slug={slug} hit />
               </h3>
               {bronze.note ? <p>{bronze.note}</p> : null}
               <span className="orbit-results-medal-num" aria-hidden="true">
