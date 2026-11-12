@@ -4390,3 +4390,297 @@ html[data-motion="off"] .orbit-home-hero:before {
     justify-content: flex-start;
   }
 }
+
+/* ── Кабинет: пульт ────────────────────────────────────── */
+.orbit-cab {
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 24px;
+}
+.orbit-cab-glow {
+  position: absolute;
+  left: 30%;
+  top: -140px;
+  z-index: 0;
+  width: 680px;
+  height: 360px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--color-accent) 8%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+.orbit-cab-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.orbit-cab-shell {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  margin-top: 22px;
+}
+.orbit-cab-rail {
+  position: sticky;
+  top: 20px;
+  padding: 20px 16px 16px;
+  background: linear-gradient(180deg, var(--color-panel), var(--color-surface) 60%);
+}
+.orbit-cab-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px 16px;
+  border-bottom: 1px solid var(--color-edge);
+  min-width: 0;
+}
+.orbit-cab-av {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-edge));
+  border-radius: 8px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.orbit-cab-who b {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.orbit-cab-who span {
+  display: block;
+  margin-top: 3px;
+  font: 9px/1.4 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.orbit-cab-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 0;
+}
+.orbit-cab-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--color-ink-muted);
+  transition: background 140ms, color 140ms;
+}
+.orbit-cab-nav a:hover {
+  background: color-mix(in srgb, var(--color-panel-strong) 55%, transparent);
+  color: var(--color-ink);
+}
+.orbit-cab-nav a[data-active="true"] {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  color: var(--color-ink);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.orbit-cab-nav i {
+  font-style: normal;
+  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-panel-strong) 70%, transparent);
+  font: 9px/1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--color-ink-muted);
+}
+.orbit-cab-nav a[data-active="true"] i,
+.orbit-cab-nav i[data-hot="true"] {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+.orbit-cab-foot {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-edge);
+}
+.orbit-cab-foot button {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: none;
+  border: 0;
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+}
+.orbit-cab-foot button:hover {
+  background: color-mix(in srgb, var(--color-panel-strong) 55%, transparent);
+  color: var(--color-ink-muted);
+}
+.orbit-cab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.orbit-cab-card {
+  padding: 20px 22px 14px;
+}
+.orbit-cab-card[data-hot="true"] {
+  border-top: 2px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-edge));
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--color-accent) 6%, var(--color-panel)),
+    var(--color-surface) 55%
+  );
+}
+.orbit-cab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-cab-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+.orbit-cab-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-pill);
+  font: 9px/1.5 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  white-space: nowrap;
+}
+.orbit-cab-tag[data-hot="true"] {
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-edge));
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
+}
+.orbit-cab-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-edge);
+}
+.orbit-cab-row:last-child {
+  border-bottom: 0;
+}
+.orbit-cab-row b {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.orbit-cab-row small {
+  display: block;
+  margin-top: 4px;
+  font: 9px/1.3 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.orbit-cab-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.orbit-cab-teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.orbit-cab-team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid var(--color-edge);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--color-panel) 50%, transparent);
+  transition: border-color 140ms, background 140ms;
+}
+.orbit-cab-team:hover {
+  border-color: var(--color-edge-strong);
+  background: color-mix(in srgb, var(--color-panel-strong) 45%, transparent);
+}
+.orbit-cab-team .mk {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-edge);
+  border-radius: 5px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+.orbit-cab-team b {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.orbit-cab-team span {
+  display: block;
+  margin-top: 3px;
+  font: 8px/1.3 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+@media (max-width: 959px) {
+  .orbit-cab-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .orbit-cab-rail {
+    position: static;
+  }
+  .orbit-cab-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .orbit-cab-teams {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
