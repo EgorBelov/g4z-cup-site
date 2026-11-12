@@ -202,7 +202,7 @@ export default async function TeamPage({ params }: Props) {
                   className="orbit-team-match"
                 >
                   <span className="when">
-                    {formatDateTime(match.scheduled_at, tournament.time_zone) ?? "—"}
+                    {formatDateTime(match.scheduled_at, tournament.time_zone) ?? "дата —"}
                   </span>
                   <span className="who">
                     <i aria-hidden="true">{initials(team.name)}</i>
