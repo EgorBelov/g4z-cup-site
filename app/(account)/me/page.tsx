@@ -24,13 +24,6 @@ function teamMark(name: string, tag?: string | null): string {
     .toUpperCase();
 }
 
-function initials(value: string): string {
-  return value
-    .replace(/^Team\s+/i, "")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
   if (status === "accepted") return "ok";
   if (status === "submitted" || status === "waitlisted" || status === "draft") return "wait";
@@ -92,250 +85,237 @@ export default async function MyAccountPage() {
     (t) => t.registration_open && t.status !== "finished",
   );
   const inviteCount = invitations.length + incoming.requests.length;
-  const role = activeTeams.some((team) => team.main_captain === player.id)
-    ? "главный капитан"
-    : activeTeams.length
-      ? "второй капитан"
-      : "участник";
+  const teamName = (id: number) =>
+    (otherTeams.data as Pick<CommunityTeam, "id" | "name" | "slug">[] | null)?.find(
+      (t) => t.id === id,
+    )?.name ?? "Команда";
 
   return (
-    <div className="orbit-cab">
-      <span className="orbit-cab-glow" aria-hidden="true" />
-
-      <div className="orbit-page-head">
-        <div>
-          <h1 className="orbit-page-title">Кабинет</h1>
-          <p className="orbit-page-sub">
-            {player.nickname} · P{player.code} · {role}
+    <div className="orbit-sh">
+      <section className="orbit-sh-hero orbit-frame">
+        <div className="min-w-0">
+          <p className="orbit-sh-label">Кабинет</p>
+          <h1>{player.nickname}</h1>
+          <p className="orbit-sh-meta">
+            <span>P{player.code}</span>
+            <span>
+              <b>{activeTeams.length}</b>{" "}
+              {plural(activeTeams.length, "команда", "команды", "команд")}
+            </span>
+            <span>
+              <b>{applications.length}</b>{" "}
+              {plural(applications.length, "заявка", "заявки", "заявок")}
+            </span>
+            <span>
+              <b>{inviteCount}</b>{" "}
+              {plural(inviteCount, "приглашение", "приглашения", "приглашений")}
+            </span>
           </p>
         </div>
-        {inviteCount > 0 ? (
-          <span className="orbit-cab-chip">
-            {inviteCount} {plural(inviteCount, "приглашение", "приглашения", "приглашений")}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="orbit-cab-shell">
-        <aside className="orbit-cab-rail orbit-frame">
-          <div className="orbit-cab-who">
-            <span className="orbit-cab-av" aria-hidden="true">
-              {initials(player.nickname)}
-            </span>
-            <div className="min-w-0">
-              <b>{player.nickname}</b>
-              <span>P{player.code}</span>
-            </div>
-          </div>
-
-          <nav className="orbit-cab-nav">
-            <a href="#top" data-active="true">
-              Кабинет
-            </a>
-            <a href="#teams">
-              Мои команды
-              {activeTeams.length > 0 ? <i>{activeTeams.length}</i> : null}
-            </a>
-            <a href="#applications">
-              Заявки
-              {applications.length > 0 ? (
-                <i data-hot={inviteCount > 0 ? "true" : undefined}>{applications.length}</i>
-              ) : null}
-            </a>
-            <Link href="/me/profile">Профиль</Link>
-          </nav>
-
-          <div className="orbit-cab-foot">
+        <div className="orbit-sh-actions">
+          <ButtonLink href="/me/profile" size="sm" variant="secondary">
+            Профиль
+          </ButtonLink>
+          <span className="orbit-sh-out">
             <form action={playerLogoutAction}>
-              <button type="submit">Выйти из аккаунта</button>
+              <button type="submit">Выйти</button>
             </form>
-          </div>
-        </aside>
+          </span>
+        </div>
+      </section>
 
-        <div className="orbit-cab-content">
-          {inviteCount > 0 ? (
-            <section className="orbit-cab-card orbit-frame" data-hot="true">
-              <div className="orbit-cab-head">
+      <div className="orbit-sh-grid">
+        {inviteCount > 0 ? (
+          <section className="orbit-sh-card orbit-frame">
+            <div className="orbit-sh-head">
+              <div>
                 <h2>Приглашения</h2>
-                <span className="orbit-cab-tag" data-hot="true">
-                  {inviteCount} · ждут ответа
-                </span>
+                <small>ждут ответа</small>
               </div>
-
-              {invitations.map((invite) => (
-                <div className="orbit-cab-row" key={invite.id}>
-                  <div className="min-w-0">
-                    <small>{invite.cupName}</small>
-                    <b>{invite.teamName}</b>
-                  </div>
-                  <div className="orbit-cab-end">
-                    <span className="orbit-app-mini" data-accent="true">
-                      <CommandForm
-                        label="Принять"
-                        variant="primary"
-                        fields={{ action: "invite_accept", invite_id: invite.id }}
-                      />
-                    </span>
-                    <span className="orbit-app-mini">
-                      <CommandForm
-                        label="Отклонить"
-                        fields={{ action: "invite_decline", invite_id: invite.id }}
-                      />
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              {incoming.requests.map((request) => (
-                <div className="orbit-cab-row" key={`role-${request.id}`}>
-                  <div className="min-w-0">
-                    <small>
-                      роль ·{" "}
-                      {request.role === "main" ? "главный капитан" : "второй капитан"}
-                    </small>
-                    <b>
-                      {(otherTeams.data as Pick<CommunityTeam, "id" | "name" | "slug">[] | null)?.find(
-                        (t) => t.id === request.community_team_id,
-                      )?.name ?? "Команда"}
-                    </b>
-                  </div>
-                  <div className="orbit-cab-end">
-                    <span className="orbit-app-mini" data-accent="true">
-                      <CommandForm
-                        label="Принять"
-                        variant="primary"
-                        fields={{ action: "captain_accept", request_id: request.id }}
-                      />
-                    </span>
-                    <span className="orbit-app-mini">
-                      <CommandForm
-                        label="Отклонить"
-                        fields={{ action: "captain_decline", request_id: request.id }}
-                      />
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </section>
-          ) : null}
-
-          <section className="orbit-cab-card orbit-frame" id="teams">
-            <div className="orbit-cab-head">
-              <h2>Мои команды</h2>
-              <span className="orbit-cab-tag">{activeTeams.length} · активные</span>
-            </div>
-
-            {teams.length ? (
-              <div className="orbit-cab-teams">
-                {teams.map((team) => (
-                  <Link
-                    prefetch={false}
-                    key={team.id}
-                    href={`/me/teams/${team.id}`}
-                    className="orbit-cab-team"
-                  >
-                    <span className="mk" aria-hidden="true">
-                      {teamMark(team.name, team.tag)}
-                    </span>
-                    <div className="min-w-0">
-                      <b>{team.name}</b>
-                      <span>
-                        {team.archived
-                          ? "закрыта"
-                          : team.main_captain === player.id
-                            ? "главный капитан"
-                            : "второй капитан"}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p className="orbit-cabinet-empty">
-                Создайте свою команду или дождитесь приглашения в состав.
-              </p>
-            )}
-          </section>
-
-          <section className="orbit-cab-card orbit-frame" id="applications">
-            <div className="orbit-cab-head">
-              <h2>Мои участия</h2>
-              <span className="orbit-cab-tag">
-                {applications.length}{" "}
-                {plural(applications.length, "заявка", "заявки", "заявок")}
+              <span className="orbit-sh-count" data-hot="true">
+                {inviteCount}
               </span>
             </div>
 
-            {applications.length ? (
-              applications.map((application) => (
-                <div className="orbit-cab-row" key={application.id}>
-                  <div className="min-w-0">
-                    <small>
-                      {tournaments.find((t) => t.id === application.tournament_id)?.name ??
-                        "Турнир"}
-                    </small>
-                    <b>
-                      {(
-                        otherTeams.data as
-                          | Pick<CommunityTeam, "id" | "name" | "slug">[]
-                          | null
-                      )?.find((t) => t.id === application.community_team_id)?.name ??
-                        "Команда"}
-                    </b>
-                  </div>
-                  <div className="orbit-cab-end">
-                    <span
-                      className="orbit-app-status"
-                      data-tone={statusTone(application.status)}
-                      style={{ marginTop: 0 }}
-                    >
-                      {applicationLabels[application.status]}
-                    </span>
-                    <span className="orbit-app-mini">
-                      <ButtonLink
-                        href={`/me/applications/${application.id}`}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        Открыть
-                      </ButtonLink>
-                    </span>
-                  </div>
+            {invitations.map((invite) => (
+              <div className="orbit-cab-row" key={invite.id}>
+                <div className="min-w-0">
+                  <small>{invite.cupName}</small>
+                  <b>{invite.teamName}</b>
                 </div>
-              ))
-            ) : (
-              <p className="orbit-cabinet-empty">
-                Вы пока не в турнирном составе. Командную заявку подаёт капитан.
-              </p>
-            )}
-          </section>
-
-          {openCups.length > 0 ? (
-            <section className="orbit-cab-card orbit-frame">
-              <div className="orbit-cab-head">
-                <h2>Следующие кубки</h2>
-                <span className="orbit-cab-tag">приём открыт</span>
+                <div className="orbit-cab-end">
+                  <span className="orbit-app-mini" data-accent="true">
+                    <CommandForm
+                      label="Принять"
+                      variant="primary"
+                      fields={{ action: "invite_accept", invite_id: invite.id }}
+                    />
+                  </span>
+                  <span className="orbit-app-mini">
+                    <CommandForm
+                      label="✕"
+                      fields={{ action: "invite_decline", invite_id: invite.id }}
+                    />
+                  </span>
+                </div>
               </div>
-              {openCups.map((cup) => (
-                <div className="orbit-cab-row" key={cup.id}>
+            ))}
+
+            {incoming.requests.map((request) => (
+              <div className="orbit-cab-row" key={`role-${request.id}`}>
+                <div className="min-w-0">
+                  <small>
+                    роль ·{" "}
+                    {request.role === "main" ? "главный капитан" : "второй капитан"}
+                  </small>
+                  <b>{teamName(request.community_team_id)}</b>
+                </div>
+                <div className="orbit-cab-end">
+                  <span className="orbit-app-mini" data-accent="true">
+                    <CommandForm
+                      label="Принять"
+                      variant="primary"
+                      fields={{ action: "captain_accept", request_id: request.id }}
+                    />
+                  </span>
+                  <span className="orbit-app-mini">
+                    <CommandForm
+                      label="✕"
+                      fields={{ action: "captain_decline", request_id: request.id }}
+                    />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </section>
+        ) : null}
+
+        <section className="orbit-sh-card orbit-frame">
+          <div className="orbit-sh-head">
+            <div>
+              <h2>Мои команды</h2>
+              <small>активные</small>
+            </div>
+            <span className="orbit-sh-count">{activeTeams.length}</span>
+          </div>
+
+          {teams.length ? (
+            teams.map((team) => (
+              <div className="orbit-cab-row" key={team.id}>
+                <div className="min-w-0" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <span className="orbit-cab-av" style={{ width: 34, height: 34, fontSize: 10 }}>
+                    {teamMark(team.name, team.tag)}
+                  </span>
                   <div className="min-w-0">
+                    <b>{team.name}</b>
                     <small>
-                      {cup.game} · {cup.roster_size} + {cup.max_substitutes} запасных
+                      {team.archived
+                        ? "закрыта"
+                        : team.main_captain === player.id
+                          ? "главный капитан"
+                          : "второй капитан"}
                     </small>
-                    <b>{cup.name}</b>
-                  </div>
-                  <div className="orbit-cab-end">
-                    <span className="orbit-app-mini" data-accent="true">
-                      <ButtonLink href={`/t/${cup.slug}/register`} size="sm" variant="live">
-                        Участие ↗
-                      </ButtonLink>
-                    </span>
                   </div>
                 </div>
-              ))}
-            </section>
-          ) : null}
-        </div>
+                <div className="orbit-cab-end">
+                  <span className="orbit-app-mini">
+                    <ButtonLink href={`/me/teams/${team.id}`} size="sm" variant="ghost">
+                      Открыть
+                    </ButtonLink>
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="orbit-sh-note">
+              Создайте свою команду или дождитесь приглашения в состав.
+            </p>
+          )}
+
+          <p className="orbit-sh-note">
+            <Link href="/me/teams/new">Создать новую команду ↗</Link>
+          </p>
+        </section>
+
+        <section className="orbit-sh-card orbit-frame">
+          <div className="orbit-sh-head">
+            <div>
+              <h2>Мои участия</h2>
+              <small>заявки на турниры</small>
+            </div>
+            <span className="orbit-sh-count">{applications.length}</span>
+          </div>
+
+          {applications.length ? (
+            applications.map((application) => (
+              <div className="orbit-cab-row" key={application.id}>
+                <div className="min-w-0">
+                  <small>
+                    {tournaments.find((t) => t.id === application.tournament_id)?.name ??
+                      "Турнир"}
+                  </small>
+                  <b>{teamName(application.community_team_id)}</b>
+                </div>
+                <div className="orbit-cab-end">
+                  <span
+                    className="orbit-app-status"
+                    data-tone={statusTone(application.status)}
+                    style={{ marginTop: 0 }}
+                  >
+                    {applicationLabels[application.status]}
+                  </span>
+                  <span className="orbit-app-mini">
+                    <ButtonLink
+                      href={`/me/applications/${application.id}`}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Открыть
+                    </ButtonLink>
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="orbit-sh-note">
+              Вы пока не в турнирном составе. Командную заявку подаёт капитан.
+            </p>
+          )}
+        </section>
+
+        <section className="orbit-sh-card orbit-frame">
+          <div className="orbit-sh-head">
+            <div>
+              <h2>Следующие кубки</h2>
+              <small>приём открыт</small>
+            </div>
+            <span className="orbit-sh-count">{openCups.length}</span>
+          </div>
+
+          {openCups.length ? (
+            openCups.map((cup) => (
+              <div className="orbit-cab-row" key={cup.id}>
+                <div className="min-w-0">
+                  <small>
+                    {cup.game} · {cup.roster_size} + {cup.max_substitutes} запасных
+                  </small>
+                  <b>{cup.name}</b>
+                </div>
+                <div className="orbit-cab-end">
+                  <span className="orbit-app-mini" data-accent="true">
+                    <ButtonLink href={`/t/${cup.slug}/register`} size="sm" variant="live">
+                      Участие ↗
+                    </ButtonLink>
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="orbit-sh-note">
+              Открытых турниров сейчас нет. Следите за анонсами в Telegram.
+            </p>
+          )}
+        </section>
       </div>
     </div>
   );
