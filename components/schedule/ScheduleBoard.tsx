@@ -120,10 +120,10 @@ export function ScheduleBoard({
 
   return (
     <>
-      <div className="orbit-schedule-head">
+      <div className="orbit-page-head">
         <div>
-          <h1 className="orbit-schedule-title">Расписание</h1>
-          <p className="orbit-schedule-sub">
+          <h1 className="orbit-page-title">Расписание</h1>
+          <p className="orbit-page-sub">
             {total > 0 ? `Все матчи турнира · Время ${unit}` : "Время " + unit}
           </p>
         </div>
@@ -135,7 +135,7 @@ export function ScheduleBoard({
             <b>Даты уточняются</b>
             <span>0 матчей</span>
           </div>
-          <div className="orbit-schedule-empty orbit-frame">
+          <div className="orbit-page-empty orbit-frame">
             <Icon name="calendar" />
             <h2>Расписание появится после жеребьёвки</h2>
             <p>
@@ -175,7 +175,7 @@ export function ScheduleBoard({
             </section>
           ))}
 
-          <p className="orbit-schedule-note">
+          <p className="orbit-page-note">
             Всего матчей: {total} · время указано в часовом поясе турнира
           </p>
         </>

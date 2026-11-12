@@ -26,7 +26,9 @@
 .orbit-tournament-tabs,
 .orbit-overview,
 .orbit-bracket-page,
-.orbit-schedule {
+.orbit-schedule,
+.orbit-groups,
+.orbit-teams {
   font-family: Orbit Grotesk, Arial, sans-serif;
 }
 
