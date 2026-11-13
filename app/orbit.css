@@ -4970,3 +4970,48 @@ html[data-motion="off"] .orbit-home-hero:before {
     padding: 24px 22px;
   }
 }
+
+/* ── Регистрация: широкий вариант ──────────────────────── */
+.orbit-auth--wide {
+  grid-template-columns: 380px minmax(0, 1fr);
+  min-height: 0;
+}
+.orbit-auth--wide .orbit-auth-side {
+  justify-content: center;
+}
+.orbit-auth--wide .orbit-auth-card {
+  justify-content: flex-start;
+  padding: 26px 28px 22px;
+}
+.orbit-auth--wide .orbit-auth-card .orbit-form-scope {
+  margin-top: 18px;
+}
+.orbit-auth-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.orbit-auth-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-edge);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-panel) 55%, transparent);
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+.orbit-auth-steps b {
+  font: 10px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  color: var(--color-accent);
+}
+@media (max-width: 959px) {
+  .orbit-auth--wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
