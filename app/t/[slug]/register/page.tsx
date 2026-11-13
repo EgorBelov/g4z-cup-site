@@ -291,9 +291,6 @@ async function PlayerParticipation({
           ) : (
             <span className="orbit-register-state">приём пожеланий закрыт</span>
           )}
-          <ButtonLink href="/me/teams/new" variant="secondary">
-            Создать команду ↗
-          </ButtonLink>
         </div>
         <p className="orbit-register-note" style={{ marginTop: 14 }}>
           Заявку на турнир подаёт капитан — кнопкой «Подать заявку» в блоке «Мои составы».
