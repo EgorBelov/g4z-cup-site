@@ -4837,3 +4837,136 @@ html[data-motion="off"] .orbit-home-hero:before {
     align-items: flex-start;
   }
 }
+
+/* ── Вход и регистрация ────────────────────────────────── */
+.orbit-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 16px;
+  align-items: stretch;
+  padding: 28px 0 32px;
+  min-height: min(620px, calc(100vh - 220px));
+}
+.orbit-auth-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 14px;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 32px 34px 30px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface) 20%, transparent),
+      color-mix(in srgb, var(--color-surface) 88%, transparent) 62%,
+      var(--color-surface)
+    ),
+    url("/brand/orbit-banner.png") center / cover no-repeat;
+}
+.orbit-auth-side .label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font: 10px/1 var(--font-mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.orbit-auth-side .label::before {
+  content: "";
+  width: 26px;
+  height: 2px;
+  background: var(--color-accent);
+}
+.orbit-auth-side h1 {
+  margin: 0;
+  font-size: clamp(28px, 3.4vw, 46px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.orbit-auth-side p {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+}
+.orbit-auth-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 30px 30px 26px;
+}
+.orbit-auth-card h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+.orbit-auth-card .lead {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+}
+.orbit-auth-card form {
+  margin-top: 20px;
+}
+.orbit-auth-card form button[type="submit"] {
+  width: 100%;
+  min-height: 44px;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-weight: 650;
+}
+.orbit-auth-card form button[type="submit"]:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-accent) 85%, var(--color-ink));
+  background: color-mix(in srgb, var(--color-accent) 85%, var(--color-ink));
+}
+.orbit-auth-note {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-warn) 35%, var(--color-edge));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-warn) 8%, transparent);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--color-ink-muted);
+}
+.orbit-auth-foot {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-edge);
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+.orbit-auth-foot a {
+  color: var(--color-accent);
+}
+.orbit-auth-foot a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 959px) {
+  .orbit-auth {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .orbit-auth-side {
+    justify-content: flex-start;
+    padding: 24px 22px;
+  }
+  .orbit-auth-side p {
+    display: none;
+  }
+  .orbit-auth-card {
+    padding: 24px 22px;
+  }
+}
