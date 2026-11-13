@@ -134,7 +134,7 @@ test("Telegram code requires the initiating browser and cannot be replayed", asy
     await otherPage.goto(`${callback}&next=https://example.com`);
     await expect(otherPage).toHaveURL(/\/login\?notice=expired/);
     await expect(
-      otherPage.getByRole("heading", { name: "Войти в G4Z CUP" }),
+      otherPage.getByRole("heading", { name: "Снова на орбите." }),
     ).toBeVisible();
     await page.unroute("**/auth/v1/authorize?*");
     const response = await context.request.get(callback, { maxRedirects: 0 });

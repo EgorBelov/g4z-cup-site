@@ -81,14 +81,12 @@ test("permanent community homepage includes current and other active tournaments
   await fitsViewport(page);
 });
 
-test("motion can be stopped and persists after navigation", async ({
-  page,
-  isMobile,
-}) => {
+test("motion can be stopped and persists after navigation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  if (isMobile) await page.getByLabel("Меню", { exact: true }).click();
+  await page.locator(".orbit-footer-extra > summary").click();
   const toggle = page
+    .locator("footer")
     .getByRole("button", { name: "Движение логотипа" })
     .filter({ visible: true });
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
@@ -96,46 +94,64 @@ test("motion can be stopped and persists after navigation", async ({
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
   expect(
     await page
-      .locator(".orbit-dot")
-      .evaluate((el) => getComputedStyle(el).animationPlayState),
-  ).toBe("paused");
+      .locator(".orbit-home-hero")
+      .evaluate((el) => getComputedStyle(el, "::before").animationName),
+  ).toBe("none");
   await page.goto("/archive", { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
 });
 
-test("discipline filters update tournament cards and reset on the homepage and archive", async ({
+test("discipline filters update tournament cards and reset on the homepage", async ({
   page,
 }, info) => {
-  for (const path of ["/", "/archive"]) {
-    await page.goto(path, { waitUntil: "domcontentloaded" });
-    const scope = path === "/" ? page.locator("#tournaments") : page.locator("main");
-    const filters = scope.getByRole("group", { name: "Дисциплина турниров" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const scope = page.locator("#tournaments");
+  const filters = scope.getByRole("group", { name: "Дисциплина турниров" });
+  await expect(
+    scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: info.outputPath("community-cards.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
+  const cs = filters.getByRole("button", { name: /CS2/ });
+  await cs.click();
+  await expect(cs).toHaveAttribute("aria-pressed", "true");
+  await expect(scope.getByRole("heading", { name: /осенний кубок/ })).toBeVisible();
+  await expect(
+    scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+  ).toHaveCount(0);
+  await expect(scope.getByRole("status")).toHaveText("Показано турниров: 1");
+  const all = filters.getByRole("button", { name: /Все игры/ });
+  await all.focus();
+  await page.keyboard.press("Enter");
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+  ).toBeVisible();
+  await fitsViewport(page);
+});
+
+test("archive links preserve each season after the archive redesign", async ({
+  page,
+}) => {
+  await page.goto("/archive");
+  const archive = page.locator("main");
+  for (const slug of [
+    "orbit-dota",
+    "orbit-cs",
+    "orbit-archive",
+    "orbit-empty",
+    "g4z-cup-13",
+  ]) {
     await expect(
-      scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
+      archive.locator(`.orbit-archive-hit[href="/t/${slug}"]`),
     ).toBeVisible();
-    if (path === "/")
-      await page.screenshot({
-        path: info.outputPath("community-cards.png"),
-        fullPage: true,
-        animations: "disabled",
-      });
-    const cs = filters.getByRole("button", { name: /CS2/ });
-    await cs.click();
-    await expect(cs).toHaveAttribute("aria-pressed", "true");
-    await expect(scope.getByRole("heading", { name: /осенний кубок/ })).toBeVisible();
-    await expect(
-      scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
-    ).toHaveCount(0);
-    await expect(scope.getByRole("status")).toHaveText("Показано турниров: 1");
-    const all = filters.getByRole("button", { name: /Все игры/ });
-    await all.focus();
-    await page.keyboard.press("Enter");
-    await expect(all).toHaveAttribute("aria-pressed", "true");
-    await expect(
-      scope.getByRole("heading", { name: "G4Z CUP 11", exact: true }),
-    ).toBeVisible();
-    await fitsViewport(page);
   }
+  await archive.locator('.orbit-archive-hit[href="/t/orbit-archive"]').click();
+  await expect(page).toHaveURL(/\/t\/orbit-archive$/);
+  await fitsViewport(page);
 });
 
 test("system reduced motion keeps the brand still", async ({ page }) => {
@@ -144,8 +160,8 @@ test("system reduced motion keeps the brand still", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
   expect(
     await page
-      .locator(".orbit-dot")
-      .evaluate((el) => getComputedStyle(el).animationName),
+      .locator(".orbit-home-hero")
+      .evaluate((el) => getComputedStyle(el, "::before").animationName),
   ).toBe("none");
 });
 
@@ -177,10 +193,16 @@ test("public pages and both bracket formats render populated data without overfl
         page.getByRole("heading", { name: "Нижняя сетка", exact: true }),
       ).toBeVisible();
       if (info.project.name === "mobile") {
-        const columns = page.locator(".md\\:w-72");
+        const board = page.locator(".orbit-bracket-scroll").first();
+        const columns = board.locator(".orbit-bracket-column");
         const first = await columns.nth(0).boundingBox();
         const second = await columns.nth(1).boundingBox();
-        expect(second!.y).toBeGreaterThan(first!.y + first!.height);
+        expect(second!.x).toBeGreaterThan(first!.x);
+        await board.evaluate((el) => {
+          el.scrollLeft = el.scrollWidth;
+        });
+        expect(await board.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+        await fitsViewport(page);
       }
     }
     if (
@@ -212,15 +234,21 @@ test("mobile menu supports navigation and active tournament section", async ({
   isMobile,
 }) => {
   await page.goto("/t/orbit-dota/schedule", { waitUntil: "domcontentloaded" });
+  const sections = page.getByRole("navigation", { name: "Разделы турнира" });
+  await expect(sections.locator('[aria-current="page"]')).toHaveText("Расписание");
+  await sections.getByRole("link", { name: "Группы", exact: true }).click();
+  await expect(page).toHaveURL(/\/groups$/);
+  await expect(sections.locator('[aria-current="page"]')).toHaveText("Группы");
   if (isMobile) await page.getByLabel("Меню", { exact: true }).click();
   const nav = page.getByRole("navigation", {
     name: isMobile ? "Мобильная навигация" : "Основная навигация",
   });
-  await expect(nav.locator('[aria-current="page"]')).toHaveText("Расписание");
-  await nav.getByRole("link", { name: "Группы", exact: true }).click();
-  await expect(page).toHaveURL(/\/groups$/);
+  await nav.getByRole("link", { name: "Архив", exact: true }).click();
+  await expect(page).toHaveURL(/\/archive$/);
   if (isMobile)
-    expect(await page.locator("details.mobile-menu").getAttribute("open")).toBeNull();
+    await expect(
+      page.locator("details.mobile-menu").filter({ visible: true }),
+    ).not.toHaveAttribute("open");
 });
 
 test("organizer screens render against isolated fixtures", async ({
@@ -414,6 +442,7 @@ test("a saved map refreshes the score in a separate viewer session", async ({
       response.url().includes("/t/orbit-dota/matches/104?") &&
       response.request().headers()["rsc"] === "1",
   );
+  await viewer.bringToFront();
   publish!();
   expect((await refreshed).ok()).toBeTruthy();
   await expect(viewer.getByLabel("Счёт 2:0", { exact: true })).toBeVisible();

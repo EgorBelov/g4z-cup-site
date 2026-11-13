@@ -9,6 +9,10 @@ test.skip(
 test.use({ actionTimeout: 15000, trace: "retain-on-failure" });
 
 async function asTelegram(page: Page, number: number) {
+  // Independent fixture players must not consume one shared localhost IP quota.
+  await page.context().setExtraHTTPHeaders({
+    "x-forwarded-for": `2001:db8::${number.toString(16)}`,
+  });
   await page.route("**/auth/v1/authorize?*", (route) => {
     const url = new URL(route.request().url());
     url.searchParams.set("fixture_user", String(number));

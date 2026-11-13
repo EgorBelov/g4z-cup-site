@@ -82,6 +82,7 @@ export default async function MatchPage({ params }: Props) {
 
   const team1Winner = match.status === "finished" && match.winner_id === match.team1_id;
   const team2Winner = match.status === "finished" && match.winner_id === match.team2_id;
+  const showScore = match.status === "live" || match.status === "finished";
 
   return (
     <Container className="orbit-match-page">
@@ -125,8 +126,12 @@ export default async function MatchPage({ params }: Props) {
         </div>
 
         <div className="orbit-score-middle">
-          <div className="score">
-            {match.status === "finished" ? (
+          <div
+            className="score"
+            role="group"
+            aria-label={`Счёт ${showScore ? `${match.score1}:${match.score2}` : "ещё не открыт"}`}
+          >
+            {showScore ? (
               <>
                 {match.score1} <i>:</i> {match.score2}
               </>
