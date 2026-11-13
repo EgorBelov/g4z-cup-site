@@ -109,6 +109,8 @@ const privateRegistrationTables = new Set([
   "player_profiles",
   "player_ratings",
   "community_teams",
+  "community_members",
+  "community_member_invites",
   "registration_teams",
   "team_members",
   "team_invites",
@@ -126,6 +128,10 @@ const rpcDefinitions = {
   register_player: [
     ["p_user", "p_telegram_id", "p_verified_username", "p_profile", "p_ip"],
     ["uuid", "text", "text", "jsonb", "text"],
+  ],
+  community_member_command: [
+    ["p_actor", "p_admin", "p_action", "p_input", "p_ip"],
+    ["uuid", "boolean", "text", "jsonb", "text"],
   ],
   registration_command: [
     ["p_actor", "p_admin", "p_action", "p_input", "p_ip"],

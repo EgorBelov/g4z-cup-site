@@ -92,11 +92,7 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
               </section>
             </>
           ) : (
-            <PlayerParticipation
-              playerId={player.id}
-              tournamentId={t.id}
-              open={open}
-            />
+            <PlayerParticipation playerId={player.id} tournamentId={t.id} open={open} />
           )}
         </div>
 
@@ -272,8 +268,8 @@ async function PlayerParticipation({
           <h2>Пока без команды?</h2>
         </div>
         <p className="orbit-register-note" style={{ marginTop: 16 }}>
-          Отметьтесь, если ищете команду: организатор увидит это и поможет собрать состав.
-          На турнир это не заявляет — заявку подаёт капитан.
+          Отметьтесь, если ищете команду: организатор увидит это и поможет собрать
+          состав. На турнир это не заявляет — заявку подаёт капитан.
         </p>
         <div className="orbit-register-actions">
           {open || interest.data?.active ? (
@@ -293,10 +289,10 @@ async function PlayerParticipation({
           )}
         </div>
         <p className="orbit-register-note" style={{ marginTop: 14 }}>
-          Заявку на турнир подаёт капитан — кнопкой «Подать заявку» в блоке «Мои составы».
+          Заявку на турнир подаёт капитан — кнопкой «Подать заявку» в блоке «Мои
+          составы».
         </p>
       </section>
-
     </>
   );
 }

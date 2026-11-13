@@ -35,7 +35,7 @@ export default async function OrganizerPlayerPage({
   return (
     <AdminShell
       title={p.nickname}
-      subtitle={`Аккаунт P${p.code}`}
+      subtitle="Аккаунт игрока"
       actions={
         <ButtonLink href="/admin/players" variant="secondary" size="sm">
           Все игроки

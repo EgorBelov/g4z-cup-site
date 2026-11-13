@@ -133,6 +133,12 @@ export const communityTeamSchema = z.object({
 export const registrationCommandSchema = z
   .object({
     action: z.enum([
+      "community_invite",
+      "community_accept",
+      "community_decline",
+      "community_revoke",
+      "community_remove",
+      "community_leave",
       "application_create",
       "interest",
       "invite_create",
@@ -187,6 +193,12 @@ export const registrationCommandSchema = z
   })
   .superRefine((input, ctx) => {
     const required: Record<string, string[]> = {
+      community_invite: ["team_id", "recipient_id"],
+      community_accept: ["invite_id"],
+      community_decline: ["invite_id"],
+      community_revoke: ["invite_id"],
+      community_remove: ["team_id", "profile_id"],
+      community_leave: ["team_id"],
       application_create: ["team_id", "tournament_id"],
       interest: ["tournament_id"],
       invite_create: ["application_id", "version"],

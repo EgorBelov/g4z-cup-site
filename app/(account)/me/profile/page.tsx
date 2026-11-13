@@ -12,7 +12,7 @@ export default async function ProfilePage() {
         <div>
           <h1 className="orbit-page-title">Мой профиль</h1>
           <p className="orbit-page-sub">
-            P{player.code} · {verified ? "telegram-контакт подтверждён" : "контакт указан вручную"}
+            {verified ? "telegram-контакт подтверждён" : "контакт указан вручную"}
           </p>
         </div>
         <ButtonLink href="/me" size="sm" variant="secondary">
@@ -75,13 +75,6 @@ export default async function ProfilePage() {
               <h2>Аккаунт</h2>
             </div>
             <div className="orbit-profile-vis">
-              <div>
-                <span className="dot" aria-hidden="true" />
-                <div>
-                  <b>P{player.code}</b>
-                  <span>номер игрока, не меняется</span>
-                </div>
-              </div>
               <div>
                 <span className="dot" aria-hidden="true" />
                 <div>

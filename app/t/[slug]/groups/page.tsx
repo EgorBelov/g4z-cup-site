@@ -102,8 +102,8 @@ export default async function GroupsPage({ params }: Props) {
           <h2>Группы появятся после жеребьёвки</h2>
           <p>
             Команды разобьют по группам, когда закончится приём заявок. Число групп и
-            состав зависят от количества участников — сетку соберём под фактический список
-            команд.
+            состав зависят от количества участников — сетку соберём под фактический
+            список команд.
           </p>
           {tournament.registration_open || community.telegram ? (
             <div>
@@ -176,7 +176,6 @@ export default async function GroupsPage({ params }: Props) {
               </section>
             ))}
           </div>
-
         </>
       )}
 

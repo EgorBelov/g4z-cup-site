@@ -19,15 +19,9 @@ function plural(count: number, one: string, few: string, many: string): string {
   return many;
 }
 
-type Captain = { nickname: string; code: number } | null;
+type Captain = { nickname: string } | null;
 
-function CaptainCard({
-  role,
-  captain,
-}: {
-  role: string;
-  captain: Captain;
-}) {
+function CaptainCard({ role, captain }: { role: string; captain: Captain }) {
   if (!captain) {
     return (
       <div className="orbit-ct-cap orbit-frame" data-empty="true">
@@ -50,7 +44,6 @@ function CaptainCard({
       <div>
         <p className="role">{role}</p>
         <b>{captain.nickname}</b>
-        <span className="code">P{captain.code}</span>
       </div>
     </div>
   );
@@ -103,6 +96,23 @@ export default async function PublicCommunityTeamPage({
           <CaptainCard role="Главный капитан" captain={team.main_captain} />
           <CaptainCard role="Второй капитан" captain={team.second_captain} />
         </div>
+
+        <section className="orbit-ct-history orbit-frame">
+          <div className="orbit-ct-hist-head">
+            <h2>Участники</h2>
+            <span>{team.members.length}</span>
+          </div>
+          {team.members.length ? (
+            team.members.map((member, index) => (
+              <div className="orbit-tm-row" key={index}>
+                <b>{member.nickname}</b>
+                <span className="text-sm text-ink-muted">Участник</span>
+              </div>
+            ))
+          ) : (
+            <p className="orbit-app-note">Капитаны пока не добавили участников.</p>
+          )}
+        </section>
 
         <section className="orbit-ct-history orbit-frame">
           <div className="orbit-ct-hist-head">

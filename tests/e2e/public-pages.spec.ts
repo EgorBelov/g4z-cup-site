@@ -46,7 +46,7 @@ test("unknown tournaments render the 404 page, not a crash", async ({ page }) =>
   const response = await page.goto("/t/definitely-not-a-tournament");
 
   expect(response?.status()).toBe(404);
-  await expect(page.locator("body")).toContainText(/не найдена|не найден/i);
+  await expect(page.getByRole("heading", { name: "Мимо орбиты." })).toBeVisible();
 });
 
 test("sitemap lists the archive", async ({ request }) => {

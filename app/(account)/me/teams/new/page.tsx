@@ -10,9 +10,7 @@ export default async function NewCommunityTeamPage() {
       <div className="orbit-page-head">
         <div>
           <h1 className="orbit-page-title">Собрать своих</h1>
-          <p className="orbit-page-sub">
-            новая команда · вы станете главным капитаном
-          </p>
+          <p className="orbit-page-sub">новая команда · вы станете главным капитаном</p>
         </div>
         <ButtonLink href="/me" variant="secondary">
           В кабинет

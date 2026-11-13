@@ -479,6 +479,66 @@ begin
 end;
 $$;
 reset role;
+-- Persistent members neither acquire captain powers nor enter tournament rosters.
+do $$
+declare
+  cap uuid := '00000000-0000-4000-8000-000000000901';
+  member uuid := '00000000-0000-4000-8000-000000000902';
+  outsider uuid := '00000000-0000-4000-8000-000000000903';
+  uid uuid; team bigint; invite bigint; other_invite bigint;
+begin
+  foreach uid in array array[cap,member,outsider] loop
+    insert into auth.users values(uid);
+    perform register_player(uid,uid::text,'member_contact',jsonb_build_object('nickname','Member '||right(uid::text,3),'telegram_username','member_contact','steam_url','https://steamcommunity.com/id/member_'||right(uid::text,3)));
+  end loop;
+  team := (registration_command(cap,false,'team_create',jsonb_build_object('name','Persistent team','slug','persistent-team'))->>'team_id')::bigint;
+  perform community_member_command(cap,false,'community_invite',jsonb_build_object('team_id',team,'recipient_id',member));
+  perform community_member_command(cap,false,'community_invite',jsonb_build_object('team_id',team,'recipient_id',outsider));
+  select id into invite from community_member_invites where community_team_id=team and recipient_id=member and status='active';
+  select id into other_invite from community_member_invites where community_team_id=team and recipient_id=outsider and status='active';
+  perform assert_equals(2::bigint,(select count(*) from community_member_invites where community_team_id=team and status='active'),'multiple members may be invited concurrently');
+  begin perform community_member_command(outsider,false,'community_accept',jsonb_build_object('invite_id',invite)); raise exception 'FAIL accepted another player invitation';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  perform community_member_command(member,false,'community_accept',jsonb_build_object('invite_id',invite));
+  perform assert_equals(1::bigint,(select count(*) from community_members where community_team_id=team),'accepted invitation creates persistent membership');
+  perform assert_equals(null::uuid,(select second_captain from community_teams where id=team),'membership gives no captain role');
+  perform assert_equals(0::bigint,(select count(*) from team_members where profile_id=member),'community joining does not enroll in a tournament');
+  perform assert_equals('Member 902'::text,public_community_team('persistent-team')->'members'->0->>'nickname','public team shows accepted members');
+  perform assert_equals(false,public_community_team('persistent-team')::text like '%member_contact%','community public projection excludes contacts');
+  perform assert_equals(false,public_community_team('persistent-team')::text like '%00000000-%','community public projection excludes auth IDs');
+  perform assert_equals(false,public_community_team('persistent-team')::text like '%"code"%','community public projection excludes player codes');
+  begin perform community_member_command(member,false,'community_invite',jsonb_build_object('team_id',team,'recipient_id',outsider)); raise exception 'FAIL member invited without captain powers';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin perform registration_command(member,false,'team_update',jsonb_build_object('team_id',team,'name','Stolen')); raise exception 'FAIL member edited team';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin perform community_member_command(outsider,false,'community_remove',jsonb_build_object('team_id',team,'profile_id',member)); raise exception 'FAIL outsider removed member';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  perform community_member_command(cap,false,'community_remove',jsonb_build_object('team_id',team,'profile_id',member));
+  perform assert_equals(0::bigint,(select count(*) from community_members where community_team_id=team),'captain removes persistent member');
+  begin perform community_member_command(member,false,'community_accept',jsonb_build_object('invite_id',invite)); raise exception 'FAIL replay accepted invite';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  perform community_member_command(cap,false,'community_invite',jsonb_build_object('team_id',team,'recipient_id',member));
+  select id into invite from community_member_invites where community_team_id=team and recipient_id=member and status='active';
+  update community_member_invites set expires_at=now()-interval '1 second' where id=invite;
+  begin perform community_member_command(member,false,'community_accept',jsonb_build_object('invite_id',invite)); raise exception 'FAIL expired member invite';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  perform community_member_command(cap,false,'community_revoke',jsonb_build_object('invite_id',invite));
+  perform community_member_command(outsider,false,'community_decline',jsonb_build_object('invite_id',other_invite));
+  perform assert_equals('rejected'::text,(select status from community_member_invites where id=other_invite),'recipient can decline');
+  perform community_member_command(cap,false,'community_invite',jsonb_build_object('team_id',team,'recipient_id',member));
+  select id into invite from community_member_invites where community_team_id=team and recipient_id=member and status='active';
+  perform community_member_command(member,false,'community_accept',jsonb_build_object('invite_id',invite));
+  perform community_member_command(member,false,'community_leave',jsonb_build_object('team_id',team));
+  perform assert_equals(0::bigint,(select count(*) from community_members where community_team_id=team),'member can leave independently');
+  perform community_member_command(cap,false,'community_invite',jsonb_build_object('team_id',team,'recipient_id',member));
+  select id into invite from community_member_invites where community_team_id=team and recipient_id=member and status='active';
+  perform registration_command(cap,false,'team_archive',jsonb_build_object('team_id',team));
+  perform registration_command(null,true,'team_restore',jsonb_build_object('team_id',team));
+  perform assert_equals('revoked'::text,(select status from community_member_invites where id=invite),'archiving revokes invitations permanently');
+  perform assert_equals(false,has_table_privilege('anon','public.community_members','SELECT'),'community members table stays private');
+  perform assert_equals(false,has_table_privilege('authenticated','public.community_member_invites','SELECT'),'member invitations stay private');
+  perform assert_equals(false,has_function_privilege('authenticated','public.community_member_command(uuid,boolean,text,jsonb,text)','EXECUTE'),'member command is service-only');
+end $$;
 rollback;
 
 -- Registration: real transactions, private rows, roles and immutable snapshots.

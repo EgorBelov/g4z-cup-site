@@ -75,7 +75,9 @@ function BracketMatch({
         )}
       >
         {showLabel ? (
-          <span className="truncate">{match.round_label ?? `Раунд ${match.round}`}</span>
+          <span className="truncate">
+            {match.round_label ?? `Раунд ${match.round}`}
+          </span>
         ) : null}
         <MatchStatusBadge status={match.status} />
       </div>

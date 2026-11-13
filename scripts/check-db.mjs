@@ -123,6 +123,8 @@ for (const [relation, columns, migration] of [
     "0012_registration_schema.sql",
   ]),
   ["registration_limits", "key", "0012_registration_schema.sql"],
+  ["community_members", "profile_id", "0015_community_members.sql"],
+  ["community_member_invites", "id", "0015_community_members.sql"],
 ]) {
   const { error } = await client.from(relation).select(columns).limit(1);
   const label = `${relation}.${columns}`;
@@ -214,6 +216,21 @@ if (env.SUPABASE_SERVICE_ROLE_KEY) {
     console.log(
       "✓ registration commands доступны только серверу; неверный actor отклоняется без записи",
     );
+  const [memberService, memberPublic] = await Promise.all([
+    service.rpc("community_member_command", registrationInput),
+    client.rpc("community_member_command", registrationInput),
+  ]);
+  if (
+    memberService.error?.message !== "Требуется аккаунт игрока" ||
+    !["42501", "PGRST202"].includes(memberPublic.error?.code ?? "")
+  ) {
+    problems.push({
+      relation: "community_member_command",
+      migration: "0015_community_members.sql",
+      message: "Не подтверждены функция участников и её приватные права",
+    });
+    console.log("✗ community_member_command: функция или права не готовы");
+  } else console.log("✓ community_member_command доступна только серверу");
   if (versionError)
     problems.push({
       relation: "teams.roster_version",

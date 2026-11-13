@@ -38,8 +38,8 @@ export default async function PlayerLoginPage({
       <section className="orbit-auth-card orbit-frame">
         <h2>Вход</h2>
         <p className="lead">
-          Войдите тем же Telegram-аккаунтом, с которым регистрировались. Пароль не
-          нужен — подтверждение придёт в Telegram.
+          Войдите тем же Telegram-аккаунтом, с которым регистрировались. Пароль не нужен
+          — подтверждение придёт в Telegram.
         </p>
 
         {params.notice ? (

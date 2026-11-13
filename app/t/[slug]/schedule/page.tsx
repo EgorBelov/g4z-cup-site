@@ -84,7 +84,10 @@ function groupByDay(
       label:
         key === "tbd"
           ? "Время уточняется"
-          : formatDayLabel(items[0]?.scheduled_at ?? null, timeZone).replace(", ", " · "),
+          : formatDayLabel(items[0]?.scheduled_at ?? null, timeZone).replace(
+              ", ",
+              " · ",
+            ),
       matches: items.map((match) => toRow(match, timeZone, slug)),
     }));
 }

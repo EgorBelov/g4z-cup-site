@@ -52,7 +52,8 @@ export default async function BracketPage({ params }: Props) {
   );
   const bestOf = matches.reduce((top, match) => Math.max(top, match.best_of), 0);
   const format = bestOf > 0 ? `BO${bestOf}` : null;
-  const rounds = new Set(matches.map((match) => `${match.stage_id}-${match.round}`)).size;
+  const rounds = new Set(matches.map((match) => `${match.stage_id}-${match.round}`))
+    .size;
 
   return (
     <Container className="orbit-bracket-page">
@@ -72,8 +73,9 @@ export default async function BracketPage({ params }: Props) {
             <Icon name="bracket" />
             <h2>Сетка появится после жеребьёвки</h2>
             <p>
-              Когда команды займут места в группах, здесь соберётся сетка плей-офф: пары,
-              серии и путь до финала. Сетка обновляется автоматически по ходу турнира.
+              Когда команды займут места в группах, здесь соберётся сетка плей-офф:
+              пары, серии и путь до финала. Сетка обновляется автоматически по ходу
+              турнира.
             </p>
             {tournament.registration_open || community.telegram ? (
               <div>

@@ -94,9 +94,7 @@ export default async function TournamentRegistrationsPage({
               href={`/admin/players/${p.id}`}
               className="interactive-card rounded-control border border-edge bg-panel p-4"
             >
-              <p className="font-medium">
-                {p.nickname} <span className="text-xs text-ink-muted">P{p.code}</span>
-              </p>
+              <p className="font-medium">{p.nickname}</p>
               <p className="mt-2 text-sm text-ink-muted">@{p.telegram_username}</p>
             </Link>
           ))}

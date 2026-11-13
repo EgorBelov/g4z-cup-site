@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { browserClient } from "@/lib/supabase/browser";
 
 /**
  * Keeps a page fresh while a tournament is running.
  *
- * Subscribes to Postgres changes on matches and games and refreshes the router
+ * Subscribes to this tournament's matches and refreshes the router
  * when something moves, so viewers never press F5. If realtime is unavailable it
  * falls back to a slow poll.
  */
@@ -21,42 +21,53 @@ export function LiveRefresher({
   pollSeconds?: number;
 }) {
   const router = useRouter();
-  const [connected, setConnected] = useState(false);
-
   useEffect(() => {
     if (!enabled) return;
-
+    let connected = false;
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      if (document.visibilityState !== "visible" || pending) return;
+      // One game write can also advance several bracket matches. Batch the
+      // resulting notifications into a single server render.
+      pending = setTimeout(() => {
+        pending = undefined;
+        if (document.visibilityState === "visible") router.refresh();
+      }, 350);
+    };
     const client = browserClient();
-    if (!client) return;
-
     const channel = client
-      .channel(`tournament-${tournamentId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "matches",
-          filter: `tournament_id=eq.${tournamentId}`,
-        },
-        () => router.refresh(),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () =>
-        router.refresh(),
-      )
-      .subscribe((status) => setConnected(status === "SUBSCRIBED"));
+      ? client
+          .channel(`tournament-${tournamentId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "matches",
+              filter: `tournament_id=eq.${tournamentId}`,
+            },
+            refresh,
+          )
+          // games_recalc updates the parent match for every game mutation, so a
+          // global games subscription duplicated updates and included other cups.
+          .subscribe((status) => {
+            const wasConnected = connected;
+            connected = status === "SUBSCRIBED";
+            if (connected && !wasConnected) refresh();
+          })
+      : null;
+    const timer = setInterval(() => {
+      if (!connected) refresh();
+    }, pollSeconds * 1000);
+    document.addEventListener("visibilitychange", refresh);
 
     return () => {
-      void client.removeChannel(channel);
+      if (client && channel) void client.removeChannel(channel);
+      clearInterval(timer);
+      clearTimeout(pending);
+      document.removeEventListener("visibilitychange", refresh);
     };
-  }, [enabled, router, tournamentId]);
-
-  useEffect(() => {
-    if (!enabled || connected) return;
-
-    const timer = setInterval(() => router.refresh(), pollSeconds * 1000);
-    return () => clearInterval(timer);
-  }, [connected, enabled, pollSeconds, router]);
+  }, [enabled, pollSeconds, router, tournamentId]);
 
   return null;
 }

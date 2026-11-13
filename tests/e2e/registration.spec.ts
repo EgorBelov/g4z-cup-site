@@ -86,10 +86,80 @@ test("registration preserves form on OAuth cancellation and returns to the origi
   await page.getByRole("button", { name: "Создать аккаунт через Telegram" }).click();
   await expect(page).toHaveURL(/\/t\/g4z-cup-13\/register$/);
   await expect(
-    page.getByRole("button", { name: "Хочу участвовать", exact: true }),
+    page.getByRole("button", { name: "Ищу команду", exact: true }),
   ).toBeVisible();
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/admin\/login/);
+});
+
+test("captains invite persistent members without granting team management", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.setTimeout(120_000);
+  const number = isMobile ? 800 : 700;
+  const suffix = isMobile ? "mobile" : "desktop";
+  const crewContext = await browser.newContext();
+  try {
+    await signup(page, `Persistent captain ${suffix}`, number);
+    await page.goto("/me/teams/new");
+    await page
+      .getByLabel("Название команды", { exact: true })
+      .fill(`Persistent ${suffix}`);
+    await page.getByRole("button", { name: "Создать команду", exact: true }).click();
+    await expect(page).toHaveURL(/\/me\/teams\/\d+$/);
+    const managementPath = new URL(page.url()).pathname;
+    const publicPath = await page
+      .getByRole("link", { name: "Публичная страница ↗" })
+      .getAttribute("href");
+    const crew = await crewContext.newPage();
+    await signup(crew, `Persistent crew ${suffix}`, number + 1);
+    const section = page.locator("section").filter({
+      has: page.getByRole("heading", { name: "Участники команды", exact: true }),
+    });
+    await section
+      .getByLabel("Ник игрока", { exact: true })
+      .fill(`Persistent crew ${suffix}`);
+    await section.getByRole("button", { name: "Найти игрока", exact: true }).click();
+    await section.getByRole("button", { name: "Пригласить", exact: true }).click();
+    await expect(
+      section.getByText(`Persistent crew ${suffix} · ожидает подтверждения`),
+    ).toBeVisible();
+    expect(await page.content()).not.toContain(`private_contact_${number + 1}`);
+    await crew.reload();
+    await crew
+      .getByRole("button", { name: "Принять приглашение в команду", exact: true })
+      .click();
+    await expect(crew.getByText("участник", { exact: true })).toBeVisible();
+    await expect(
+      crew.getByRole("button", { name: "Выйти из команды", exact: true }),
+    ).toBeVisible();
+    await crew.goto(managementPath);
+    await expect(
+      crew.getByRole("button", { name: "Закрыть команду", exact: true }),
+    ).toHaveCount(0);
+    await page.reload();
+    await expect(
+      section.getByRole("button", { name: "Убрать из команды", exact: true }),
+    ).toBeVisible();
+    await crew.goto(publicPath!);
+    await expect(
+      crew.getByText(`Persistent crew ${suffix}`, { exact: true }),
+    ).toBeVisible();
+    expect(await crew.locator("main").innerText()).not.toMatch(/\bP\d+\b/);
+    await crew.goto("/me");
+    await crew.getByRole("button", { name: "Выйти из команды", exact: true }).click();
+    await expect(crew.getByText(`Persistent ${suffix}`, { exact: true })).toHaveCount(
+      0,
+    );
+    await page.reload();
+    await expect(
+      section.getByRole("button", { name: "Убрать из команды", exact: true }),
+    ).toHaveCount(0);
+  } finally {
+    await crewContext.close();
+  }
 });
 
 test("players build a team, submit it and an organiser approves and adds an interested player", async ({
@@ -112,16 +182,19 @@ test("players build a team, submit it and an organiser approves and adds an inte
     await page.getByRole("button", { name: "Создать команду", exact: true }).click();
     await expect(page).toHaveURL(/\/me\/teams\/\d+$/);
     const teamPath = new URL(page.url()).pathname;
-    await page
-      .getByRole("button", { name: "Создать заявку команды", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Создать заявку", exact: true }).click();
     await expect(page).toHaveURL(/\/me\/applications\/\d+$/);
     const appPath = new URL(page.url()).pathname;
     const appId = appPath.split("/").at(-1)!;
     await page.getByRole("button", { name: "Подать заявку", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("Нужно 5 основных");
     await page.getByRole("button", { name: "Занять слот самому" }).click();
-    await expect(page.getByText("Основные: 1/5", { exact: true })).toBeVisible();
+    await expect(
+      page
+        .locator(".orbit-app-facts > div")
+        .filter({ has: page.getByText("Основные", { exact: true }) })
+        .locator("dd"),
+    ).toHaveText(/1\s*\/\s*5/);
     await page.getByRole("button", { name: "Создать новую ссылку" }).click();
     const invite = await page
       .getByLabel("Ссылка-приглашение", { exact: true })
@@ -158,18 +231,23 @@ test("players build a team, submit it and an organiser approves and adds an inte
       number + 5,
       "/t/g4z-cup-13/register",
     );
-    await interested
-      .getByRole("button", { name: "Хочу участвовать", exact: true })
-      .click();
+    await interested.getByRole("button", { name: "Ищу команду", exact: true }).click();
     await expect(
-      interested.getByRole("button", { name: "Убрать пожелание" }),
+      interested.getByRole("button", { name: "Убрать отметку" }),
     ).toBeVisible();
     await interested.goto(appPath);
-    await expect(interested.getByText(/не найдена|не найден/i).first()).toBeVisible();
+    await expect(
+      interested.getByRole("heading", { name: "Мимо орбиты." }),
+    ).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText("Основные: 5/5", { exact: true })).toBeVisible();
-    await page.getByLabel("Ник или код игрока", { exact: true }).fill(`Crew ${suffix}`);
+    await expect(
+      page
+        .locator(".orbit-app-facts > div")
+        .filter({ has: page.getByText("Основные", { exact: true }) })
+        .locator("dd"),
+    ).toHaveText(/5\s*\/\s*5/);
+    await page.getByLabel("Ник игрока", { exact: true }).fill(`Crew ${suffix}`);
     await page.getByRole("button", { name: "Найти игрока", exact: true }).click();
     await expect(
       page.getByRole("button", { name: "Пригласить", exact: true }).first(),
@@ -229,10 +307,13 @@ test("players build a team, submit it and an organiser approves and adds an inte
       "Изменения организатора сохранены",
     );
     await page.reload();
+    await expect(page.getByText(`Interest ${suffix}`, { exact: true })).toBeVisible();
     await expect(
-      page.getByText(new RegExp(`^Interest ${suffix}\\s+P\\d+$`)),
-    ).toBeVisible();
-    await expect(page.getByText("Запасные: 1/2", { exact: true })).toBeVisible();
+      page
+        .locator(".orbit-app-facts > div")
+        .filter({ has: page.getByText("Запасные", { exact: true }) })
+        .locator("dd"),
+    ).toHaveText(/1\s*\/\s*2/);
     await page.screenshot({
       path: info.outputPath("accepted-application.png"),
       fullPage: true,
@@ -240,12 +321,16 @@ test("players build a team, submit it and an organiser approves and adds an inte
 
     await page.goto(teamPath);
     await page
-      .getByLabel("Ник или код игрока", { exact: true })
+      .getByLabel("Ник игрока", { exact: true })
+      .last()
       .fill(`Crew ${suffix} 1`);
-    await page.getByRole("button", { name: "Найти игрока", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Найти игрока", exact: true })
+      .last()
+      .click();
     await page.getByRole("button", { name: "Предложить роль", exact: true }).click();
     await firstCrew!.goto("/me");
-    await firstCrew!.getByRole("button", { name: "Принять роль", exact: true }).click();
+    await firstCrew!.getByRole("button", { name: "Принять", exact: true }).click();
     await expect(firstCrew!).toHaveURL(new RegExp(`${teamPath}$`));
     await expect(
       firstCrew!.getByRole("button", { name: "Закрыть команду", exact: true }),
@@ -256,10 +341,16 @@ test("players build a team, submit it and an organiser approves and adds an inte
     await page.getByRole("button", { name: "Сохранить профиль", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("Профиль сохранён");
     await spectator.reload();
-    await expect(spectator.getByText(captain, { exact: true })).toBeVisible();
+    await spectator
+      .getByRole("link")
+      .filter({ has: spectator.getByRole("heading", { name, exact: true }) })
+      .click();
+    await expect(
+      spectator.locator(".orbit-player").filter({ hasText: captain }),
+    ).toBeVisible();
     expect(await spectator.content()).not.toContain(`${captain} updated`);
     await page.goto("/me");
-    await page.getByRole("button", { name: "Выйти из аккаунта", exact: true }).click();
+    await page.getByRole("button", { name: "Выйти", exact: true }).click();
     await page
       .getByRole("button", { name: "Войти через Telegram", exact: true })
       .click();

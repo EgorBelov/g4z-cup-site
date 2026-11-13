@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { verifiedTelegramSession } from "@/lib/auth/player";
 import { writeClient } from "@/lib/supabase/write";
@@ -12,8 +13,8 @@ import type {
   CaptainRequest,
 } from "@/lib/types/registration";
 
-// Deliberately uncached. These results are scoped to the verified current user.
-export async function currentPlayer(): Promise<ProfileWithRatings | null> {
+// Request-local memoization only: no shared Next cache for private user data.
+export const currentPlayer = cache(async (): Promise<ProfileWithRatings | null> => {
   const session = await verifiedTelegramSession();
   if (!session) return null;
   const client = writeClient();
@@ -34,17 +35,30 @@ export async function currentPlayer(): Promise<ProfileWithRatings | null> {
     dota_mmr: ratings.data.find((r) => r.discipline === "dota2")?.value ?? null,
     cs_elo: ratings.data.find((r) => r.discipline === "cs2")?.value ?? null,
   };
-}
+});
 export async function requirePlayer() {
   const player = await currentPlayer();
   if (!player) redirect("/login?next=/me");
   return player;
 }
-export async function playerTeams(profileId: string): Promise<CommunityTeam[]> {
+export async function playerTeams(
+  profileId: string,
+  includeMembers = false,
+): Promise<CommunityTeam[]> {
+  const membership = includeMembers
+    ? await writeClient()
+        .from("community_members")
+        .select("community_team_id")
+        .eq("profile_id", profileId)
+    : { data: [], error: null };
+  if (membership.error) throw new Error("Не удалось загрузить команды игрока");
+  const ids = membership.data.map((m) => m.community_team_id as number);
   const { data, error } = await writeClient()
     .from("community_teams")
     .select("*")
-    .or(`main_captain.eq.${profileId},second_captain.eq.${profileId}`)
+    .or(
+      `main_captain.eq.${profileId},second_captain.eq.${profileId}${ids.length ? `,id.in.(${ids.join(",")})` : ""}`,
+    )
     .order("id", { ascending: false });
   if (error) throw new Error("Не удалось загрузить команды");
   return data as CommunityTeam[];
@@ -53,6 +67,9 @@ export async function playerApplications(
   profileId: string,
   teams: CommunityTeam[],
 ): Promise<RegistrationTeam[]> {
+  teams = teams.filter(
+    (t) => t.main_captain === profileId || t.second_captain === profileId,
+  );
   const client = writeClient();
   const members = await client
     .from("team_members")
@@ -112,7 +129,7 @@ export async function applicationMembers(applicationId: number): Promise<Member[
 }
 export async function incomingInvites(profileId: string) {
   const client = writeClient();
-  const [invites, requests] = await Promise.all([
+  const [invites, requests, communityInvites] = await Promise.all([
     client
       .from("team_invites")
       .select("id,registration_team_id,recipient_id,status,expires_at")
@@ -125,12 +142,22 @@ export async function incomingInvites(profileId: string) {
       .eq("recipient_id", profileId)
       .eq("status", "pending")
       .gt("expires_at", new Date().toISOString()),
+    client
+      .from("community_member_invites")
+      .select("id,community_team_id")
+      .eq("recipient_id", profileId)
+      .eq("status", "active")
+      .gt("expires_at", new Date().toISOString()),
   ]);
-  if (invites.error || requests.error)
+  if (invites.error || requests.error || communityInvites.error)
     throw new Error("Не удалось загрузить приглашения");
   return {
     invites: invites.data as Invitation[],
     requests: requests.data as CaptainRequest[],
+    communityInvites: communityInvites.data as {
+      id: number;
+      community_team_id: number;
+    }[],
   };
 }
 export async function invitePreview(tokenHash: string) {
@@ -159,5 +186,57 @@ export async function invitePreview(tokenHash: string) {
     expired: new Date(invite.expires_at as string).getTime() <= Date.now(),
     application: application as RegistrationTeam,
     team: team as Pick<CommunityTeam, "id" | "slug" | "name" | "archived">,
+  };
+}
+
+export async function accountInvitationDetails(
+  applications: RegistrationTeam[],
+  incoming: Awaited<ReturnType<typeof incomingInvites>>,
+) {
+  const client = writeClient();
+  const ids = [...new Set(incoming.invites.map((i) => i.registration_team_id))];
+  const invited = ids.length
+    ? await client
+        .from("registration_teams")
+        .select("id,tournament_id,community_team_id")
+        .in("id", ids)
+    : { data: [], error: null };
+  if (invited.error) throw new Error("Не удалось загрузить приглашения");
+  const teamIds = [
+    ...new Set([
+      ...applications.map((a) => a.community_team_id),
+      ...incoming.requests.map((r) => r.community_team_id),
+      ...incoming.communityInvites.map((i) => i.community_team_id),
+      ...invited.data.map((a) => a.community_team_id as number),
+    ]),
+  ];
+  const teams = teamIds.length
+    ? await client
+        .from("community_teams")
+        .select("id,name,slug,archived")
+        .in("id", teamIds)
+    : { data: [], error: null };
+  if (teams.error) throw new Error("Не удалось загрузить команды приглашений");
+  const teamMap = new Map(teams.data.map((t) => [t.id, t]));
+  const appMap = new Map(invited.data.map((a) => [a.id, a]));
+  return {
+    teams: teams.data as Pick<CommunityTeam, "id" | "name" | "slug" | "archived">[],
+    invitations: incoming.invites.flatMap((i) => {
+      const app = appMap.get(i.registration_team_id);
+      const team = app && teamMap.get(app.community_team_id);
+      return app && team && !team.archived
+        ? [
+            {
+              ...i,
+              teamName: team.name as string,
+              tournamentId: app.tournament_id as number,
+            },
+          ]
+        : [];
+    }),
+    communityInvites: incoming.communityInvites.filter((i) => {
+      const team = teamMap.get(i.community_team_id);
+      return team && !team.archived;
+    }),
   };
 }

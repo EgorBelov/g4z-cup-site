@@ -17,23 +17,24 @@ export async function applicationDetail(id: number, admin = false) {
     .maybeSingle();
   if (error) throw new Error("Не удалось загрузить заявку");
   if (!application) notFound();
-  const { data: team, error: teamError } = await client
-    .from("community_teams")
-    .select("*")
-    .eq("id", application.community_team_id)
-    .single();
+  const [teamResult, memberRows, cupResult] = await Promise.all([
+    client
+      .from("community_teams")
+      .select("*")
+      .eq("id", application.community_team_id)
+      .single(),
+    applicationMembers(id),
+    client.from("tournaments").select("*").eq("id", application.tournament_id).single(),
+  ]);
+  const { data: team, error: teamError } = teamResult;
   if (teamError) throw new Error("Не удалось загрузить команду");
   const captain = Boolean(
     player && (team.main_captain === player.id || team.second_captain === player.id),
   );
-  let members = await applicationMembers(id);
+  let members = memberRows;
   if (!admin && !captain && !members.some((m) => m.profile_id === player!.id))
     notFound();
-  const { data: tournament, error: cupError } = await client
-    .from("tournaments")
-    .select("*")
-    .eq("id", application.tournament_id)
-    .single();
+  const { data: tournament, error: cupError } = cupResult;
   if (cupError || (!admin && tournament?.status === "draft")) notFound();
   if (application.status === "accepted" && application.snapshot_team_id) {
     const snapshot = await client
@@ -53,20 +54,21 @@ export async function applicationDetail(id: number, admin = false) {
         : m;
     });
   }
-  const invites =
+  const [invites, events] = await Promise.all([
     captain || admin
-      ? await client
+      ? client
           .from("team_invites")
           .select("id,registration_team_id,recipient_id,status,expires_at")
           .eq("registration_team_id", id)
           .eq("status", "active")
-      : null;
-  const events = await client
-    .from("registration_events")
-    .select("id,action,reason,actor_kind,created_at")
-    .eq("registration_team_id", id)
-    .order("id", { ascending: false })
-    .limit(20);
+      : null,
+    client
+      .from("registration_events")
+      .select("id,action,reason,actor_kind,created_at")
+      .eq("registration_team_id", id)
+      .order("id", { ascending: false })
+      .limit(20),
+  ]);
   if (invites?.error || events.error)
     throw new Error("Не удалось загрузить историю заявки");
   return {
@@ -91,22 +93,55 @@ export async function managedTeam(id: number) {
   if (error) throw new Error("Не удалось загрузить команду");
   if (!data || (data.main_captain !== player.id && data.second_captain !== player.id))
     notFound();
-  const applications = await client
-    .from("registration_teams")
-    .select("*")
-    .eq("community_team_id", id)
-    .order("id", { ascending: false });
-  const requests = await client
-    .from("captain_requests")
-    .select("*")
-    .eq("community_team_id", id)
-    .eq("status", "pending");
-  if (applications.error || requests.error)
+  const [applications, requests, membership, invitations] = await Promise.all([
+    client
+      .from("registration_teams")
+      .select("*")
+      .eq("community_team_id", id)
+      .order("id", { ascending: false }),
+    client
+      .from("captain_requests")
+      .select("*")
+      .eq("community_team_id", id)
+      .eq("status", "pending"),
+    client.from("community_members").select("profile_id").eq("community_team_id", id),
+    client
+      .from("community_member_invites")
+      .select("id,recipient_id,expires_at")
+      .eq("community_team_id", id)
+      .eq("status", "active")
+      .gt("expires_at", new Date().toISOString()),
+  ]);
+  if (applications.error || requests.error || membership.error || invitations.error)
     throw new Error("Не удалось загрузить участия команды");
+  const profileIds = [
+    ...new Set([
+      ...membership.data.map((m) => m.profile_id as string),
+      ...invitations.data.map((i) => i.recipient_id as string),
+    ]),
+  ];
+  const profiles = profileIds.length
+    ? await client.from("player_profiles").select("id,nickname").in("id", profileIds)
+    : { data: [], error: null };
+  if (profiles.error) throw new Error("Не удалось загрузить участников команды");
+  const names = new Map(profiles.data.map((p) => [p.id, p.nickname as string]));
   return {
     player,
     team: data as CommunityTeam,
     applications: applications.data as RegistrationTeam[],
     requests: requests.data,
+    members: membership.data
+      .filter(
+        (m) =>
+          m.profile_id !== data.main_captain && m.profile_id !== data.second_captain,
+      )
+      .map((m) => ({
+        profile_id: m.profile_id as string,
+        nickname: names.get(m.profile_id) ?? "Игрок",
+      })),
+    invitations: invitations.data.map((i) => ({
+      id: i.id as number,
+      nickname: names.get(i.recipient_id) ?? "Игрок",
+    })),
   };
 }

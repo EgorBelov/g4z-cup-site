@@ -131,6 +131,7 @@ export function PlayerSearch({
   teamVersion,
   admin = false,
   roles = false,
+  communityMembers = false,
   replaceMembers = [],
 }: {
   teamId: number;
@@ -139,6 +140,7 @@ export function PlayerSearch({
   teamVersion?: number;
   admin?: boolean;
   roles?: boolean;
+  communityMembers?: boolean;
   replaceMembers?: { id: string; nickname: string }[];
 }) {
   const [state, action] = useActionState<RegistrationState, FormData>(
@@ -150,16 +152,16 @@ export function PlayerSearch({
       <form action={action} className="space-y-3">
         <input type="hidden" name="team_id" value={teamId} />
         <Field
-          label="Ник или код игрока"
-          htmlFor={`search-${roles ? "captains" : "members"}`}
+          label="Ник игрока"
+          htmlFor={`search-${roles ? "captains" : communityMembers ? "team-members" : "members"}`}
         >
           <Input
-            id={`search-${roles ? "captains" : "members"}`}
+            id={`search-${roles ? "captains" : communityMembers ? "team-members" : "members"}`}
             name="query"
             minLength={2}
             maxLength={80}
             required
-            placeholder="Ник или P123"
+            placeholder="Введите ник игрока"
           />
         </Field>
         <FormFeedback state={state} />
@@ -172,9 +174,7 @@ export function PlayerSearch({
       ) : null}
       {state.players?.map((p) => (
         <div key={p.id} className="rounded-control border border-edge bg-panel p-4">
-          <p className="font-medium">
-            {p.nickname} <span className="text-xs text-ink-muted">P{p.code}</span>
-          </p>
+          <p className="font-medium">{p.nickname}</p>
           <p className="mt-2 text-xs text-ink-muted">
             {[
               p.dota_mmr == null ? null : `Dota 2 · ${p.dota_mmr} MMR`,
@@ -202,12 +202,14 @@ export function PlayerSearch({
                     team_version: teamVersion ?? 0,
                     recipient_id: p.id,
                   }
-                : {
-                    action: admin ? "admin_member" : "invite_create",
-                    application_id: applicationId ?? null,
-                    version: version ?? 0,
-                    ...(admin ? { profile_id: p.id } : { recipient_id: p.id }),
-                  }
+                : communityMembers
+                  ? { action: "community_invite", team_id: teamId, recipient_id: p.id }
+                  : {
+                      action: admin ? "admin_member" : "invite_create",
+                      application_id: applicationId ?? null,
+                      version: version ?? 0,
+                      ...(admin ? { profile_id: p.id } : { recipient_id: p.id }),
+                    }
             }
             className="mt-3"
           >

@@ -49,7 +49,9 @@ function TeamName({
   hit?: boolean;
 }) {
   const name = placement.team_name ?? "—";
-  const classes = [className, hit ? "orbit-results-hit" : null].filter(Boolean).join(" ");
+  const classes = [className, hit ? "orbit-results-hit" : null]
+    .filter(Boolean)
+    .join(" ");
   if (!placement.team_slug) return <span className={className}>{name}</span>;
   return (
     <Link href={`/t/${slug}/teams/${placement.team_slug}`} className={classes}>

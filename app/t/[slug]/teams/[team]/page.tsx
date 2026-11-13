@@ -179,8 +179,7 @@ export default async function TeamPage({ params }: Props) {
           <div className="orbit-team-card-head">
             <h2>Матчи</h2>
             <span>
-              всего {matches.length}{" "}
-              {plural(matches.length, "матч", "матча", "матчей")}
+              всего {matches.length} {plural(matches.length, "матч", "матча", "матчей")}
             </span>
           </div>
 
@@ -214,7 +213,9 @@ export default async function TeamPage({ params }: Props) {
                   </span>
                   <span
                     className="score"
-                    data-win={match.status === "finished" && match.winner_id === team.id}
+                    data-win={
+                      match.status === "finished" && match.winner_id === team.id
+                    }
                   >
                     {score}
                   </span>

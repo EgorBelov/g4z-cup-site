@@ -1,4 +1,5 @@
 "use server";
+import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { assertAdmin, requestIp } from "@/lib/auth/guard";
@@ -34,13 +35,18 @@ async function execute(
   action: string,
   input: Record<string, unknown>,
 ) {
-  const { data, error } = await writeClient().rpc("registration_command", {
-    p_actor: actor,
-    p_admin: admin,
-    p_action: action,
-    p_input: input,
-    p_ip: await requestIp(),
-  });
+  const { data, error } = await writeClient().rpc(
+    action.startsWith("community_")
+      ? "community_member_command"
+      : "registration_command",
+    {
+      p_actor: actor,
+      p_admin: admin,
+      p_action: action,
+      p_input: input,
+      p_ip: await requestIp(),
+    },
+  );
   if (error) return { error: message(error) };
   const result = data as {
     application_id: number | null;
@@ -48,13 +54,17 @@ async function execute(
     slug: string | null;
     tournament_slug: string | null;
   };
-  invalidate(
-    tags.communityTeams(),
-    result.tournament_slug ? tags.teams(result.tournament_slug) : null,
-    result.tournament_slug ? tags.tournament(result.tournament_slug) : null,
-    result.tournament_slug ? tags.results(result.tournament_slug) : null,
-    tags.tournaments(),
-  );
+  if (action.startsWith("community_")) {
+    invalidate(tags.communityTeams());
+  } else {
+    invalidate(
+      tags.communityTeams(),
+      result.tournament_slug ? tags.teams(result.tournament_slug) : null,
+      result.tournament_slug ? tags.tournament(result.tournament_slug) : null,
+      result.tournament_slug ? tags.results(result.tournament_slug) : null,
+      tags.tournaments(),
+    );
+  }
   return { result };
 }
 export async function updatePlayerProfileAction(

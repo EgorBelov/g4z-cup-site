@@ -7,14 +7,10 @@ import {
   playerTeams,
   playerApplications,
   incomingInvites,
+  accountInvitationDetails,
 } from "@/lib/queries/player";
 import { listTournaments } from "@/lib/queries/public";
-import { writeClient } from "@/lib/supabase/write";
-import {
-  applicationLabels,
-  type ApplicationStatus,
-  type CommunityTeam,
-} from "@/lib/types/registration";
+import { applicationLabels, type ApplicationStatus } from "@/lib/types/registration";
 
 function teamMark(name: string, tag?: string | null): string {
   if (tag) return tag.slice(0, 3).toUpperCase();
@@ -26,7 +22,8 @@ function teamMark(name: string, tag?: string | null): string {
 
 function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
   if (status === "accepted") return "ok";
-  if (status === "submitted" || status === "waitlisted" || status === "draft") return "wait";
+  if (status === "submitted" || status === "waitlisted" || status === "draft")
+    return "wait";
   return "neutral";
 }
 
@@ -41,50 +38,24 @@ function plural(count: number, one: string, few: string, many: string): string {
 
 export default async function MyAccountPage() {
   const player = await requirePlayer();
-  const teams = await playerTeams(player.id);
+  const teams = await playerTeams(player.id, true);
   const [applications, incoming, tournaments] = await Promise.all([
     playerApplications(player.id, teams),
     incomingInvites(player.id),
     listTournaments(),
   ]);
-  const client = writeClient();
-  const relatedIds = [
-    ...new Set([
-      ...applications.map((a) => a.community_team_id),
-      ...incoming.requests.map((r) => r.community_team_id),
-    ]),
-  ];
-  const otherTeams = relatedIds.length
-    ? await client.from("community_teams").select("id,name,slug").in("id", relatedIds)
-    : { data: [] };
-  const invitations = [];
-  for (const invite of incoming.invites) {
-    const app = await client
-      .from("registration_teams")
-      .select("tournament_id,community_team_id")
-      .eq("id", invite.registration_team_id)
-      .single();
-    const team = app.data
-      ? await client
-          .from("community_teams")
-          .select("name")
-          .eq("id", app.data.community_team_id)
-          .single()
-      : null;
-    if (app.data && team?.data)
-      invitations.push({
-        ...invite,
-        teamName: team.data.name as string,
-        cupName:
-          tournaments.find((t) => t.id === app.data.tournament_id)?.name ?? "Турнир",
-      });
-  }
+  const details = await accountInvitationDetails(applications, incoming);
+  const invitations = details.invitations.map((invite) => ({
+    ...invite,
+    cupName: tournaments.find((t) => t.id === invite.tournamentId)?.name ?? "Турнир",
+  }));
 
   const activeTeams = teams.filter((team) => !team.archived);
   const openCups = tournaments.filter(
     (t) => t.registration_open && t.status !== "finished",
   );
-  const inviteCount = invitations.length + incoming.requests.length;
+  const inviteCount =
+    invitations.length + incoming.requests.length + details.communityInvites.length;
   // нули в шапке только шумят: показываем то, что у игрока реально есть
   const counters = [
     {
@@ -102,9 +73,7 @@ export default async function MyAccountPage() {
   ].filter((counter) => counter.value > 0);
 
   const teamName = (id: number) =>
-    (otherTeams.data as Pick<CommunityTeam, "id" | "name" | "slug">[] | null)?.find(
-      (t) => t.id === id,
-    )?.name ?? "Команда";
+    details.teams.find((t) => t.id === id)?.name ?? "Команда";
 
   return (
     <div className="orbit-sh">
@@ -113,7 +82,6 @@ export default async function MyAccountPage() {
           <p className="orbit-sh-label">Кабинет</p>
           <h1>{player.nickname}</h1>
           <p className="orbit-sh-meta">
-            <span>P{player.code}</span>
             {counters.map((counter) => (
               <span key={counter.label}>
                 <b>{counter.value}</b> {counter.label}
@@ -170,6 +138,25 @@ export default async function MyAccountPage() {
               </div>
             ))}
 
+            {details.communityInvites.map((invite) => (
+              <div className="orbit-cab-row" key={`member-${invite.id}`}>
+                <div className="min-w-0">
+                  <small>участник команды</small>
+                  <b>{teamName(invite.community_team_id)}</b>
+                </div>
+                <div className="orbit-cab-end">
+                  <CommandForm
+                    label="Принять приглашение в команду"
+                    fields={{ action: "community_accept", invite_id: invite.id }}
+                  />
+                  <CommandForm
+                    label="Отклонить приглашение"
+                    fields={{ action: "community_decline", invite_id: invite.id }}
+                  />
+                </div>
+              </div>
+            ))}
+
             {incoming.requests.map((request) => (
               <div className="orbit-cab-row" key={`role-${request.id}`}>
                 <div className="min-w-0">
@@ -211,8 +198,14 @@ export default async function MyAccountPage() {
           {teams.length ? (
             teams.map((team) => (
               <div className="orbit-cab-row" key={team.id}>
-                <div className="min-w-0" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <span className="orbit-cab-av" style={{ width: 34, height: 34, fontSize: 10 }}>
+                <div
+                  className="min-w-0"
+                  style={{ display: "flex", gap: 12, alignItems: "center" }}
+                >
+                  <span
+                    className="orbit-cab-av"
+                    style={{ width: 34, height: 34, fontSize: 10 }}
+                  >
                     {teamMark(team.name, team.tag)}
                   </span>
                   <div className="min-w-0">
@@ -222,16 +215,34 @@ export default async function MyAccountPage() {
                         ? "закрыта"
                         : team.main_captain === player.id
                           ? "главный капитан"
-                          : "второй капитан"}
+                          : team.second_captain === player.id
+                            ? "второй капитан"
+                            : "участник"}
                     </small>
                   </div>
                 </div>
                 <div className="orbit-cab-end">
                   <span className="orbit-app-mini">
-                    <ButtonLink href={`/me/teams/${team.id}`} size="sm" variant="ghost">
+                    <ButtonLink
+                      href={
+                        team.main_captain === player.id ||
+                        team.second_captain === player.id
+                          ? `/me/teams/${team.id}`
+                          : `/teams/${team.slug}`
+                      }
+                      size="sm"
+                      variant="ghost"
+                    >
                       Открыть
                     </ButtonLink>
                   </span>
+                  {team.main_captain !== player.id &&
+                  team.second_captain !== player.id ? (
+                    <CommandForm
+                      label="Выйти из команды"
+                      fields={{ action: "community_leave", team_id: team.id }}
+                    />
+                  ) : null}
                 </div>
               </div>
             ))
@@ -260,8 +271,8 @@ export default async function MyAccountPage() {
               <div className="orbit-cab-row" key={application.id}>
                 <div className="min-w-0">
                   <small>
-                    {tournaments.find((t) => t.id === application.tournament_id)?.name ??
-                      "Турнир"}
+                    {tournaments.find((t) => t.id === application.tournament_id)
+                      ?.name ?? "Турнир"}
                   </small>
                   <b>{teamName(application.community_team_id)}</b>
                 </div>
@@ -312,7 +323,11 @@ export default async function MyAccountPage() {
                 </div>
                 <div className="orbit-cab-end">
                   <span className="orbit-app-mini" data-accent="true">
-                    <ButtonLink href={`/t/${cup.slug}/register`} size="sm" variant="live">
+                    <ButtonLink
+                      href={`/t/${cup.slug}/register`}
+                      size="sm"
+                      variant="live"
+                    >
                       Участие ↗
                     </ButtonLink>
                   </span>

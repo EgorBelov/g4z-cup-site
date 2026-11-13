@@ -41,8 +41,9 @@ export type PublicCommunityTeam = {
   tag: string | null;
   description: string | null;
   archived: boolean;
-  main_captain: { nickname: string; code: number };
-  second_captain: { nickname: string; code: number } | null;
+  main_captain: { nickname: string };
+  second_captain: { nickname: string } | null;
+  members: { nickname: string }[];
   participations: { name: string; slug: string; team_slug: string }[];
 };
 export async function getPublicCommunityTeam(

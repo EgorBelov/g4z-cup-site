@@ -50,9 +50,7 @@ export default async function RegisteredPlayersPage({
             href={`/admin/players/${p.id}`}
             className="interactive-card rounded-card border border-edge bg-panel p-5"
           >
-            <p className="font-medium">
-              {p.nickname} <span className="text-xs text-ink-muted">P{p.code}</span>
-            </p>
+            <p className="font-medium">{p.nickname}</p>
             <p className="mt-3 text-sm text-ink-muted">@{p.telegram_username}</p>
           </Link>
         ))}

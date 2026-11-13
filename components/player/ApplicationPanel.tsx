@@ -34,12 +34,16 @@ const eventNames: Record<string, string> = {
 
 function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
   if (status === "accepted") return "ok";
-  if (status === "submitted" || status === "waitlisted" || status === "draft") return "wait";
+  if (status === "submitted" || status === "waitlisted" || status === "draft")
+    return "wait";
   return "neutral";
 }
 
 function initials(value: string): string {
-  return value.replace(/^Team\s+/i, "").slice(0, 2).toUpperCase();
+  return value
+    .replace(/^Team\s+/i, "")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export function ApplicationPanel({
@@ -68,7 +72,9 @@ export function ApplicationPanel({
   const editable = admin || (captain && !locked);
   const fields = { application_id: r.id, version: r.version };
   const main = members.filter((m) => m.slot === "main").length;
-  const selfInRoster = Boolean(player && members.some((m) => m.profile_id === player.id));
+  const selfInRoster = Boolean(
+    player && members.some((m) => m.profile_id === player.id),
+  );
 
   return (
     <div className="orbit-app">
@@ -108,7 +114,6 @@ export function ApplicationPanel({
                   <div className="min-w-0">
                     <b>{m.nickname}</b>
                     <small>
-                      P{m.code} ·{" "}
                       {m.slot === "main" ? <em>основной</em> : "запасной"} ·{" "}
                       {t.discipline === "dota2" && m.dota_mmr != null
                         ? `${m.dota_mmr} MMR`
@@ -198,8 +203,8 @@ export function ApplicationPanel({
               </div>
               {admin ? (
                 <p className="orbit-app-note">
-                  Если игрок уже в другом составе этого кубка, организатор переместит его
-                  одной операцией. Подтверждение игрока не требуется.
+                  Если игрок уже в другом составе этого кубка, организатор переместит
+                  его одной операцией. Подтверждение игрока не требуется.
                 </p>
               ) : null}
             </section>
@@ -212,7 +217,10 @@ export function ApplicationPanel({
                 <span>ссылка живёт 7 дней</span>
               </div>
 
-              <div className="orbit-app-slot-actions" style={{ borderTop: 0, paddingTop: 0 }}>
+              <div
+                className="orbit-app-slot-actions"
+                style={{ borderTop: 0, paddingTop: 0 }}
+              >
                 <span className="orbit-app-mini" data-accent="true">
                   <CommandForm
                     label="Создать новую ссылку"
@@ -280,7 +288,11 @@ export function ApplicationPanel({
               {captain && r.status !== "accepted" && r.status !== "withdrawn" ? (
                 <>
                   {!locked ? (
-                    <span className="orbit-app-mini" data-accent="true" data-block="true">
+                    <span
+                      className="orbit-app-mini"
+                      data-accent="true"
+                      data-block="true"
+                    >
                       <CommandForm
                         label="Подать заявку"
                         variant="primary"
@@ -288,10 +300,7 @@ export function ApplicationPanel({
                       />
                     </span>
                   ) : null}
-                  <span
-                    className="orbit-app-mini orbit-app-withdraw"
-                    data-block="true"
-                  >
+                  <span className="orbit-app-mini orbit-app-withdraw" data-block="true">
                     <CommandForm
                       label="Отозвать заявку"
                       variant="danger"
@@ -342,7 +351,11 @@ export function ApplicationPanel({
                 <h2>История</h2>
                 <span>
                   {events.length}{" "}
-                  {events.length === 1 ? "событие" : events.length < 5 ? "события" : "событий"}
+                  {events.length === 1
+                    ? "событие"
+                    : events.length < 5
+                      ? "события"
+                      : "событий"}
                 </span>
               </div>
               <div style={{ marginTop: 8 }}>

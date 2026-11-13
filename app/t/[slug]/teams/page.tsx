@@ -112,7 +112,9 @@ export default async function TeamsPage({ params }: Props) {
                 </p>
                 <div className="orbit-team-foot">
                   <span>
-                    {team.group_id ? (groupName.get(team.group_id) ?? "Состав") : "Состав"}
+                    {team.group_id
+                      ? (groupName.get(team.group_id) ?? "Состав")
+                      : "Состав"}
                   </span>
                   <span aria-hidden="true">↗</span>
                 </div>

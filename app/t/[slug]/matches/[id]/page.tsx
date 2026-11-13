@@ -201,7 +201,9 @@ export default async function MatchPage({ params }: Props) {
                         {teamPicks.map((pick) => (
                           <li key={pick.id}>
                             {pick.hero}
-                            {pick.player_name ? <small>{pick.player_name}</small> : null}
+                            {pick.player_name ? (
+                              <small>{pick.player_name}</small>
+                            ) : null}
                           </li>
                         ))}
                       </ul>

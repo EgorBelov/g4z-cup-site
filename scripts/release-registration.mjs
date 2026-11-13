@@ -39,7 +39,7 @@ try {
   const pending = readdirSync("supabase/migrations")
     .filter(
       (f) =>
-        /^001[1-4]_.*\.sql$/.test(f) &&
+        /^001[1-5]_.*\.sql$/.test(f) &&
         !history.some((r) => r.version === f.slice(0, 4)),
     )
     .sort();

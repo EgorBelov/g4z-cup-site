@@ -2124,11 +2124,11 @@ html[data-motion="off"] .orbit-home-hero:before {
     gap: 8px;
   }
   .orbit-team-cell > span {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.orbit-team-cell i {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .orbit-team-cell i {
     width: 22px;
     height: 22px;
   }
@@ -2636,17 +2636,17 @@ html[data-motion="off"] .orbit-home-hero:before {
     padding: 22px 20px 20px;
   }
   /* вся плашка призёра кликабельна */
-.orbit-results-hit::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-.orbit-results-champ,
-.orbit-results-medal {
-  cursor: pointer;
-}
-.orbit-results-cup {
+  .orbit-results-hit::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .orbit-results-champ,
+  .orbit-results-medal {
+    cursor: pointer;
+  }
+  .orbit-results-cup {
     display: none;
   }
   .orbit-results-num {
@@ -4500,7 +4500,9 @@ html[data-motion="off"] .orbit-home-hero:before {
   border-radius: 6px;
   font-size: 14px;
   color: var(--color-ink-muted);
-  transition: background 140ms, color 140ms;
+  transition:
+    background 140ms,
+    color 140ms;
 }
 .orbit-cab-nav a:hover {
   background: color-mix(in srgb, var(--color-panel-strong) 55%, transparent);
@@ -4628,6 +4630,14 @@ html[data-motion="off"] .orbit-home-hero:before {
   gap: 8px;
   flex-wrap: wrap;
 }
+@media (max-width: 639px) {
+  .orbit-cab-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .orbit-cab-end {
+    justify-content: flex-start;
+  }
+}
 .orbit-cab-teams {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4643,7 +4653,9 @@ html[data-motion="off"] .orbit-home-hero:before {
   border: 1px solid var(--color-edge);
   border-radius: 7px;
   background: color-mix(in srgb, var(--color-panel) 50%, transparent);
-  transition: border-color 140ms, background 140ms;
+  transition:
+    border-color 140ms,
+    background 140ms;
 }
 .orbit-cab-team:hover {
   border-color: var(--color-edge-strong);

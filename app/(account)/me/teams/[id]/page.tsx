@@ -11,7 +11,8 @@ import { applicationLabels, type ApplicationStatus } from "@/lib/types/registrat
 
 function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
   if (status === "accepted") return "ok";
-  if (status === "submitted" || status === "waitlisted" || status === "draft") return "wait";
+  if (status === "submitted" || status === "waitlisted" || status === "draft")
+    return "wait";
   return "neutral";
 }
 
@@ -31,7 +32,8 @@ export default async function ManageCommunityTeamPage({
 }) {
   const id = Number((await params).id);
   if (!Number.isSafeInteger(id) || id < 1) notFound();
-  const { team, player, applications, requests } = await managedTeam(id);
+  const { team, player, applications, requests, members, invitations } =
+    await managedTeam(id);
   const [tournaments, publicTeam] = await Promise.all([
     listTournaments(),
     getPublicCommunityTeam(team.slug),
@@ -97,7 +99,11 @@ export default async function ManageCommunityTeamPage({
                           {applicationLabels[app.status]}
                         </span>
                         <span className="orbit-app-mini">
-                          <ButtonLink href={`/me/applications/${app.id}`} size="sm" variant="ghost">
+                          <ButtonLink
+                            href={`/me/applications/${app.id}`}
+                            size="sm"
+                            variant="ghost"
+                          >
                             Открыть
                           </ButtonLink>
                         </span>
@@ -145,6 +151,43 @@ export default async function ManageCommunityTeamPage({
 
               <section className="orbit-app-card orbit-frame">
                 <div className="orbit-app-card-head">
+                  <h2>Участники команды</h2>
+                  <span>{members.length}</span>
+                </div>
+                <p className="orbit-app-note">
+                  Постоянный состав команды. Участники не получают права капитана. На
+                  каждый турнир собирается отдельная заявка.
+                </p>
+                {members.map((member) => (
+                  <div className="orbit-tm-row" key={member.profile_id}>
+                    <b>{member.nickname}</b>
+                    <CommandForm
+                      label="Убрать из команды"
+                      variant="danger"
+                      fields={{
+                        action: "community_remove",
+                        team_id: team.id,
+                        profile_id: member.profile_id,
+                      }}
+                    />
+                  </div>
+                ))}
+                <div className="orbit-tm-search">
+                  <PlayerSearch teamId={team.id} communityMembers />
+                </div>
+                {invitations.map((invite) => (
+                  <div className="orbit-tm-pending" key={invite.id}>
+                    <p>{invite.nickname} · ожидает подтверждения</p>
+                    <CommandForm
+                      label="Отозвать приглашение"
+                      fields={{ action: "community_revoke", invite_id: invite.id }}
+                    />
+                  </div>
+                ))}
+              </section>
+
+              <section className="orbit-app-card orbit-frame">
+                <div className="orbit-app-card-head">
                   <h2>Капитаны</h2>
                   <span>роль даёт права на состав</span>
                 </div>
@@ -153,18 +196,13 @@ export default async function ManageCommunityTeamPage({
                   <b>Главный капитан</b>
                   <span className="orbit-app-status" style={{ marginTop: 0 }}>
                     {publicTeam?.main_captain.nickname ?? "—"}
-                    {publicTeam?.main_captain.code ? ` · P${publicTeam.main_captain.code}` : ""}
                   </span>
                 </div>
                 <div className="orbit-tm-row">
                   <b>Второй капитан</b>
                   <span className="orbit-app-status" style={{ marginTop: 0 }}>
                     {publicTeam?.second_captain
-                      ? `${publicTeam.second_captain.nickname}${
-                          publicTeam.second_captain.code
-                            ? ` · P${publicTeam.second_captain.code}`
-                            : ""
-                        }`
+                      ? publicTeam.second_captain.nickname
                       : "не назначен"}
                   </span>
                 </div>
@@ -191,8 +229,8 @@ export default async function ManageCommunityTeamPage({
                     {requests.map((r) => (
                       <div className="orbit-tm-pending" key={r.id}>
                         <p>
-                          Ожидает подтверждения: {r.role === "main" ? "главный" : "второй"}{" "}
-                          капитан
+                          Ожидает подтверждения:{" "}
+                          {r.role === "main" ? "главный" : "второй"} капитан
                         </p>
                         <span className="orbit-app-mini">
                           <CommandForm

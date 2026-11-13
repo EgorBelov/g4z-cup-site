@@ -33,7 +33,10 @@
 .orbit-schedule,
 .orbit-groups,
 .orbit-teams {
-  font-family: Orbit Grotesk, Arial, sans-serif;
+  font-family:
+    Orbit Grotesk,
+    Arial,
+    sans-serif;
 }
 
 .orbit-community .orbit-home-title,
@@ -46,7 +49,10 @@
 .orbit-overview .orbit-section-title,
 .orbit-about .orbit-section-title,
 .orbit-bracket-page .page-title {
-  font-family: Orbit Grotesk, Arial, sans-serif;
+  font-family:
+    Orbit Grotesk,
+    Arial,
+    sans-serif;
   font-weight: 900;
 }
 
