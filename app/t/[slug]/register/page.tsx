@@ -272,14 +272,14 @@ async function PlayerParticipation({
           <h2>Пока без команды?</h2>
         </div>
         <p className="orbit-register-note" style={{ marginTop: 16 }}>
-          Оставьте пожелание «Хочу участвовать» — организатор увидит его и поможет собрать
-          состав. Это не заявка на турнир и не зачисление в команду.
+          Отметьтесь, если ищете команду: организатор увидит это и поможет собрать состав.
+          На турнир это не заявляет — заявку подаёт капитан.
         </p>
         <div className="orbit-register-actions">
           {open || interest.data?.active ? (
             <div className="orbit-register-action">
               <CommandForm
-                label={interest.data?.active ? "Убрать пожелание" : "Хочу участвовать"}
+                label={interest.data?.active ? "Убрать отметку" : "Ищу команду"}
                 variant="primary"
                 fields={{
                   action: "interest",
@@ -295,6 +295,10 @@ async function PlayerParticipation({
             Создать команду ↗
           </ButtonLink>
         </div>
+        <p className="orbit-register-note" style={{ marginTop: 14 }}>
+          Заявку на турнир подаёт капитан — кнопкой «Подать заявку» в блоке «Мои составы».
+          Состав: {rosterSize} + до {maxSubstitutes} запасных.
+        </p>
       </section>
 
     </>
