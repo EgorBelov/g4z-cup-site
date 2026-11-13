@@ -297,7 +297,6 @@ async function PlayerParticipation({
         </div>
         <p className="orbit-register-note" style={{ marginTop: 14 }}>
           Заявку на турнир подаёт капитан — кнопкой «Подать заявку» в блоке «Мои составы».
-          Состав: {rosterSize} + до {maxSubstitutes} запасных.
         </p>
       </section>
 
