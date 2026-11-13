@@ -2686,9 +2686,10 @@ html[data-motion="off"] .orbit-home-hero:before {
 }
 .orbit-register-card-head h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
 }
 .orbit-register-team {
   display: grid;
