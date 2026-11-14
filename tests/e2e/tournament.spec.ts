@@ -393,7 +393,7 @@ test("roster edits preserve player IDs, reject stale tabs and keep private field
     // A successful save consumes the version and remounts rows from the DB.
     await expect(page.locator('[name="roster_version"]')).toHaveValue("1");
     const result = await request.get(
-      `http://127.0.0.1:54329/rest/v1/players?team_id=eq.${teamId}&order=sort_order`,
+      `http://127.0.0.1:${process.env.FIXTURE_PORT ?? "54329"}/rest/v1/players?team_id=eq.${teamId}&order=sort_order`,
       {
         headers: { apikey: "fixture-service-key" },
       },

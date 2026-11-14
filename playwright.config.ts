@@ -54,7 +54,7 @@ export default defineConfig({
     : [
         {
           command: "node tests/fixtures/server.mjs",
-          url: "http://127.0.0.1:54329/health",
+          url: `http://127.0.0.1:${process.env.FIXTURE_PORT ?? "54329"}/health`,
           reuseExistingServer: false,
         },
         {

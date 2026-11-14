@@ -4,6 +4,7 @@ import { createHash, createHmac, randomUUID } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
+const PORT = Number(process.env.FIXTURE_PORT ?? 54329);
 const stamp = "2026-08-03T15:00:00Z";
 const base = {
   discipline: "dota2",
@@ -523,7 +524,7 @@ function issueAuthSession(user = authUser) {
 }
 
 createServer(async (req, res) => {
-  const url = new URL(req.url, "http://127.0.0.1:54329");
+  const url = new URL(req.url, "http://127.0.0.1:" + PORT);
   if (url.pathname === "/health") {
     res.end("ok");
     return;
@@ -913,6 +914,6 @@ createServer(async (req, res) => {
     "Content-Range": `0-${Math.max(0, rows.length - 1)}/${total}`,
   });
   res.end(JSON.stringify(object ? (rows[0] ?? null) : rows));
-}).listen(54329, "127.0.0.1", () =>
-  console.log("Isolated tournament fixtures on http://127.0.0.1:54329"),
+}).listen(PORT, "127.0.0.1", () =>
+  console.log("Isolated tournament fixtures on http://127.0.0.1:" + PORT),
 );

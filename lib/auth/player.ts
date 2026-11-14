@@ -34,7 +34,9 @@ export async function assertAuthEntry() {
   const origin = await authRequestOrigin();
   const ip = await requestIp();
   const key = createHash("sha256").update(authSecret()).update(ip).digest("hex");
-  await consumeRate(`auth:${key}`, 20, 900);
+  // Mobile carriers put thousands of players behind one CGNAT address, so a
+  // tight per-IP limit locks out a whole network instead of one abuser.
+  await consumeRate(`auth:${key}`, 60, 900);
   return origin;
 }
 export async function assertPlayer() {

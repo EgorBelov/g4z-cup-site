@@ -2,7 +2,7 @@
 export const fixtureSecret = "fixture-only-secret-0123456789abcdef0123456789abcdef";
 
 export const fixtureEnvironment = {
-  NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54329",
+  NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${process.env.FIXTURE_PORT ?? "54329"}`,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "fixture-anon-key",
   SUPABASE_SERVICE_ROLE_KEY: "fixture-service-key",
   AUTH_SECRET: fixtureSecret,

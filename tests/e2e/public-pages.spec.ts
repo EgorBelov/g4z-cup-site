@@ -80,3 +80,19 @@ test("sitemap lists the archive and the regulations", async ({ request }) => {
   expect(sitemap).toContain("/archive");
   expect(sitemap).toContain("/rules");
 });
+
+test("the liveness probe answers without touching the database", async ({
+  request,
+}) => {
+  const response = await request.get("/api/ping");
+
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toMatchObject({ ok: true });
+  expect(response.headers()["cache-control"]).toContain("no-store");
+});
+
+test("public pages advertise a short edge cache", async ({ request }) => {
+  const response = await request.get("/");
+
+  expect(response.headers()["cdn-cache-control"]).toContain("s-maxage=30");
+});
