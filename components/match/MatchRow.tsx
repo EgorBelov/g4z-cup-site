@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MatchStatusBadge } from "@/components/ui/Badge";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { formatTime } from "@/lib/format/date";
 import { cn } from "@/lib/utils/cn";
 import type { MatchDetails } from "@/lib/types/database";
@@ -75,12 +76,14 @@ export function MatchRow({
             {
               id: match.team1_id,
               name: match.team1_name,
+              slug: match.team1_slug,
               fallback: match.team1_source,
               score: match.score1,
             },
             {
               id: match.team2_id,
               name: match.team2_name,
+              slug: match.team2_slug,
               fallback: match.team2_source,
               score: match.score2,
             },
@@ -98,7 +101,11 @@ export function MatchRow({
                     : "bg-violet-soft text-violet",
                 )}
               >
-                {(side.name ?? "?").slice(0, 1).toUpperCase()}
+                {side.slug ? (
+                  <TeamEmblem slug={side.slug} size={18} />
+                ) : (
+                  (side.name ?? "?").slice(0, 1).toUpperCase()
+                )}
               </span>
               <span
                 className={cn(

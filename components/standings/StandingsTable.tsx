@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils/cn";
 import type { StandingRow } from "@/lib/types/database";
@@ -64,9 +65,10 @@ export function StandingsTable({
                 <td className={cell}>
                   <Link
                     href={`/t/${tournamentSlug}/teams/${row.team_slug}`}
-                    className="block max-w-[7.5rem] break-words font-normal hover:text-accent sm:max-w-none"
+                    className="flex max-w-[7.5rem] items-center gap-2 break-words font-normal hover:text-accent sm:max-w-none"
                   >
-                    {row.team_name}
+                    <TeamEmblem slug={row.team_slug} size={18} />
+                    <span>{row.team_name}</span>
                   </Link>
                 </td>
                 <td className={cn(cell, "text-center tabular-nums text-ink-muted")}>

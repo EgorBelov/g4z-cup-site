@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge, MatchStatusBadge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { formatDateTime } from "@/lib/format/date";
 import { cn } from "@/lib/utils/cn";
 import type { MatchDetails } from "@/lib/types/database";
@@ -32,12 +33,13 @@ export function ScoreBoard({
     const title = side.name ?? side.fallback ?? "TBD";
     return (
       <div className="min-w-0 text-center">
-        <p
-          aria-hidden="true"
-          className="mb-5 text-2xl tracking-tight text-accent sm:text-4xl"
-        >
-          {side.name?.slice(0, 3).toUpperCase() ?? "?"}
-        </p>
+        <div className="mb-5 flex justify-center text-accent">
+          {side.slug ? (
+            <TeamEmblem slug={side.slug} size={48} />
+          ) : (
+            <span className="text-2xl tracking-tight sm:text-4xl">?</span>
+          )}
+        </div>
         {side.slug ? (
           <Link
             href={`/t/${match.tournament_slug}/teams/${side.slug}`}

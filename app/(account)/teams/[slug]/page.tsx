@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/PageHeader";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { getPublicCommunityTeam } from "@/lib/queries/public";
 
 function initials(value: string): string {
@@ -75,7 +76,12 @@ export default async function PublicCommunityTeamPage({
       <div className="orbit-ct">
         <div className="orbit-page-head">
           <div>
-            <h1 className="orbit-page-title">{team.name}</h1>
+            <div className="flex items-center gap-3">
+              <span className="text-accent" aria-hidden="true">
+                <TeamEmblem slug={team.slug} size={40} />
+              </span>
+              <h1 className="orbit-page-title">{team.name}</h1>
+            </div>
             <p className="orbit-page-sub">{sub}</p>
           </div>
           <div className="orbit-team-chips">

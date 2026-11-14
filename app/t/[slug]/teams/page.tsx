@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/PageHeader";
 import { Icon } from "@/components/ui/Icon";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { community } from "@/lib/community";
 import { getRosters, getTeams, getTournament } from "@/lib/queries/public";
 
@@ -33,14 +34,6 @@ function plural(count: number, one: string, few: string, many: string): string {
   if (mod10 === 1) return one;
   if (mod10 >= 2 && mod10 <= 4) return few;
   return many;
-}
-
-function teamMark(name: string, tag: string | null): string {
-  if (tag) return tag.slice(0, 3).toUpperCase();
-  return name
-    .replace(/^Team\s+/i, "")
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 export default async function TeamsPage({ params }: Props) {
@@ -103,7 +96,7 @@ export default async function TeamsPage({ params }: Props) {
                 className="orbit-team-card orbit-frame"
               >
                 <span className="orbit-team-mark" aria-hidden="true">
-                  {teamMark(team.name, team.tag)}
+                  <TeamEmblem slug={team.slug} size={26} />
                 </span>
                 <h2>{team.name}</h2>
                 <p className="orbit-team-meta">

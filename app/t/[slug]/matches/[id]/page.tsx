@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/Button";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { isDota } from "@/lib/format/discipline";
 import { Container } from "@/components/ui/PageHeader";
 import { formatDateTime, formatDuration } from "@/lib/format/date";
@@ -117,7 +118,11 @@ export default async function MatchPage({ params }: Props) {
       <section className="orbit-score orbit-frame">
         <div className="orbit-score-side" data-winner={team1Winner}>
           <span className="mark" aria-hidden="true">
-            {match.team1_tag ?? initials(match.team1_name)}
+            {match.team1_slug ? (
+              <TeamEmblem slug={match.team1_slug} size={36} />
+            ) : (
+              initials(match.team1_name)
+            )}
           </span>
           <div className="min-w-0">
             <b>{match.team1_name ?? "TBD"}</b>
@@ -148,7 +153,11 @@ export default async function MatchPage({ params }: Props) {
             {match.team2_source ? <small>{match.team2_source}</small> : null}
           </div>
           <span className="mark" aria-hidden="true">
-            {match.team2_tag ?? initials(match.team2_name)}
+            {match.team2_slug ? (
+              <TeamEmblem slug={match.team2_slug} size={36} />
+            ) : (
+              initials(match.team2_name)
+            )}
           </span>
         </div>
       </section>

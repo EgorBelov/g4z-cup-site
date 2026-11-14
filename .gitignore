@@ -36,3 +36,4 @@ supabase/.branches/
 npm-debug.log*
 
 /data
+/work

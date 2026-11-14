@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { CommandForm } from "@/components/player/TeamForms";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { playerLogoutAction } from "@/lib/actions/player-auth";
 import {
   requirePlayer,
@@ -11,14 +12,6 @@ import {
 } from "@/lib/queries/player";
 import { listTournaments } from "@/lib/queries/public";
 import { applicationLabels, type ApplicationStatus } from "@/lib/types/registration";
-
-function teamMark(name: string, tag?: string | null): string {
-  if (tag) return tag.slice(0, 3).toUpperCase();
-  return name
-    .replace(/^Team\s+/i, "")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function statusTone(status: ApplicationStatus): "ok" | "wait" | "neutral" {
   if (status === "accepted") return "ok";
@@ -207,11 +200,8 @@ export default async function MyAccountPage() {
                   className="min-w-0"
                   style={{ display: "flex", gap: 12, alignItems: "center" }}
                 >
-                  <span
-                    className="orbit-cab-av"
-                    style={{ width: 34, height: 34, fontSize: 10 }}
-                  >
-                    {teamMark(team.name, team.tag)}
+                  <span className="orbit-cab-av" style={{ width: 34, height: 34 }}>
+                    <TeamEmblem slug={team.slug} size={22} />
                   </span>
                   <div className="min-w-0">
                     <b>{team.name}</b>

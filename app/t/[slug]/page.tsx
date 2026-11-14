@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { CardHeader, EmptyState } from "@/components/ui/Card";
 import { Container } from "@/components/ui/PageHeader";
 import { MatchRow } from "@/components/match/MatchRow";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import {
   getHighlights,
   getTournament,
@@ -249,7 +250,7 @@ export default async function TournamentOverviewPage({ params }: Props) {
                 className="orbit-team-compact orbit-frame"
               >
                 <span aria-hidden="true">
-                  {team.tag || team.name.replace(/^Team\s+/i, "").slice(0, 2)}
+                  <TeamEmblem slug={team.slug} size={24} />
                 </span>
                 <strong>{team.name}</strong>
               </Link>

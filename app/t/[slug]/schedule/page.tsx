@@ -31,17 +31,6 @@ async function metadataFor(slug: string): Promise<Metadata> {
   };
 }
 
-function mark(name: string | null, tag: string | null): string {
-  if (tag) return tag.slice(0, 3).toUpperCase();
-  if (name) {
-    return name
-      .replace(/^Team\s+/i, "")
-      .slice(0, 2)
-      .toUpperCase();
-  }
-  return "?";
-}
-
 function toRow(match: MatchDetails, timeZone: string, slug: string): ScheduleRowView {
   const stage = match.group_name ?? match.round_label ?? match.stage_name;
 
@@ -51,8 +40,8 @@ function toRow(match: MatchDetails, timeZone: string, slug: string): ScheduleRow
     time: formatTime(match.scheduled_at, timeZone),
     team1: match.team1_name ?? match.team1_source ?? "TBD",
     team2: match.team2_name ?? match.team2_source ?? "TBD",
-    mark1: mark(match.team1_name, match.team1_tag),
-    mark2: mark(match.team2_name, match.team2_tag),
+    slug1: match.team1_slug,
+    slug2: match.team2_slug,
     score1: match.score1,
     score2: match.score2,
     played: match.status === "live" || match.status === "finished",

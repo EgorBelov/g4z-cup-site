@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { averageMmr, formatMmr } from "@/lib/format/mmr";
 import type { PublicPlayer, Team } from "@/lib/types/database";
 
@@ -36,8 +37,8 @@ export function TeamCard({
       className="interactive-card group flex h-full min-w-0 flex-col rounded-card border border-edge bg-panel p-5 sm:p-6"
     >
       <div className="mb-6 flex items-center justify-between">
-        <span className="flex min-h-16 min-w-16 max-w-full items-center justify-center break-all rounded-control border border-accent/20 bg-accent-soft px-3 py-2 text-2xl tracking-tight text-accent">
-          {team.tag ?? team.name.slice(0, 3).toUpperCase()}
+        <span className="grid size-16 shrink-0 place-items-center rounded-control border border-accent/20 bg-accent-soft text-accent">
+          <TeamEmblem slug={team.slug} size={38} />
         </span>
         <span className="ml-3 grid size-9 shrink-0 place-items-center rounded-pill bg-panel-strong text-accent">
           <Icon name="arrow" className="size-4" />

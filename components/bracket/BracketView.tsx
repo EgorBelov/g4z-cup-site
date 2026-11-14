@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Icon } from "@/components/ui/Icon";
 import { MatchStatusBadge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/Card";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import { formatDateTime } from "@/lib/format/date";
 import { cn } from "@/lib/utils/cn";
 import type { BracketSide, MatchDetails } from "@/lib/types/database";
@@ -29,6 +30,7 @@ function BracketMatch({
     score: number,
     teamId: number | null,
     logo: string | null,
+    slug: string | null,
   ) => (
     <div
       className={cn(
@@ -43,11 +45,8 @@ function BracketMatch({
         <span className="orbit-bracket-logo" aria-hidden="true">
           {logo ? (
             <Image src={logo} alt="" width={27} height={27} unoptimized />
-          ) : name ? (
-            name
-              .replace(/^Team\s+/i, "")
-              .slice(0, 2)
-              .toUpperCase()
+          ) : slug ? (
+            <TeamEmblem slug={slug} size={18} />
           ) : (
             "?"
           )}
@@ -89,6 +88,7 @@ function BracketMatch({
           match.score1,
           match.team1_id,
           match.team1_logo,
+          match.team1_slug,
         )}
         {side(
           match.team2_name,
@@ -96,6 +96,7 @@ function BracketMatch({
           match.score2,
           match.team2_id,
           match.team2_logo,
+          match.team2_slug,
         )}
       </div>
 

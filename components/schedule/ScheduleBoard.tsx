@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { TeamEmblem } from "@/components/team/TeamEmblem";
 import type { MatchStatus } from "@/lib/types/database";
 
 /**
@@ -15,8 +16,8 @@ export type ScheduleRowView = {
   time: string;
   team1: string;
   team2: string;
-  mark1: string;
-  mark2: string;
+  slug1: string | null;
+  slug2: string | null;
   score1: number;
   score2: number;
   played: boolean;
@@ -67,7 +68,7 @@ function ScheduleLine({ row, tzBadge }: { row: ScheduleRowView; tzBadge: string 
       <span className="orbit-schedule-team orbit-schedule-team--a">
         <span>{row.team1}</span>
         <i className="orbit-schedule-mark" aria-hidden="true">
-          {row.mark1}
+          {row.slug1 ? <TeamEmblem slug={row.slug1} size={20} /> : "?"}
         </i>
       </span>
       <span className="orbit-schedule-score">
@@ -87,7 +88,7 @@ function ScheduleLine({ row, tzBadge }: { row: ScheduleRowView; tzBadge: string 
       </span>
       <span className="orbit-schedule-team orbit-schedule-team--b">
         <i className="orbit-schedule-mark" aria-hidden="true">
-          {row.mark2}
+          {row.slug2 ? <TeamEmblem slug={row.slug2} size={20} /> : "?"}
         </i>
         <span>{row.team2}</span>
       </span>

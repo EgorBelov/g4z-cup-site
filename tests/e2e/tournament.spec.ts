@@ -64,6 +64,28 @@ async function fitsViewport(page: import("@playwright/test").Page) {
   ).toBeLessThanOrEqual(1);
 }
 
+test("teams render deterministic emblems instead of initials", async ({ page }) => {
+  const collect = () =>
+    page
+      .locator("svg[data-team-emblem]")
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute("data-team-emblem") ?? ""),
+      );
+
+  await page.goto("/t/orbit-dota/teams", { waitUntil: "domcontentloaded" });
+  const marks = page.locator("svg[data-team-emblem]");
+  await expect(marks.first()).toBeVisible();
+  await expect(marks.first()).toHaveAttribute("aria-hidden", "true");
+  const teamEmblems = await collect();
+  expect(teamEmblems.length).toBeGreaterThan(0);
+
+  // Matches reuse the same glyphs, so the schedule is a subset of the roster.
+  await page.goto("/t/orbit-dota/schedule", { waitUntil: "domcontentloaded" });
+  const scheduleEmblems = await collect();
+  expect(scheduleEmblems.length).toBeGreaterThan(0);
+  for (const emblem of scheduleEmblems) expect(teamEmblems).toContain(emblem);
+});
+
 test("the header links to the community Telegram channel next to the stream", async ({
   page,
 }) => {
