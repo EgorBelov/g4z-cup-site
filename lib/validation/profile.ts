@@ -51,7 +51,8 @@ export function safePlayerReturn(value: unknown): string {
   if (
     /^\/me(?:\/[a-z0-9/-]+)?$/.test(value) ||
     /^\/t\/[a-z0-9-]+\/register$/.test(value) ||
-    /^\/invite\/[A-Za-z0-9_-]{40,64}$/.test(value)
+    /^\/invite\/[A-Za-z0-9_-]{40,64}$/.test(value) ||
+    /^\/join\/[A-Za-z0-9_-]{40,64}$/.test(value)
   )
     return value;
   return "/me";

@@ -189,6 +189,60 @@ export async function invitePreview(tokenHash: string) {
   };
 }
 
+/** One shareable invite row: no recipient, only a token hash. */
+export type TeamInvite = {
+  id: number;
+  community_team_id: number;
+  status: string;
+  expires_at: string;
+};
+
+/**
+ * Preview of a shareable invite into the persistent team roster.
+ *
+ * Only the team name/slug and the invitation state are exposed: the link is
+ * meant to be forwarded to people who are not players yet.
+ */
+export async function teamInviteByToken(tokenHash: string) {
+  const client = writeClient();
+  const { data: invite, error } = await client
+    .from("community_member_invites")
+    .select("id,community_team_id,status,expires_at")
+    .eq("token_hash", tokenHash)
+    .maybeSingle();
+  if (error) throw new Error("Не удалось проверить приглашение");
+  if (!invite) return null;
+  const { data: team, error: teamError } = await client
+    .from("community_teams")
+    .select("id,slug,name,archived,main_captain,second_captain")
+    .eq("id", invite.community_team_id)
+    .single();
+  if (teamError) throw new Error("Не удалось проверить команду");
+  return {
+    invite: invite as TeamInvite,
+    expired: new Date(invite.expires_at as string).getTime() <= Date.now(),
+    team: team as Pick<
+      CommunityTeam,
+      "id" | "slug" | "name" | "archived" | "main_captain" | "second_captain"
+    >,
+  };
+}
+
+/** Whether the profile already belongs to the persistent roster of the team. */
+export async function isTeamMember(
+  teamId: number,
+  profileId: string,
+): Promise<boolean> {
+  const { data, error } = await writeClient()
+    .from("community_members")
+    .select("profile_id")
+    .eq("community_team_id", teamId)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  if (error) throw new Error("Не удалось проверить участие в команде");
+  return Boolean(data);
+}
+
 export async function accountInvitationDetails(
   applications: RegistrationTeam[],
   incoming: Awaited<ReturnType<typeof incomingInvites>>,

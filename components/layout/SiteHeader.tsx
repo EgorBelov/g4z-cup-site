@@ -144,8 +144,8 @@ export function SiteHeader({
                 {navLinks}
               </nav>
               <div className="mt-4 flex flex-wrap items-center gap-5 border-t border-edge pt-3">
-                <MotionToggle />
                 {socials}
+                <MotionToggle />
               </div>
             </div>
           </details>

@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
  * against a preview deployment or a local build in CI.
  */
 
-const paths = ["/", "/archive"];
+const paths = ["/", "/archive", "/rules"];
 
 test.beforeEach(async ({ page }) => {
   if (!process.env.PLAYWRIGHT_BASE_URL) {
@@ -42,6 +42,20 @@ test("the archive page is reachable from the footer", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Архив/);
 });
 
+test("the regulations page is reachable from the footer", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("contentinfo")
+    .getByRole("link", { name: "Регламент" })
+    .click();
+  await expect(page).toHaveURL(/\/rules$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Регламент");
+  await expect(page.getByRole("heading", { name: "Замены игроков" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Запрещённые оскорбления" }),
+  ).toBeVisible();
+});
+
 test("unknown tournaments render the 404 page, not a crash", async ({ page }) => {
   const response = await page.goto("/t/definitely-not-a-tournament");
 
@@ -49,9 +63,11 @@ test("unknown tournaments render the 404 page, not a crash", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Мимо орбиты." })).toBeVisible();
 });
 
-test("sitemap lists the archive", async ({ request }) => {
+test("sitemap lists the archive and the regulations", async ({ request }) => {
   const response = await request.get("/sitemap.xml");
 
   expect(response.ok()).toBeTruthy();
-  expect(await response.text()).toContain("/archive");
+  const sitemap = await response.text();
+  expect(sitemap).toContain("/archive");
+  expect(sitemap).toContain("/rules");
 });

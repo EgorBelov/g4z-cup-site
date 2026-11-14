@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container, Skeleton } from "@/components/ui/PageHeader";
 import { CommandForm } from "@/components/player/TeamForms";
+import { tournamentRatingLabel } from "@/lib/format/rating";
 import { getTournament } from "@/lib/queries/public";
 import { currentPlayer, playerTeams, playerApplications } from "@/lib/queries/player";
 import { writeClient } from "@/lib/supabase/write";
@@ -36,6 +37,8 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
   const player = await currentPlayer();
   const next = `/t/${slug}/register`;
   const open = t.registration_open && t.status !== "finished";
+  // Рейтинги объявляет организатор; это не ограничение, а ориентир для команд.
+  const ratingLabel = tournamentRatingLabel(t);
 
   return (
     <>
@@ -138,7 +141,7 @@ async function Participation({ params }: { params: Promise<{ slug: string }> }) 
             </div>
             <div>
               <dt>Рейтинг</dt>
-              <dd>не обязателен</dd>
+              <dd>{ratingLabel}</dd>
             </div>
             <div>
               <dt>Приём</dt>

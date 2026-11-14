@@ -175,6 +175,20 @@ export default async function ManageCommunityTeamPage({
                 <div className="orbit-tm-search">
                   <PlayerSearch teamId={team.id} communityMembers />
                 </div>
+                <div className="orbit-tm-pending">
+                  <p>
+                    Ссылка-приглашение в команду: многоразовая, действует 7 дней. Новая
+                    ссылка отключает предыдущую.
+                  </p>
+                  <CommandForm
+                    label="Создать ссылку-приглашение"
+                    fields={{
+                      action: "community_link_create",
+                      team_id: team.id,
+                      team_version: team.version,
+                    }}
+                  />
+                </div>
                 {invitations.map((invite) => (
                   <div className="orbit-tm-pending" key={invite.id}>
                     <p>{invite.nickname} · ожидает подтверждения</p>

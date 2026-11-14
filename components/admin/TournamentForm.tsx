@@ -207,6 +207,38 @@ export function TournamentForm({ tournament }: { tournament?: Tournament }) {
             required
           />
         </Field>
+        <Field
+          label="Общий рейтинг команды"
+          htmlFor="rating_team"
+          hint="Справочно: показывается на странице заявки, участие не ограничивает"
+          error={state.fieldErrors?.rating_team}
+        >
+          <Input
+            id="rating_team"
+            name="rating_team"
+            type="number"
+            min={0}
+            max={100000}
+            defaultValue={tournament?.rating_team ?? ""}
+            placeholder="например, 30000"
+          />
+        </Field>
+        <Field
+          label="Рейтинг на игрока"
+          htmlFor="rating_player"
+          hint="MMR для Dota 2, Elo для CS2. Тоже справочное значение"
+          error={state.fieldErrors?.rating_player}
+        >
+          <Input
+            id="rating_player"
+            name="rating_player"
+            type="number"
+            min={0}
+            max={20000}
+            defaultValue={tournament?.rating_player ?? ""}
+            placeholder="например, 7000"
+          />
+        </Field>
       </div>
       <Checkbox
         name="registration_open"

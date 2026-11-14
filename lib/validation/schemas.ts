@@ -36,6 +36,17 @@ const optionalInt = z
   .optional()
   .transform((value) => (value === "" || value === undefined ? null : value));
 
+/**
+ * Справочный рейтинг турнира: пустое поле означает «не объявлен».
+ * Это не ограничение при приёме заявки, поэтому значение просто публикуется.
+ */
+function optionalRating(max: number) {
+  return z
+    .union([z.literal(""), z.coerce.number().int().min(0).max(max)])
+    .optional()
+    .transform((value) => (value === "" || value === undefined ? null : value));
+}
+
 const checkbox = z
   .union([z.literal("on"), z.literal("true"), z.literal("")])
   .optional()
@@ -139,6 +150,8 @@ export const registrationCommandSchema = z
       "community_revoke",
       "community_remove",
       "community_leave",
+      "community_link_create",
+      "community_link_accept",
       "application_create",
       "interest",
       "invite_create",
@@ -199,6 +212,8 @@ export const registrationCommandSchema = z
       community_revoke: ["invite_id"],
       community_remove: ["team_id", "profile_id"],
       community_leave: ["team_id"],
+      community_link_create: ["team_id", "team_version"],
+      community_link_accept: ["token"],
       application_create: ["team_id", "tournament_id"],
       interest: ["tournament_id"],
       invite_create: ["application_id", "version"],
@@ -256,6 +271,8 @@ export const tournamentSchema = z.object({
   registration_open: checkbox,
   roster_size: z.coerce.number().int().min(1).max(32).default(5),
   max_substitutes: z.coerce.number().int().min(0).max(32).default(2),
+  rating_team: optionalRating(100000),
+  rating_player: optionalRating(20000),
   slug,
   name: trimmed.min(2, { error: "Укажите название" }),
   edition: optionalInt,

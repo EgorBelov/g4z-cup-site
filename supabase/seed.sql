@@ -40,7 +40,7 @@ begin
     'Одиннадцатый сезон G4Z CUP по Dota 2.',
     'Слава и уважение',
     'https://www.twitch.tv/g4zcup_ru',
-    'https://t.me/g4zagzes'
+    'https://t.me/g4zcup'
   )
   returning id into t_id;
 

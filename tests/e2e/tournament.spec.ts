@@ -64,6 +64,22 @@ async function fitsViewport(page: import("@playwright/test").Page) {
   ).toBeLessThanOrEqual(1);
 }
 
+test("the header links to the community Telegram channel next to the stream", async ({
+  page,
+}) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const header = page.getByRole("banner");
+  // On phones the socials live inside the collapsed menu.
+  const menu = header.locator('summary[aria-label="Меню"]');
+  if (await menu.isVisible()) await menu.click();
+
+  await expect(
+    header.locator('a[href="https://t.me/g4zcup"]:visible').first(),
+  ).toBeVisible();
+  await expect(header.locator('a[href*="twitch.tv"]:visible').first()).toBeVisible();
+});
+
 test("permanent community homepage includes current and other active tournaments", async ({
   page,
 }) => {
@@ -217,6 +233,16 @@ test("public pages and both bracket formats render populated data without overfl
       });
   }
   expect(errors).toEqual([]);
+});
+
+test("the application page shows the organiser's rating figures", async ({ page }) => {
+  await page.goto("/t/orbit-dota/register", { waitUntil: "domcontentloaded" });
+
+  const rating = page
+    .locator(".orbit-register-facts div")
+    .filter({ hasText: "Рейтинг" });
+  await expect(rating).toContainText(/30\s000 на команду/);
+  await expect(rating).toContainText(/7\s000 на игрока/);
 });
 
 test("CS2 pages do not display Dota ratings or hero drafts", async ({ page }) => {

@@ -149,12 +149,21 @@ export async function playerRegistrationCommandAction(
     compact.token_hash = createHash("sha256").update(token).digest("hex");
     inviteUrl = `${await authRequestOrigin()}/invite/${token}`;
   }
+  // Ссылка в постоянный состав команды: токен показывается один раз, в базе
+  // остаётся только его хэш.
+  if (input.action === "community_link_create") {
+    const token = randomBytes(32).toString("base64url");
+    compact.token_hash = createHash("sha256").update(token).digest("hex");
+    inviteUrl = `${await authRequestOrigin()}/join/${token}`;
+  }
   const result = await execute(actor.user.id, false, input.action, compact);
   if (result.error) return fail(result.error);
   if (["application_create", "invite_accept"].includes(input.action))
     redirect(`/me/applications/${result.result!.application_id}`);
   if (input.action === "captain_accept")
     redirect(`/me/teams/${result.result!.team_id}`);
+  if (input.action === "community_link_accept")
+    redirect(`/teams/${result.result!.slug}`);
   return { ...done("Готово"), inviteUrl };
 }
 export async function adminRegistrationCommandAction(

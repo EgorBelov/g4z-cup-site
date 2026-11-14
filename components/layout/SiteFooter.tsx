@@ -32,6 +32,12 @@ export function SiteFooter() {
             >
               Архив
             </Link>
+            <Link
+              href="/rules"
+              className="inline-flex min-h-11 items-center hover:text-ink"
+            >
+              Регламент
+            </Link>
           </nav>
           <span className="orbit-footer-motto">На одной орбите</span>
         </div>

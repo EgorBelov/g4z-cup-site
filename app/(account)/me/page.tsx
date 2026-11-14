@@ -50,7 +50,12 @@ export default async function MyAccountPage() {
     cupName: tournaments.find((t) => t.id === invite.tournamentId)?.name ?? "Турнир",
   }));
 
+  // Закрытые команды и отозванные заявки остаются в базе для истории, но в
+  // кабинете не занимают место: их видно только там, где они ещё актуальны.
   const activeTeams = teams.filter((team) => !team.archived);
+  const activeApplications = applications.filter(
+    (application) => application.status !== "withdrawn",
+  );
   const openCups = tournaments.filter(
     (t) => t.registration_open && t.status !== "finished",
   );
@@ -63,8 +68,8 @@ export default async function MyAccountPage() {
       label: plural(activeTeams.length, "команда", "команды", "команд"),
     },
     {
-      value: applications.length,
-      label: plural(applications.length, "заявка", "заявки", "заявок"),
+      value: activeApplications.length,
+      label: plural(activeApplications.length, "заявка", "заявки", "заявок"),
     },
     {
       value: inviteCount,
@@ -195,8 +200,8 @@ export default async function MyAccountPage() {
             <span className="orbit-sh-count">{activeTeams.length}</span>
           </div>
 
-          {teams.length ? (
-            teams.map((team) => (
+          {activeTeams.length ? (
+            activeTeams.map((team) => (
               <div className="orbit-cab-row" key={team.id}>
                 <div
                   className="min-w-0"
@@ -211,13 +216,11 @@ export default async function MyAccountPage() {
                   <div className="min-w-0">
                     <b>{team.name}</b>
                     <small>
-                      {team.archived
-                        ? "закрыта"
-                        : team.main_captain === player.id
-                          ? "главный капитан"
-                          : team.second_captain === player.id
-                            ? "второй капитан"
-                            : "участник"}
+                      {team.main_captain === player.id
+                        ? "главный капитан"
+                        : team.second_captain === player.id
+                          ? "второй капитан"
+                          : "участник"}
                     </small>
                   </div>
                 </div>
@@ -263,11 +266,11 @@ export default async function MyAccountPage() {
               <h2>Мои участия</h2>
               <small>заявки на турниры</small>
             </div>
-            <span className="orbit-sh-count">{applications.length}</span>
+            <span className="orbit-sh-count">{activeApplications.length}</span>
           </div>
 
-          {applications.length ? (
-            applications.map((application) => (
+          {activeApplications.length ? (
+            activeApplications.map((application) => (
               <div className="orbit-cab-row" key={application.id}>
                 <div className="min-w-0">
                   <small>

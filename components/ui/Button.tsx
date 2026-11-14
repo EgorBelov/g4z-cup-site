@@ -80,7 +80,9 @@ export function ButtonLink({
   return (
     <Link
       href={href}
-      prefetch={/^\/(me|login|register|invite)(\/|\?|$)/.test(href) ? false : undefined}
+      prefetch={
+        /^\/(me|login|register|invite|join)(\/|\?|$)/.test(href) ? false : undefined
+      }
       className={buttonClass(variant, size, className)}
     >
       {children}

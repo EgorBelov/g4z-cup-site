@@ -166,6 +166,110 @@ test("captains invite persistent members without granting team management", asyn
   }
 });
 
+test("a shared team link adds a persistent member", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.setTimeout(120_000);
+  // Numbers stay unique per project so one fixture player is never reused.
+  const number = isMobile ? 860 : 760;
+  const suffix = isMobile ? "mobile" : "desktop";
+  const guestContext = await browser.newContext();
+  try {
+    await signup(page, `Link captain ${suffix}`, number);
+    await page.goto("/me/teams/new");
+    await page.getByLabel("Название команды", { exact: true }).fill(`Link ${suffix}`);
+    await page.getByRole("button", { name: "Создать команду", exact: true }).click();
+    await expect(page).toHaveURL(/\/me\/teams\/\d+$/);
+
+    const section = page.locator("section").filter({
+      has: page.getByRole("heading", { name: "Участники команды", exact: true }),
+    });
+    await section
+      .getByRole("button", { name: "Создать ссылку-приглашение", exact: true })
+      .click();
+    const link = await section
+      .getByLabel("Ссылка-приглашение", { exact: true })
+      .inputValue({ timeout: 15000 });
+    expect(link).toMatch(/\/join\/[A-Za-z0-9_-]{43}$/);
+    const joinPath = new URL(link).pathname;
+
+    // The link must work for someone who is not a player yet, and it lands them
+    // in the persistent team roster rather than in a tournament application.
+    const guestName = `Link guest ${suffix}`;
+    const guest = await guestContext.newPage();
+    await signup(guest, guestName, number + 1, joinPath);
+    await expect(
+      guest.getByRole("heading", { name: `Link ${suffix}`, exact: true }),
+    ).toBeVisible();
+    await guest
+      .getByRole("button", { name: "Вступить в команду", exact: true })
+      .click();
+    await expect(guest).toHaveURL(/\/teams\/link-/);
+    await expect(
+      guest.locator("main").getByText(guestName, { exact: true }),
+    ).toBeVisible();
+
+    await page.reload();
+    await expect(
+      section.getByRole("button", { name: "Убрать из команды", exact: true }),
+    ).toBeVisible();
+  } finally {
+    await guestContext.close();
+  }
+});
+
+test("archived teams and withdrawn applications leave the account dashboard", async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(120_000);
+  const number = isMobile ? 880 : 780;
+  const suffix = isMobile ? "mobile" : "desktop";
+  const teamName = `Closed ${suffix}`;
+
+  await signup(page, `Closed captain ${suffix}`, number);
+  await page.goto("/me/teams/new");
+  await page.getByLabel("Название команды", { exact: true }).fill(teamName);
+  await page.getByRole("button", { name: "Создать команду", exact: true }).click();
+  await expect(page).toHaveURL(/\/me\/teams\/\d+$/);
+  const teamPath = new URL(page.url()).pathname;
+
+  // Отозванная заявка не должна оставаться в «Моих участиях».
+  await page.getByRole("button", { name: "Создать заявку", exact: true }).click();
+  await expect(page).toHaveURL(/\/me\/applications\/\d+$/);
+  await page.getByRole("button", { name: "Отозвать заявку", exact: true }).click();
+  await expect(page.getByText("Заявка отозвана", { exact: true })).toBeVisible();
+
+  await page.goto("/me");
+  const participations = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Мои участия", exact: true }),
+  });
+  await expect(participations.locator(".orbit-sh-count")).toHaveText("0");
+  await expect(
+    participations.getByText(
+      "Вы пока не в турнирном составе. Командную заявку подаёт капитан.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+
+  // Закрытая команда уходит из «Моих команд», но её страница остаётся.
+  await page.goto(teamPath);
+  await page.getByRole("button", { name: "Закрыть команду", exact: true }).click();
+  await page.goto("/me");
+  const teams = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Мои команды", exact: true }),
+  });
+  await expect(teams.locator(".orbit-sh-count")).toHaveText("0");
+  await expect(teams.getByText(teamName, { exact: true })).toHaveCount(0);
+  await expect(
+    teams.getByText("Создайте свою команду или дождитесь приглашения в состав.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
 test("players build a team, submit it and an organiser approves and adds an interested player", async ({
   page,
   context,

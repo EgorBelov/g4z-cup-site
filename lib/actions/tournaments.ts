@@ -35,6 +35,8 @@ export async function saveTournamentAction(
     registration_open: input.registration_open,
     roster_size: input.roster_size,
     max_substitutes: input.max_substitutes,
+    rating_team: input.rating_team,
+    rating_player: input.rating_player,
     slug: input.slug,
     name: input.name,
     edition: input.edition,

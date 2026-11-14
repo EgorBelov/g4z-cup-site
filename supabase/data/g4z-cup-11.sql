@@ -146,7 +146,7 @@ begin
       || 'группами за оставшиеся слоты. Плей-офф — bo3, шесть команд.',
     'Одиннадцатый турнир G4Z CUP по Dota 2.',
     'https://www.twitch.tv/g4zcup_ru',
-    'https://t.me/g4zagzes'
+    'https://t.me/g4zcup'
   )
   on conflict (slug) do update set
     name = excluded.name,

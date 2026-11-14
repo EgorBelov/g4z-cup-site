@@ -46,7 +46,7 @@ begin
     'Одна группа из 7 команд, плей-офф: 1–2 места сразу в полуфинал, 3–6 — четвертьфинал',
     'Юбилейный, десятый турнир G4Z CUP по Dota 2.',
     'https://www.twitch.tv/g4zcup_ru',
-    'https://t.me/g4zagzes'
+    'https://t.me/g4zcup'
   )
   on conflict (slug) do update set
     name = excluded.name,

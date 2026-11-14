@@ -21,6 +21,10 @@ export type Tournament = {
   registration_open: boolean;
   roster_size: number;
   max_substitutes: number;
+  /** Объявленный организатором общий рейтинг команды. Справочное значение. */
+  rating_team: number | null;
+  /** Объявленный рейтинг на игрока. Справочное значение. */
+  rating_player: number | null;
   status: TournamentStatus;
   is_current: boolean;
   starts_at: string | null;

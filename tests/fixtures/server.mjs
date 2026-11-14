@@ -20,7 +20,7 @@ const base = {
   description: "Свои люди, честная игра и ещё один повод встретиться.",
   prize_pool: "Кубок сообщества",
   stream_url: "https://www.twitch.tv/g4zcup_ru",
-  telegram_url: "https://t.me/g4zagzes",
+  telegram_url: "https://t.me/g4zcup",
   logo_url: null,
   created_at: stamp,
   updated_at: stamp,
@@ -33,6 +33,8 @@ const tournaments = [
     name: "G4Z CUP 11",
     game: "Dota 2",
     is_current: true,
+    rating_team: 30000,
+    rating_player: 7000,
   },
   {
     ...base,

@@ -47,6 +47,7 @@ export const config = {
     "/register",
     "/auth/complete",
     "/invite/:path*",
+    "/join/:path*",
     "/t/:slug/register",
   ],
 };

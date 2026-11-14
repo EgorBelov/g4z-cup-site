@@ -34,3 +34,5 @@ supabase/.branches/
 .DS_Store
 *.pem
 npm-debug.log*
+
+/data

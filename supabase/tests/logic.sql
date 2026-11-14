@@ -541,6 +541,77 @@ begin
 end $$;
 rollback;
 
+-- Team invite links: one reusable link per team, into the persistent roster.
+begin;
+do $$
+declare
+  cap uuid := '00000000-0000-4000-8000-000000000911';
+  member uuid := '00000000-0000-4000-8000-000000000912';
+  outsider uuid := '00000000-0000-4000-8000-000000000913';
+  late uuid := '00000000-0000-4000-8000-000000000914';
+  uid uuid; team bigint; link1 text := repeat('a',64); link2 text := repeat('b',64); link3 text := repeat('c',64); inv bigint;
+begin
+  foreach uid in array array[cap,member,outsider,late] loop
+    insert into auth.users values(uid);
+    perform register_player(uid,uid::text,'link_contact',jsonb_build_object('nickname','Link '||right(uid::text,3),'telegram_username','link_contact','steam_url','https://steamcommunity.com/id/link_'||right(uid::text,3)));
+  end loop;
+  team := (registration_command(cap,false,'team_create',jsonb_build_object('name','Link team','slug','link-team'))->>'team_id')::bigint;
+
+  begin perform community_member_command(member,false,'community_link_create',jsonb_build_object('team_id',team,'team_version',0,'token_hash',link1)); raise exception 'FAIL non-captain created a team link';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+
+  perform community_member_command(cap,false,'community_link_create',jsonb_build_object('team_id',team,'team_version',0,'token_hash',link1));
+  select id into inv from community_member_invites where token_hash=link1;
+  perform assert_equals(null::uuid,(select recipient_id from community_member_invites where id=inv),'link invite has no recipient');
+  perform assert_equals(true,(select expires_at > now()+interval '6 days' from community_member_invites where id=inv),'link invite lives a week');
+
+  -- A second link replaces the first, so an already forwarded link stops working.
+  perform community_member_command(cap,false,'community_link_create',jsonb_build_object('team_id',team,'team_version',0,'token_hash',link2));
+  perform assert_equals('revoked'::text,(select status from community_member_invites where token_hash=link1),'new link revokes the previous one');
+  perform assert_equals(1::bigint,(select count(*) from community_member_invites where community_team_id=team and status='active' and token_hash is not null),'one active link per team');
+
+  begin perform community_member_command(outsider,false,'community_link_accept',jsonb_build_object('token_hash',link1)); raise exception 'FAIL revoked link still accepted';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+
+  perform community_member_command(member,false,'community_link_accept',jsonb_build_object('token_hash',link2));
+  perform assert_equals(1::bigint,(select count(*) from community_members where community_team_id=team),'link acceptance adds a persistent member');
+  perform assert_equals(0::bigint,(select count(*) from team_members where profile_id=member),'team link does not enroll in a tournament');
+  perform assert_equals('active'::text,(select status from community_member_invites where token_hash=link2),'link stays reusable after acceptance');
+
+  -- Multi-use, but a captain or an existing member cannot enter twice.
+  perform community_member_command(outsider,false,'community_link_accept',jsonb_build_object('token_hash',link2));
+  perform assert_equals(2::bigint,(select count(*) from community_members where community_team_id=team),'link is reusable');
+  begin perform community_member_command(cap,false,'community_link_accept',jsonb_build_object('token_hash',link2)); raise exception 'FAIL captain joined own team';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin perform community_member_command(member,false,'community_link_accept',jsonb_build_object('token_hash',link2)); raise exception 'FAIL member joined twice';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+
+  -- Expiry and archiving both close the link.
+  update community_member_invites set expires_at=now()-interval '1 second' where token_hash=link2;
+  begin perform community_member_command(late,false,'community_link_accept',jsonb_build_object('token_hash',link2)); raise exception 'FAIL expired link accepted';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+
+  perform community_member_command(cap,false,'community_link_create',jsonb_build_object('team_id',team,'team_version',0,'token_hash',link3));
+  perform registration_command(cap,false,'team_archive',jsonb_build_object('team_id',team));
+  perform assert_equals('revoked'::text,(select status from community_member_invites where token_hash=link3),'archiving revokes the active link');
+  perform registration_command(null,true,'team_restore',jsonb_build_object('team_id',team));
+  begin perform community_member_command(late,false,'community_link_accept',jsonb_build_object('token_hash',link3)); raise exception 'FAIL archived link accepted after restore';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+
+  -- A row is either personal or a link, never both and never neither.
+  begin
+    insert into community_member_invites(community_team_id,recipient_id,token_hash) values(team,member,repeat('d',64));
+    raise exception 'FAIL row with both a recipient and a token was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into community_member_invites(community_team_id) values(team);
+    raise exception 'FAIL row with neither a recipient nor a token was accepted';
+  exception when check_violation then null;
+  end;
+end $$;
+rollback;
+
 -- Registration: real transactions, private rows, roles and immutable snapshots.
 begin;
 do $$
@@ -671,6 +742,23 @@ end $$;
 set local role anon;
 select assert_equals('Registration one'::text,public.public_community_team('registration-team-one')->>'name','public team uses safe definer projection');
 reset role;
+rollback;
+
+-- Tournament ratings are informational and surface through the summary view.
+begin;
+do $$
+declare t bigint;
+begin
+  insert into public.tournaments(slug,name,status,rating_team,rating_player)
+    values('rating-test','Rating test','upcoming',30000,7000) returning id into t;
+  perform assert_equals(30000,(select rating_team from public.tournament_summaries where id=t),'summary exposes the team rating');
+  perform assert_equals(7000,(select rating_player from public.tournament_summaries where id=t),'summary exposes the player rating');
+  perform assert_equals(null::integer,(select rating_team from public.tournament_summaries where slug='g4z-cup-10'),'missing rating stays null');
+  begin insert into public.tournaments(slug,name,rating_team) values('rating-bad','Bad',100001); raise exception 'FAIL team rating above the cap was accepted';
+  exception when check_violation then null;end;
+  begin insert into public.tournaments(slug,name,rating_player) values('rating-bad-two','Bad',20001); raise exception 'FAIL player rating above the cap was accepted';
+  exception when check_violation then null;end;
+end $$;
 rollback;
 
 drop function assert_equals(anyelement, anyelement, text);

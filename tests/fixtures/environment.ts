@@ -8,6 +8,6 @@ export const fixtureEnvironment = {
   AUTH_SECRET: fixtureSecret,
   ADMIN_PASSWORD_HASH: "fixture-password-disabled",
   NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3000",
-  NEXT_PUBLIC_COMMUNITY_TELEGRAM_URL: "https://t.me/g4zagzes",
+  NEXT_PUBLIC_COMMUNITY_TELEGRAM_URL: "https://t.me/g4zcup",
   NEXT_PUBLIC_COMMUNITY_STREAM_URL: "https://www.twitch.tv/g4zcup_ru",
 };
