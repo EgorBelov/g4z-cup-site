@@ -761,4 +761,62 @@ begin
 end $$;
 rollback;
 
+-- Discord identity, team channels and the grant ledger stay server-only.
+begin;
+do $$
+declare
+  cap uuid := '00000000-0000-4000-8000-000000000921';
+  other uuid := '00000000-0000-4000-8000-000000000922';
+  ghost uuid := '00000000-0000-4000-8000-000000000923';
+  uid uuid; team bigint;
+  discord text := '1291787278045413468';
+begin
+  foreach uid in array array[cap,other] loop
+    insert into auth.users values(uid);
+    perform register_player(uid,uid::text,'discord_contact',jsonb_build_object('nickname','Discord '||right(uid::text,3),'telegram_username','discord_contact','steam_url','https://steamcommunity.com/id/discord_'||right(uid::text,3)));
+  end loop;
+  -- Inserted directly: the registration RPC writes an audit row that would
+  -- block the delete this check needs.
+  insert into auth.users values(ghost);
+  insert into public.player_profiles(id,telegram_id,nickname,telegram_username,steam_url)
+    values(ghost,'discord-ghost','Ghost','discord_ghost','https://steamcommunity.com/id/ghost');
+
+  perform assert_equals(false,has_table_privilege('anon','public.discord_role_grants','SELECT'),'discord grants stay private for anon');
+  perform assert_equals(false,has_table_privilege('authenticated','public.discord_role_grants','SELECT'),'discord grants stay private for authenticated');
+  perform assert_equals(true,has_table_privilege('service_role','public.discord_role_grants','SELECT'),'discord grants are readable by the server');
+
+  update public.player_profiles set discord_id=discord,discord_username='g4z_captain',discord_linked_at=now() where id=cap;
+  perform assert_equals(false,(select discord_in_guild from public.player_profiles where id=cap),'a linked player is not on the server until guilds.join succeeds');
+
+  begin update public.player_profiles set discord_id=discord where id=other;
+    raise exception 'FAIL duplicate discord id was accepted';
+  exception when unique_violation then null; end;
+
+  begin update public.player_profiles set discord_id='not-a-snowflake' where id=other;
+    raise exception 'FAIL malformed discord id was accepted';
+  exception when check_violation then null; end;
+
+  begin update public.player_profiles set discord_linked_at=now() where id=other;
+    raise exception 'FAIL a link date without an account was accepted';
+  exception when check_violation then null; end;
+
+  team := (registration_command(cap,false,'team_create',jsonb_build_object('name','Discord team','slug','discord-team'))->>'team_id')::bigint;
+  update public.community_teams set discord_role_id=discord,discord_voice_channel_id=discord,discord_synced_at=now() where id=team;
+  begin update public.community_teams set discord_voice_channel_id='abc' where id=team;
+    raise exception 'FAIL malformed channel id was accepted';
+  exception when check_violation then null; end;
+
+  insert into public.discord_role_grants(profile_id,role_id) values(cap,discord);
+  perform assert_equals(1::bigint,(select count(*) from public.discord_role_grants where role_id=discord),'grants record what the bot did');
+  begin insert into public.discord_role_grants(profile_id,role_id) values(cap,discord);
+    raise exception 'FAIL duplicate grant was accepted';
+  exception when unique_violation then null; end;
+
+  -- Deleting the profile must not leave a role the bot cannot revoke later.
+  insert into public.discord_role_grants(profile_id,role_id) values(ghost,discord);
+  delete from public.player_profiles where id=ghost;
+  perform assert_equals(1::bigint,(select count(*) from public.discord_role_grants where role_id=discord),'deleting a profile forgets its grants');
+end $$;
+rollback;
+
 drop function assert_equals(anyelement, anyelement, text);

@@ -1,6 +1,7 @@
 "use server";
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { assertAdmin, requestIp } from "@/lib/auth/guard";
 import { assertPlayer } from "@/lib/auth/player";
@@ -16,7 +17,26 @@ import {
 import { slugify } from "@/lib/utils/slug";
 import { invalidate } from "@/lib/actions/revalidate";
 import { tags } from "@/lib/cache/tags";
+import { discordConfigured } from "@/lib/discord/config";
+import { syncTeam } from "@/lib/discord/provision";
 import type { PublicRegistrant } from "@/lib/types/registration";
+
+/** Actions after which Discord roles or the team channel can change. */
+const discordActions = new Set([
+  "team_create",
+  "team_update",
+  "team_archive",
+  "team_restore",
+  "admin_member",
+  "member_remove",
+  "member_leave",
+  "captain_direct",
+  "captain_accept",
+  "second_remove",
+  "community_accept",
+  "community_leave",
+  "community_remove",
+]);
 
 export type RegistrationState = ActionState & {
   inviteUrl?: string;
@@ -64,6 +84,12 @@ async function execute(
       result.tournament_slug ? tags.results(result.tournament_slug) : null,
       tags.tournaments(),
     );
+  }
+  // Discord work never blocks the response and never fails the action: errors
+  // land in `community_teams.discord_error` and the captain can retry.
+  if (result.team_id && discordActions.has(action) && discordConfigured()) {
+    const teamId = result.team_id;
+    after(() => syncTeam(teamId));
   }
   return { result };
 }

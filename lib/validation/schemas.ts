@@ -589,3 +589,6 @@ export const deleteEntitySchema = z.object({
   tournament_id: z.coerce.number().int().positive(),
   id: z.coerce.number().int().positive(),
 });
+
+// ─── Discord ─────────────────────────────────────────────────────────────────
+export const discordSyncSchema = z.object({ team_id: optionalId });

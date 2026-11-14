@@ -10,6 +10,10 @@ export type Profile = {
   faceit_url: string | null;
   dotabuff_url: string | null;
   version: number;
+  discord_id: string | null;
+  discord_username: string | null;
+  discord_linked_at: string | null;
+  discord_in_guild: boolean;
 };
 export type ProfileWithRatings = Profile & {
   dota_mmr: number | null;
@@ -32,6 +36,10 @@ export type CommunityTeam = {
   second_captain: string | null;
   archived: boolean;
   version: number;
+  discord_role_id: string | null;
+  discord_voice_channel_id: string | null;
+  discord_synced_at: string | null;
+  discord_error: string | null;
 };
 export type ApplicationStatus =
   | "draft"

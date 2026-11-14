@@ -4,7 +4,9 @@ import {
   CommandForm,
   PlayerSearch,
 } from "@/components/player/TeamForms";
+import { DiscordSyncForm } from "@/components/player/DiscordForms";
 import { ButtonLink } from "@/components/ui/Button";
+import { discordChannelUrl, discordConfigured } from "@/lib/discord/config";
 import { managedTeam } from "@/lib/queries/registration";
 import { listTournaments, getPublicCommunityTeam } from "@/lib/queries/public";
 import { applicationLabels, type ApplicationStatus } from "@/lib/types/registration";
@@ -39,6 +41,11 @@ export default async function ManageCommunityTeamPage({
     getPublicCommunityTeam(team.slug),
   ]);
   const main = team.main_captain === player.id;
+  const configured = discordConfigured();
+  const channelUrl =
+    configured && team.discord_voice_channel_id
+      ? discordChannelUrl(team.discord_voice_channel_id)
+      : null;
 
   const visible = tournaments.filter(
     (t) => t.registration_open || applications.some((a) => a.tournament_id === t.id),
@@ -160,7 +167,12 @@ export default async function ManageCommunityTeamPage({
                 </p>
                 {members.map((member) => (
                   <div className="orbit-tm-row" key={member.profile_id}>
-                    <b>{member.nickname}</b>
+                    <div className="min-w-0">
+                      <b>{member.nickname}</b>
+                      <small>
+                        {member.discord ? "Discord привязан" : "Discord не привязан"}
+                      </small>
+                    </div>
                     <CommandForm
                       label="Убрать из команды"
                       variant="danger"
@@ -298,14 +310,64 @@ export default async function ManageCommunityTeamPage({
             </div>
           </section>
 
+          <section className="orbit-app-card orbit-frame">
+            <div className="orbit-app-card-head">
+              <h2>Discord</h2>
+              <span>
+                {team.discord_voice_channel_id ? "канал готов" : "канала нет"}
+              </span>
+            </div>
+            <p className="orbit-app-note">
+              Канал команды видят все на сервере, зайти могут только участники и
+              капитаны.
+            </p>
+            <div className="orbit-tm-row">
+              <div className="min-w-0">
+                <b>Вы в Discord</b>
+                <small>
+                  {!player.discord_id
+                    ? "не привязан"
+                    : player.discord_in_guild
+                      ? "на сервере"
+                      : "не на сервере — добавьтесь заново"}
+                </small>
+              </div>
+              {configured && !player.discord_id ? (
+                <ButtonLink
+                  href={`/auth/discord/start?next=/me/teams/${team.id}`}
+                  size="sm"
+                  variant="secondary"
+                >
+                  Привязать
+                </ButtonLink>
+              ) : null}
+              {channelUrl ? (
+                <ButtonLink href={channelUrl} external size="sm" variant="secondary">
+                  Открыть канал
+                </ButtonLink>
+              ) : null}
+            </div>
+            {team.discord_error ? (
+              <p className="mt-3 text-xs leading-relaxed text-live">
+                {team.discord_error}
+              </p>
+            ) : null}
+            {configured ? (
+              <DiscordSyncForm teamId={team.id} className="mt-4" />
+            ) : (
+              <p className="mt-3 text-xs text-ink-muted">Discord не настроен.</p>
+            )}
+          </section>
+
           {main && !team.archived ? (
             <section className="orbit-app-card orbit-tm-danger orbit-frame">
               <div className="orbit-app-card-head">
                 <h2>Закрытие</h2>
               </div>
               <p>
-                Закрытие сохраняет историю и адрес. Сначала отзовите непринятые заявки.
-                Для восстановления потребуется организатор.
+                Закрытие сохраняет историю и адрес. Голосовой канал и роль команды в
+                Discord будут удалены. Сначала отзовите непринятые заявки. Для
+                восстановления потребуется организатор.
               </p>
               <CommandForm
                 label="Закрыть команду"

@@ -121,10 +121,16 @@ export async function managedTeam(id: number) {
     ]),
   ];
   const profiles = profileIds.length
-    ? await client.from("player_profiles").select("id,nickname").in("id", profileIds)
+    ? await client
+        .from("player_profiles")
+        .select("id,nickname,discord_id,discord_in_guild")
+        .in("id", profileIds)
     : { data: [], error: null };
   if (profiles.error) throw new Error("Не удалось загрузить участников команды");
   const names = new Map(profiles.data.map((p) => [p.id, p.nickname as string]));
+  const inDiscord = new Map(
+    profiles.data.map((p) => [p.id, Boolean(p.discord_id && p.discord_in_guild)]),
+  );
   return {
     player,
     team: data as CommunityTeam,
@@ -138,6 +144,7 @@ export async function managedTeam(id: number) {
       .map((m) => ({
         profile_id: m.profile_id as string,
         nickname: names.get(m.profile_id) ?? "Игрок",
+        discord: inDiscord.get(m.profile_id) ?? false,
       })),
     invitations: invitations.data.map((i) => ({
       id: i.id as number,

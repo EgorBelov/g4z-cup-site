@@ -41,7 +41,9 @@ export async function assertPlayer() {
   const session = await assertTelegramSession();
   const { data, error } = await writeClient()
     .from("player_profiles")
-    .select("*")
+    .select(
+      "id,code,telegram_id,nickname,telegram_username,telegram_contact_verified,steam_url,faceit_url,dotabuff_url,version,discord_id,discord_username,discord_linked_at,discord_in_guild",
+    )
     .eq("id", session.user.id)
     .maybeSingle();
   if (error) throw new Error("Не удалось загрузить профиль");

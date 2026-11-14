@@ -14,13 +14,18 @@ import type {
 } from "@/lib/types/registration";
 
 // Request-local memoization only: no shared Next cache for private user data.
+// Discord tokens are deliberately not selected: this object reaches client
+// components through `ProfileForm`.
+const profileColumns =
+  "id,code,telegram_id,nickname,telegram_username,telegram_contact_verified,steam_url,faceit_url,dotabuff_url,version,discord_id,discord_username,discord_linked_at,discord_in_guild";
+
 export const currentPlayer = cache(async (): Promise<ProfileWithRatings | null> => {
   const session = await verifiedTelegramSession();
   if (!session) return null;
   const client = writeClient();
   const { data, error } = await client
     .from("player_profiles")
-    .select("*")
+    .select(profileColumns)
     .eq("id", session.user.id)
     .maybeSingle();
   if (error) throw new Error("Не удалось загрузить профиль игрока");

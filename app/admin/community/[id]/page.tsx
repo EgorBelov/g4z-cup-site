@@ -7,6 +7,8 @@ import {
   CommandForm,
   CommunityTeamForm,
 } from "@/components/player/TeamForms";
+import { DiscordSyncForm } from "@/components/player/DiscordForms";
+import { discordChannelUrl, discordConfigured } from "@/lib/discord/config";
 import type { CommunityTeam } from "@/lib/types/registration";
 import { requireAdmin } from "@/lib/auth/guard";
 import { writeClient } from "@/lib/supabase/write";
@@ -27,6 +29,10 @@ export default async function OrganizerCommunityTeamPage({
   if (error) throw new Error("Не удалось загрузить команду");
   if (!team) notFound();
   const publicTeam = await getPublicCommunityTeam(team.slug as string);
+  const channelUrl =
+    discordConfigured() && team.discord_voice_channel_id
+      ? discordChannelUrl(team.discord_voice_channel_id as string)
+      : null;
   return (
     <AdminShell
       title={team.name as string}
@@ -72,6 +78,43 @@ export default async function OrganizerCommunityTeamPage({
               }}
             />
           ) : null}
+        </Card>
+        <Card className="p-5">
+          <h2 className="text-2xl">Discord</h2>
+          <p className="mt-5 text-sm text-ink-muted">
+            Роль команды: {team.discord_role_id ? "создана" : "не создана"}
+            <br />
+            Голосовой канал: {team.discord_voice_channel_id ? "создан" : "не создан"}
+            <br />
+            Последняя синхронизация:{" "}
+            {team.discord_synced_at
+              ? new Date(team.discord_synced_at as string).toLocaleString("ru-RU", {
+                  timeZone: "Asia/Yekaterinburg",
+                })
+              : "не было"}
+          </p>
+          {channelUrl ? (
+            <ButtonLink
+              href={channelUrl}
+              external
+              size="sm"
+              variant="secondary"
+              className="mt-4"
+            >
+              Открыть канал
+            </ButtonLink>
+          ) : null}
+          {team.discord_error ? (
+            <p className="mt-4 text-sm text-live">
+              Ошибка: {team.discord_error as string}
+            </p>
+          ) : null}
+          <DiscordSyncForm teamId={id} admin className="mt-5" />
+          <DiscordSyncForm
+            admin
+            label="Синхронизировать все команды"
+            className="mt-3"
+          />
         </Card>
         <Card className="p-5">
           <h2 className="text-2xl">

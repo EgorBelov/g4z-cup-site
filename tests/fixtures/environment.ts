@@ -10,4 +10,12 @@ export const fixtureEnvironment = {
   NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3000",
   NEXT_PUBLIC_COMMUNITY_TELEGRAM_URL: "https://t.me/g4zcup",
   NEXT_PUBLIC_COMMUNITY_STREAM_URL: "https://www.twitch.tv/g4zcup_ru",
+  // Empty on purpose: end-to-end runs must never touch the real Discord server.
+  DISCORD_CLIENT_ID: "",
+  DISCORD_CLIENT_SECRET: "",
+  DISCORD_BOT_TOKEN: "",
+  DISCORD_GUILD_ID: "",
+  DISCORD_TEAMS_CATEGORY_ID: "",
+  DISCORD_ROLE_CAPTAIN_ID: "",
+  DISCORD_REDIRECT_URI: "",
 };
