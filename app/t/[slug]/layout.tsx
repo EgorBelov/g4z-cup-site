@@ -52,7 +52,6 @@ async function TournamentChrome({ slug }: { slug: string }) {
     { href: `${base}/bracket`, label: "Плей-офф" },
     { href: `${base}/teams`, label: "Команды" },
     { href: `${base}/results`, label: "Итоги" },
-    { href: "/archive", label: "Архив" },
   ];
 
   return (

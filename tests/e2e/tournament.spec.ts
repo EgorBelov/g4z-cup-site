@@ -269,8 +269,8 @@ test("mobile menu supports navigation and active tournament section", async ({
   const nav = page.getByRole("navigation", {
     name: isMobile ? "Мобильная навигация" : "Основная навигация",
   });
-  await nav.getByRole("link", { name: "Архив", exact: true }).click();
-  await expect(page).toHaveURL(/\/archive$/);
+  await nav.getByRole("link", { name: "Сообщество", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
   if (isMobile)
     await expect(
       page.locator("details.mobile-menu").filter({ visible: true }),

@@ -13,7 +13,6 @@ export type NavLink = { href: string; label: string };
 const defaultLinks: NavLink[] = [
   { href: "/", label: "Сообщество" },
   { href: "/#tournaments", label: "Турниры" },
-  { href: "/archive", label: "Архив" },
 ];
 
 export function SiteHeader({

@@ -93,7 +93,9 @@ export function ApplicationPanel({
         </div>
         <div>
           <dt>Приём заявок</dt>
-          <dd style={{ fontSize: 18 }}>{t.registration_open ? "открыт" : "закрыт"}</dd>
+          <dd data-state={t.registration_open ? "open" : "closed"}>
+            {t.registration_open ? "открыт" : "закрыт"}
+          </dd>
         </div>
       </dl>
 

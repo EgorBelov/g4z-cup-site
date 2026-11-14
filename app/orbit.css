@@ -3976,6 +3976,14 @@ html[data-motion="off"] .orbit-home-hero:before {
   letter-spacing: 0;
   color: var(--color-ink-faint);
 }
+/* Статус приёма — то же место в сетке, что и числа: тот же размер, но по цвету
+   видно состояние, а не «случайно другой шрифт». */
+.orbit-app-facts dd[data-state="open"] {
+  color: var(--color-accent);
+}
+.orbit-app-facts dd[data-state="closed"] {
+  color: var(--color-ink-faint);
+}
 .orbit-app-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
