@@ -44,16 +44,25 @@ test("the archive page is reachable from the footer", async ({ page }) => {
 
 test("the regulations page is reachable from the footer", async ({ page }) => {
   await page.goto("/");
-  await page
-    .getByRole("contentinfo")
-    .getByRole("link", { name: "Регламент" })
-    .click();
+  await page.getByRole("contentinfo").getByRole("link", { name: "Регламент" }).click();
   await expect(page).toHaveURL(/\/rules$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Регламент");
   await expect(page.getByRole("heading", { name: "Замены игроков" })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Запрещённые оскорбления" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Присутствие в Discord" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Результаты" })).toBeVisible();
+  // Discord rules are the eighth point, so the results stay ninth.
+  await expect(page.locator(".orbit-doc-section")).toHaveCount(9);
+  await expect(
+    page
+      .locator(".orbit-doc-section")
+      .filter({ has: page.getByRole("heading", { name: "Результаты", exact: true }) })
+      .locator(".orbit-doc-num"),
+  ).toHaveText("09");
 });
 
 test("unknown tournaments render the 404 page, not a crash", async ({ page }) => {
