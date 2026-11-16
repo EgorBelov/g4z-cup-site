@@ -61,7 +61,18 @@ export function discordRedirectUri(origin: string): string {
   return `${origin.replace(/\/$/, "")}/auth/discord/callback`;
 }
 
-export function discordChannelUrl(channelId: string): string {
-  const { guildId } = discordConfig();
-  return `https://discord.com/channels/${guildId}/${channelId}`;
+/**
+ * Channel deep link, or null when Discord is not configured.
+ *
+ * A broken or half-filled configuration must not take a whole cabinet page
+ * down: the link simply disappears.
+ */
+export function discordChannelUrl(channelId: string | null | undefined): string | null {
+  if (!channelId) return null;
+  try {
+    const { guildId } = discordConfig();
+    return `https://discord.com/channels/${guildId}/${channelId}`;
+  } catch {
+    return null;
+  }
 }

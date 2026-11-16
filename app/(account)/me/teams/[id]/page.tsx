@@ -42,10 +42,7 @@ export default async function ManageCommunityTeamPage({
   ]);
   const main = team.main_captain === player.id;
   const configured = discordConfigured();
-  const channelUrl =
-    configured && team.discord_voice_channel_id
-      ? discordChannelUrl(team.discord_voice_channel_id)
-      : null;
+  const channelUrl = discordChannelUrl(team.discord_voice_channel_id);
 
   const visible = tournaments.filter(
     (t) => t.registration_open || applications.some((a) => a.tournament_id === t.id),

@@ -195,6 +195,14 @@ test("a shared team link adds a persistent member", async ({
     expect(link).toMatch(/\/join\/[A-Za-z0-9_-]{43}$/);
     const joinPath = new URL(link).pathname;
 
+    // The captain's own page must survive an active link invite: it has no
+    // recipient, and turning it into a profile id broke the page on Postgres.
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: `Link ${suffix}`, exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Сбой загрузки")).toHaveCount(0);
+
     // The link must work for someone who is not a player yet, and it lands them
     // in the persistent team roster rather than in a tournament application.
     const guestName = `Link guest ${suffix}`;

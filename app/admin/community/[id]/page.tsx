@@ -8,7 +8,7 @@ import {
   CommunityTeamForm,
 } from "@/components/player/TeamForms";
 import { DiscordSyncForm } from "@/components/player/DiscordForms";
-import { discordChannelUrl, discordConfigured } from "@/lib/discord/config";
+import { discordChannelUrl } from "@/lib/discord/config";
 import type { CommunityTeam } from "@/lib/types/registration";
 import { requireAdmin } from "@/lib/auth/guard";
 import { writeClient } from "@/lib/supabase/write";
@@ -29,10 +29,7 @@ export default async function OrganizerCommunityTeamPage({
   if (error) throw new Error("Не удалось загрузить команду");
   if (!team) notFound();
   const publicTeam = await getPublicCommunityTeam(team.slug as string);
-  const channelUrl =
-    discordConfigured() && team.discord_voice_channel_id
-      ? discordChannelUrl(team.discord_voice_channel_id as string)
-      : null;
+  const channelUrl = discordChannelUrl(team.discord_voice_channel_id as string | null);
   return (
     <AdminShell
       title={team.name as string}

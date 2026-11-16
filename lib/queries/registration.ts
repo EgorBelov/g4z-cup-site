@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/guard";
 import { requirePlayer, applicationMembers } from "@/lib/queries/player";
 import { writeClient } from "@/lib/supabase/write";
+import { personalInviteRecipients, personalInvites } from "@/lib/utils/invites";
 import type { CommunityTeam, RegistrationTeam } from "@/lib/types/registration";
 import type { Tournament } from "@/lib/types/database";
 
@@ -114,10 +115,12 @@ export async function managedTeam(id: number) {
   ]);
   if (applications.error || requests.error || membership.error || invitations.error)
     throw new Error("Не удалось загрузить участия команды");
+  // Link invites have no recipient: they must not become uuid values below.
+  const pendingInvites = personalInvites(invitations.data);
   const profileIds = [
     ...new Set([
       ...membership.data.map((m) => m.profile_id as string),
-      ...invitations.data.map((i) => i.recipient_id as string),
+      ...personalInviteRecipients(invitations.data),
     ]),
   ];
   const profiles = profileIds.length
@@ -146,7 +149,7 @@ export async function managedTeam(id: number) {
         nickname: names.get(m.profile_id) ?? "Игрок",
         discord: inDiscord.get(m.profile_id) ?? false,
       })),
-    invitations: invitations.data.map((i) => ({
+    invitations: pendingInvites.map((i) => ({
       id: i.id as number,
       nickname: names.get(i.recipient_id) ?? "Игрок",
     })),
