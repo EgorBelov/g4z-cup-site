@@ -13,6 +13,8 @@ export async function GET() {
   return Response.json(
     {
       ok: true,
+      // Short git SHA of the deployment, so "is the fix live?" is one request.
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
       edge: list.get("cf-ray") ?? null,
       country: list.get("cf-ipcountry") ?? null,
       region: list.get("x-vercel-id") ?? null,
