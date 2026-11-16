@@ -138,6 +138,9 @@
   isolation: isolate;
   display: flex;
   align-items: center;
+  /* Картинка 1659×948 растягивается на всю ширину: держим пропорции кадра,
+     иначе cover на широком экране зумит фон и обрезает орбиту сверху и снизу. */
+  aspect-ratio: 1659 / 948;
   min-height: 640px;
   overflow: hidden;
 }
@@ -1016,9 +1019,6 @@
   }
 }
 @media (min-width: 1200px) {
-  .orbit-home-hero {
-    min-height: 790px;
-  }
   .orbit-home-copy {
     max-width: 790px;
   }
