@@ -1,12 +1,16 @@
 @font-face {
   font-family: Orbit Display;
-  src: url("/brand/fonts/Oswald-Variable.ttf") format("truetype");
+  src:
+    url("/brand/fonts/Oswald-Variable.woff2") format("woff2"),
+    url("/brand/fonts/Oswald-Variable.ttf") format("truetype");
   font-weight: 200 700;
   font-display: swap;
 }
 @font-face {
   font-family: Orbit Text;
-  src: url("/brand/fonts/Manrope-Variable.ttf") format("truetype");
+  src:
+    url("/brand/fonts/Manrope-Variable.woff2") format("woff2"),
+    url("/brand/fonts/Manrope-Variable.ttf") format("truetype");
   font-weight: 200 800;
   font-display: swap;
 }
@@ -145,7 +149,7 @@
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: url("/brand/orbit-stone.png") center/cover;
+  background: url("/brand/orbit-stone.webp") center/cover;
   animation: orbit-drift 26s ease-in-out infinite alternate;
 }
 .orbit-home-hero:after {
@@ -249,7 +253,7 @@
       var(--color-surface),
       color-mix(in srgb, var(--color-surface) 30%, transparent)
     ),
-    url("/brand/orbit-banner.png") center/cover;
+    url("/brand/orbit-banner.webp") center/cover;
 }
 .orbit-featured-tournament h3 {
   font: 700 clamp(47px, 6vw, 80px)/1.1 var(--font-display);
@@ -298,7 +302,7 @@
       var(--color-panel),
       color-mix(in srgb, var(--color-surface) 85%, transparent)
     ),
-    url("/brand/orbit-stone.png") left bottom/240%;
+    url("/brand/orbit-stone.webp") left bottom/240%;
 }
 .orbit-editorial-card:nth-child(2) {
   background-position: right bottom;
@@ -348,7 +352,7 @@
       color-mix(in srgb, var(--color-surface) 75%, transparent),
       transparent
     ),
-    url("/brand/orbit-banner.png") center/cover;
+    url("/brand/orbit-banner.webp") center/cover;
 }
 .orbit-community .tournament-cover + div h3 {
   font: 600 30px/1.2 var(--font-display);
@@ -367,7 +371,7 @@
       var(--color-surface),
       color-mix(in srgb, var(--color-surface) 50%, transparent)
     ),
-    url("/brand/orbit-stone.png") center bottom/cover;
+    url("/brand/orbit-stone.webp") center bottom/cover;
 }
 .orbit-community-band .orbit-section-title {
   font-size: clamp(28px, 3.4vw, 48px);
@@ -410,7 +414,7 @@
       color-mix(in srgb, var(--color-surface) 80%, transparent) 33%,
       transparent
     ),
-    url("/brand/orbit-banner.png") center/cover;
+    url("/brand/orbit-banner.webp") center/cover;
 }
 .orbit-breadcrumb {
   display: flex;
@@ -2174,7 +2178,7 @@ html[data-motion="off"] .orbit-home-hero:before {
       color-mix(in srgb, var(--color-surface) 55%, transparent) 66%,
       transparent 92%
     ),
-    url("/brand/orbit-banner.png") right center / 58% auto no-repeat;
+    url("/brand/orbit-banner.webp") right center / 58% auto no-repeat;
 }
 .orbit-archive-body {
   display: flex;
@@ -2380,7 +2384,7 @@ html[data-motion="off"] .orbit-home-hero:before {
       color-mix(in srgb, var(--color-surface) 78%, transparent) 52%,
       transparent 86%
     ),
-    url("/brand/orbit-banner.png") right center / 55% auto no-repeat;
+    url("/brand/orbit-banner.webp") right center / 55% auto no-repeat;
 }
 .orbit-results-champ-body {
   display: flex;
@@ -3320,7 +3324,7 @@ html[data-motion="off"] .orbit-home-hero:before {
       var(--color-surface) 56%,
       color-mix(in srgb, var(--color-surface) 84%, transparent)
     ),
-    url("/brand/orbit-banner.png") center / cover;
+    url("/brand/orbit-banner.webp") center / cover;
 }
 .orbit-score-side {
   display: flex;
@@ -4736,7 +4740,7 @@ html[data-motion="off"] .orbit-home-hero:before {
       color-mix(in srgb, var(--color-surface) 70%, transparent) 60%,
       transparent 90%
     ),
-    url("/brand/orbit-banner.png") right center / 60% auto no-repeat;
+    url("/brand/orbit-banner.webp") right center / 60% auto no-repeat;
 }
 .orbit-sh-label {
   display: flex;
@@ -4892,7 +4896,7 @@ html[data-motion="off"] .orbit-home-hero:before {
       color-mix(in srgb, var(--color-surface) 88%, transparent) 62%,
       var(--color-surface)
     ),
-    url("/brand/orbit-banner.png") center / cover no-repeat;
+    url("/brand/orbit-banner.webp") center / cover no-repeat;
 }
 .orbit-auth-side .label {
   display: flex;

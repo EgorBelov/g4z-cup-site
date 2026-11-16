@@ -13,7 +13,9 @@
 
 @font-face {
   font-family: Orbit Grotesk;
-  src: url("/brand/fonts/Inter-Variable.ttf") format("truetype");
+  src:
+    url("/brand/fonts/Inter-Variable.woff2") format("woff2"),
+    url("/brand/fonts/Inter-Variable.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
