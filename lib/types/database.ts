@@ -33,6 +33,8 @@ export type Tournament = {
   format_summary: string | null;
   description: string | null;
   prize_pool: string | null;
+  /** Взнос за участие, объявленный организатором. Может быть пустым. */
+  entry_fee: string | null;
   stream_url: string | null;
   telegram_url: string | null;
   logo_url: string | null;

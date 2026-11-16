@@ -20,6 +20,7 @@ const base = {
   format_summary: "Группы BO2 / Double Elimination BO3",
   description: "Свои люди, честная игра и ещё один повод встретиться.",
   prize_pool: "Кубок сообщества",
+  entry_fee: null,
   stream_url: "https://www.twitch.tv/g4zcup_ru",
   telegram_url: "https://t.me/g4zcup",
   logo_url: null,
@@ -36,6 +37,7 @@ const tournaments = [
     is_current: true,
     rating_team: 30000,
     rating_player: 7000,
+    entry_fee: "1200 ₽ с человека",
   },
   {
     ...base,

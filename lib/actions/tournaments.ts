@@ -47,6 +47,7 @@ export async function saveTournamentAction(
     format_summary: input.format_summary,
     description: input.description,
     prize_pool: input.prize_pool,
+    entry_fee: input.entry_fee,
     stream_url: input.stream_url,
     telegram_url: input.telegram_url,
     logo_url: input.logo_url,

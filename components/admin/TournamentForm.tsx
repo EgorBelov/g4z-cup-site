@@ -125,6 +125,19 @@ export function TournamentForm({ tournament }: { tournament?: Tournament }) {
         </Field>
 
         <Field
+          label="Взнос"
+          htmlFor="entry_fee"
+          hint="Свободный текст. Пустое поле — взнос ещё не объявлен"
+        >
+          <Input
+            id="entry_fee"
+            name="entry_fee"
+            defaultValue={tournament?.entry_fee ?? ""}
+            placeholder="1200 ₽ с человека"
+          />
+        </Field>
+
+        <Field
           label="Ссылка на стрим"
           htmlFor="stream_url"
           error={state.fieldErrors?.stream_url}

@@ -86,6 +86,19 @@ test("teams render deterministic emblems instead of initials", async ({ page }) 
   for (const emblem of scheduleEmblems) expect(teamEmblems).toContain(emblem);
 });
 
+test("the entry fee is its own row in the tournament summary", async ({ page }) => {
+  await page.goto("/t/orbit-dota", { waitUntil: "domcontentloaded" });
+  const fee = page.locator(".orbit-about dl > div", { hasText: "Взнос" });
+  await expect(fee).toHaveCount(1);
+  await expect(fee).toContainText("1200 ₽ с человека");
+
+  // An organiser may leave the fee unannounced; the row still renders.
+  await page.goto("/t/orbit-cs", { waitUntil: "domcontentloaded" });
+  const empty = page.locator(".orbit-about dl > div", { hasText: "Взнос" });
+  await expect(empty).toHaveCount(1);
+  await expect(empty).toContainText("Уточняется");
+});
+
 test("the header links to the community Telegram channel next to the stream", async ({
   page,
 }) => {

@@ -170,6 +170,10 @@ export default async function TournamentOverviewPage({ params }: Props) {
               <dt>Призовой фонд</dt>
               <dd>{tournament.prize_pool ?? "Уточняется"}</dd>
             </div>
+            <div>
+              <dt>Взнос</dt>
+              <dd>{tournament.entry_fee ?? "Уточняется"}</dd>
+            </div>
           </dl>
           {tournament.format_summary ? (
             <details className="orbit-format-details">

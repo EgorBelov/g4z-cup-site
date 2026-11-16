@@ -761,6 +761,20 @@ begin
 end $$;
 rollback;
 
+-- Взнос турнира — свободный текст в блоке «О турнире», а не строка описания.
+begin;
+do $$
+declare t bigint;
+begin
+  insert into public.tournaments(slug,name,status,entry_fee)
+    values('fee-test','Fee test','upcoming','1200 ₽ с человека') returning id into t;
+  perform assert_equals('1200 ₽ с человека'::text,(select entry_fee from public.tournament_summaries where id=t),'summary exposes the entry fee');
+  perform assert_equals(null::text,(select entry_fee from public.tournament_summaries where slug='g4z-cup-10'),'missing entry fee stays null');
+  begin insert into public.tournaments(slug,name,entry_fee) values('fee-bad','Bad',repeat('x',121)); raise exception 'FAIL overlong entry fee was accepted';
+  exception when check_violation then null;end;
+end $$;
+rollback;
+
 -- Discord identity, team channels and the grant ledger stay server-only.
 begin;
 do $$

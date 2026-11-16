@@ -283,6 +283,7 @@ export const tournamentSchema = z.object({
   format_summary: optionalText,
   description: optionalText,
   prize_pool: optionalText,
+  entry_fee: optionalText,
   stream_url: optionalUrl,
   telegram_url: optionalUrl,
   logo_url: optionalUrl,
