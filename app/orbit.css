@@ -5212,9 +5212,6 @@
 }
 
 /* Прозрачная шапка на главной: живёт поверх первого экрана. */
-.orbit-hero-spacer {
-  height: 77px;
-}
 .orbit-header-overlay {
   position: absolute;
   inset: 0 0 auto;

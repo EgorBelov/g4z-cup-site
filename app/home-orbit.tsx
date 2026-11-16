@@ -15,7 +15,6 @@ export default function HomePage() {
     <div className="orbit-community flex min-h-screen flex-col">
       <SiteHeader />
       <main id="main-content" className="flex-1">
-        <div className="orbit-hero-spacer" aria-hidden="true" />
         <section className="orbit-home-hero">
           <Container>
             <div className="orbit-home-copy">
