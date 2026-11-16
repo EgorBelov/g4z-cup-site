@@ -5269,24 +5269,26 @@
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .orbit-reveal,
-    .orbit-reveal-card {
+    .orbit-reveal-card,
+    .orbit-reveal-left,
+    .orbit-reveal-right {
       animation: orbit-reveal-up linear both;
       animation-timeline: view();
-      animation-range: entry 2% entry 62%;
+      animation-range: entry 0% cover 50%;
     }
     .orbit-reveal-left {
       animation-name: orbit-reveal-left;
-      animation-range: entry 2% entry 58%;
+      animation-range: entry 0% cover 46%;
     }
     .orbit-reveal-right {
       animation-name: orbit-reveal-right;
-      animation-range: entry 4% entry 66%;
+      animation-range: entry 2% cover 56%;
     }
     .orbit-editorial-slot:nth-child(2) .orbit-reveal-card {
-      animation-range: entry 9% entry 69%;
+      animation-range: entry 0% cover 58%;
     }
     .orbit-editorial-slot:nth-child(3) .orbit-reveal-card {
-      animation-range: entry 16% entry 76%;
+      animation-range: entry 0% cover 66%;
     }
   }
 }
