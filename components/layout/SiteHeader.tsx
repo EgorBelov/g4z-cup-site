@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { BrandMark } from "@/components/brand/BrandMark";
-import { MotionToggle } from "@/components/brand/MotionSettings";
 import { Container } from "@/components/ui/PageHeader";
 import { community } from "@/lib/community";
 import { buttonClass } from "@/components/ui/Button";
@@ -32,6 +31,7 @@ export function SiteHeader({
   titleHref?: string;
 }) {
   const pathname = usePathname();
+  const overlay = pathname === "/";
   const menu = useRef<HTMLDetailsElement>(null);
   const active =
     links
@@ -76,7 +76,13 @@ export function SiteHeader({
   );
 
   return (
-    <header className="orbit-site-header sticky top-0 z-40 border-b border-edge bg-surface/95 backdrop-blur-xl">
+    <header
+      className={
+        overlay
+          ? "orbit-site-header orbit-header-overlay z-40"
+          : "orbit-site-header sticky top-0 z-40 border-b border-edge bg-surface/95 backdrop-blur-xl"
+      }
+    >
       <a
         href="#main-content"
         className="skip-link rounded-pill bg-ink px-5 py-3 text-sm text-surface"
@@ -111,7 +117,6 @@ export function SiteHeader({
             {navLinks}
           </nav>
           <div className="orbit-header-actions hidden shrink-0 items-center gap-5 xl:flex">
-            <MotionToggle />
             {socials}
           </div>
           <details
@@ -144,7 +149,6 @@ export function SiteHeader({
               </nav>
               <div className="mt-4 flex flex-wrap items-center gap-5 border-t border-edge pt-3">
                 {socials}
-                <MotionToggle />
               </div>
             </div>
           </details>

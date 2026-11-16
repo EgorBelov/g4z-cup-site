@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { siteUrl } from "@/lib/env";
-import { MotionSettings } from "@/components/brand/MotionSettings";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="ru" data-scroll-behavior="smooth">
       <body className="min-h-screen bg-surface text-ink">
-        <MotionSettings />
+        <div className="orbit-scroll-progress" aria-hidden="true" />
         {children}
         <Analytics />
         <SpeedInsights />

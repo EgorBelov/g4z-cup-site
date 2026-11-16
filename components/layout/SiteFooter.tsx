@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Container } from "@/components/ui/PageHeader";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { community } from "@/lib/community";
-import { MotionToggle } from "@/components/brand/MotionSettings";
 
 export function SiteFooter() {
   return (
@@ -70,7 +69,6 @@ export function SiteFooter() {
             >
               Организаторам
             </Link>
-            <MotionToggle />
             <Link
               href="/register"
               prefetch={false}

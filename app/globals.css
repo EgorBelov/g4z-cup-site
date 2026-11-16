@@ -208,10 +208,6 @@ textarea:focus-visible {
     );
     offset-distance: 0%;
     animation: orbit 18s linear infinite;
-    animation-play-state: paused;
-  }
-  html[data-motion="on"] .orbit-dot {
-    animation-play-state: running;
   }
   .admin-shell .page-title {
     font-size: clamp(2.25rem, 4vw, 3.125rem);

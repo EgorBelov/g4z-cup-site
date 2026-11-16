@@ -15,6 +15,7 @@ export default function HomePage() {
     <div className="orbit-community flex min-h-screen flex-col">
       <SiteHeader />
       <main id="main-content" className="flex-1">
+        <div className="orbit-hero-spacer" aria-hidden="true" />
         <section className="orbit-home-hero">
           <Container>
             <div className="orbit-home-copy">
@@ -41,7 +42,10 @@ export default function HomePage() {
           <Suspense fallback={<Skeleton className="mt-10 h-60" />}>
             <CommunityTournaments />
           </Suspense>
-          <section id="community" className="orbit-community-band orbit-frame">
+          <section
+            id="community"
+            className="orbit-community-band orbit-frame orbit-reveal-right"
+          >
             <div>
               <p className="orbit-eyebrow">Место встречи — G4Z</p>
               <h2 className="orbit-section-title mt-5">
@@ -83,14 +87,16 @@ async function CommunityTournaments() {
   return (
     <>
       <section id="tournaments" className="orbit-home-section">
-        <div className="orbit-section-heading">
+        <div className="orbit-section-heading orbit-reveal-left">
           <h2 className="orbit-section-title">На нашей орбите</h2>
           <span className="eyebrow">{active.length} активных турниров</span>
         </div>
         {active.length ? (
-          <TournamentExplorer tournaments={active} featured />
+          <div className="orbit-reveal">
+            <TournamentExplorer tournaments={active} featured />
+          </div>
         ) : (
-          <div className="orbit-surface flex flex-wrap items-center justify-between gap-6 p-8">
+          <div className="orbit-surface orbit-reveal flex flex-wrap items-center justify-between gap-6 p-8">
             <div>
               <h3 className="section-title">Свои никуда не пропадают.</h3>
               <p className="mt-3 max-w-lg text-sm text-ink-muted">
@@ -105,7 +111,7 @@ async function CommunityTournaments() {
         )}
       </section>
       <section className="orbit-home-section">
-        <div className="orbit-section-heading">
+        <div className="orbit-section-heading orbit-reveal-left">
           <h2 className="orbit-section-title">Турнир ближе, чем кажется</h2>
         </div>
         <div className="orbit-editorial-grid">
@@ -131,22 +137,23 @@ async function CommunityTournaments() {
               },
             ] as const
           ).map((item, index) => (
-            <Link
-              className="orbit-editorial-card orbit-frame"
-              href={item.href}
-              key={item.title}
-            >
-              <span className="eyebrow">0{index + 1}</span>
-              <Icon name={item.icon} className="my-6 size-8 text-accent" />
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-              <Icon name="arrow" className="orbit-card-arrow size-5" />
-            </Link>
+            <div className="orbit-editorial-slot" key={item.title}>
+              <Link
+                className="orbit-editorial-card orbit-frame orbit-reveal-card"
+                href={item.href}
+              >
+                <span className="eyebrow">0{index + 1}</span>
+                <Icon name={item.icon} className="my-6 size-8 text-accent" />
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+                <Icon name="arrow" className="orbit-card-arrow size-5" />
+              </Link>
+            </div>
           ))}
         </div>
       </section>
       {finished.length ? (
-        <details className="orbit-home-archive">
+        <details className="orbit-home-archive orbit-reveal">
           <summary>Прошлые кубки ↗</summary>
           <div className="orbit-section-heading">
             <h2 className="orbit-section-title">Последнее GG</h2>

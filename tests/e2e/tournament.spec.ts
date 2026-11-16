@@ -119,26 +119,6 @@ test("permanent community homepage includes current and other active tournaments
   await fitsViewport(page);
 });
 
-test("motion can be stopped and persists after navigation", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.locator(".orbit-footer-extra > summary").click();
-  const toggle = page
-    .locator("footer")
-    .getByRole("button", { name: "Движение логотипа" })
-    .filter({ visible: true });
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await toggle.click();
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
-  expect(
-    await page
-      .locator(".orbit-home-hero")
-      .evaluate((el) => getComputedStyle(el, "::before").animationName),
-  ).toBe("none");
-  await page.goto("/archive", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
-});
-
 test("discipline filters update tournament cards and reset on the homepage", async ({
   page,
 }, info) => {
@@ -195,11 +175,15 @@ test("archive links preserve each season after the archive redesign", async ({
 test("system reduced motion keeps the brand still", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
   expect(
     await page
       .locator(".orbit-home-hero")
       .evaluate((el) => getComputedStyle(el, "::before").animationName),
+  ).toBe("none");
+  expect(
+    await page
+      .locator(".orbit-scroll-progress")
+      .evaluate((el) => getComputedStyle(el).display),
   ).toBe("none");
 });
 
