@@ -102,7 +102,7 @@ export async function updatePlayerProfileAction(
   if (parsed.state) return parsed.state;
   const result = await execute(actor.user.id, false, "profile_update", {
     ...parsed.data,
-    verified_username: actor.identity.username,
+    verified_username: actor.identity?.username ?? null,
   });
   return result.error
     ? fail(result.error)

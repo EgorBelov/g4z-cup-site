@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { TournamentList } from "@/components/layout/TournamentList";
@@ -14,9 +15,21 @@ export default function HomePage() {
   return (
     <div className="orbit-community flex min-h-screen flex-col">
       <SiteHeader />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="flex-1 overflow-x-clip">
         <section className="orbit-home-hero">
-          <Container>
+          <div className="orbit-home-art" aria-hidden="true">
+            <Image
+              src="/brand/orbit-stone.webp"
+              alt=""
+              width={1659}
+              height={948}
+              sizes="(max-width: 859px) 100vw, (max-width: 1659px) 100vw, 1659px"
+              preload
+              className="orbit-home-image"
+            />
+            <span className="orbit-hero-caption eyebrow">На одной орбите —</span>
+          </div>
+          <Container className="orbit-home-content">
             <div className="orbit-home-copy">
               <p className="orbit-eyebrow">Игровое сообщество / G4Z CUP</p>
               <h1 className="orbit-home-title">
@@ -35,7 +48,6 @@ export default function HomePage() {
               </div>
             </div>
           </Container>
-          <span className="orbit-hero-caption eyebrow">На одной орбите —</span>
         </section>
         <Container>
           <Suspense fallback={<Skeleton className="mt-10 h-60" />}>

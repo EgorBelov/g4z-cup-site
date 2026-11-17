@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Field, Input } from "@/components/ui/Field";
 import { FormFeedback, SubmitButton } from "@/components/ui/Form";
 import { Icon } from "@/components/ui/Icon";
@@ -8,6 +8,8 @@ import {
   beginRegistrationAction,
   beginPlayerLoginAction,
   completePlayerAuthAction,
+  registerWithPasswordAction,
+  loginWithPasswordAction,
 } from "@/lib/actions/player-auth";
 import { updatePlayerProfileAction } from "@/lib/actions/registration";
 import type { ProfileWithRatings } from "@/lib/types/registration";
@@ -34,12 +36,28 @@ export function ProfileForm({
   next?: string;
   editing?: boolean;
 }) {
+  const [method, setMethod] = useState<"telegram" | "password">("telegram");
+  const [draft, setDraft] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(values).map(([key, value]) => [key, String(value ?? "")]),
+    ),
+  );
+  const profileInput = (name: string) => ({
+    value: draft[name] ?? "",
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+      setDraft((current) => ({ ...current, [name]: event.target.value })),
+  });
   const [state, action] = useActionState(
-    editing ? updatePlayerProfileAction : beginRegistrationAction,
+    editing
+      ? updatePlayerProfileAction
+      : method === "password"
+        ? registerWithPasswordAction
+        : beginRegistrationAction,
     idle,
   );
   return (
     <form action={action} className="space-y-5">
+      {!editing ? <AuthMethod method={method} onChange={setMethod} /> : null}
       <input type="hidden" name="next" value={next} />
       {editing ? (
         <input type="hidden" name="version" value={values.version ?? 0} />
@@ -53,11 +71,11 @@ export function ProfileForm({
           <Input
             id="nickname"
             name="nickname"
-            defaultValue={values.nickname ?? ""}
+            {...profileInput("nickname")}
             minLength={2}
             maxLength={80}
             required
-            autoComplete="nickname"
+            autoComplete={!editing && method === "password" ? "username" : "nickname"}
             placeholder="Как вас знают в игре"
           />
         </Field>
@@ -70,7 +88,7 @@ export function ProfileForm({
           <Input
             id="telegram_username"
             name="telegram_username"
-            defaultValue={values.telegram_username ?? ""}
+            {...profileInput("telegram_username")}
             maxLength={33}
             required
             placeholder="@username"
@@ -80,6 +98,15 @@ export function ProfileForm({
           />
         </Field>
       </div>
+      {!editing && method === "password" ? (
+        <>
+          <p className="text-sm text-ink-muted">
+            Публичный ник станет вашим логином. Регистр букв при входе не важен. Если
+            позже измените публичный ник, входите по первоначальному.
+          </p>
+          <PasswordFields state={state} registration />
+        </>
+      ) : null}
       <Field
         label="Ссылка на Steam"
         htmlFor="steam_url"
@@ -90,7 +117,7 @@ export function ProfileForm({
           id="steam_url"
           name="steam_url"
           type="url"
-          defaultValue={values.steam_url ?? ""}
+          {...profileInput("steam_url")}
           required
           maxLength={300}
           placeholder="https://steamcommunity.com/id/…"
@@ -116,7 +143,7 @@ export function ProfileForm({
               type="number"
               min={0}
               max={20000}
-              defaultValue={values.dota_mmr ?? ""}
+              {...profileInput("dota_mmr")}
               placeholder="Можно оставить пустым"
             />
           </Field>
@@ -127,7 +154,7 @@ export function ProfileForm({
               type="number"
               min={0}
               max={20000}
-              defaultValue={values.cs_elo ?? ""}
+              {...profileInput("cs_elo")}
               placeholder="Можно оставить пустым"
             />
           </Field>
@@ -140,7 +167,7 @@ export function ProfileForm({
               id="faceit_url"
               name="faceit_url"
               type="url"
-              defaultValue={values.faceit_url ?? ""}
+              {...profileInput("faceit_url")}
               maxLength={300}
               placeholder="https://www.faceit.com/en/players/…"
             />
@@ -154,7 +181,7 @@ export function ProfileForm({
               id="dotabuff_url"
               name="dotabuff_url"
               type="url"
-              defaultValue={values.dotabuff_url ?? ""}
+              {...profileInput("dotabuff_url")}
               maxLength={300}
               placeholder="https://www.dotabuff.com/players/…"
             />
@@ -172,25 +199,138 @@ export function ProfileForm({
       <FormFeedback state={state} />
       <SubmitButton
         className="w-full sm:w-auto"
-        pendingLabel={editing ? "Сохраняем…" : "Открываем Telegram…"}
+        pendingLabel={
+          editing
+            ? "Сохраняем…"
+            : method === "password"
+              ? "Создаём аккаунт…"
+              : "Открываем Telegram…"
+        }
       >
-        {editing ? null : <Icon name="telegram" />}
-        {editing ? "Сохранить профиль" : "Создать аккаунт через Telegram"}
+        {editing || method === "password" ? null : <Icon name="telegram" />}
+        {editing
+          ? "Сохранить профиль"
+          : method === "password"
+            ? "Создать аккаунт по паролю"
+            : "Создать аккаунт через Telegram"}
       </SubmitButton>
     </form>
   );
 }
 export function PlayerLoginForm({ next }: { next: string }) {
-  const [state, action] = useActionState(beginPlayerLoginAction, idle);
+  const [nickname, setNickname] = useState("");
+  const [method, setMethod] = useState<"telegram" | "password">("telegram");
+  const [state, action] = useActionState(
+    method === "password" ? loginWithPasswordAction : beginPlayerLoginAction,
+    idle,
+  );
   return (
     <form action={action} className="mt-6 space-y-4">
+      <AuthMethod method={method} onChange={setMethod} />
       <input type="hidden" name="next" value={next} />
+      {method === "password" ? (
+        <>
+          <Field
+            label="Ник при регистрации"
+            htmlFor="login-nickname"
+            error={state.fieldErrors?.nickname}
+          >
+            <Input
+              id="login-nickname"
+              name="nickname"
+              value={nickname}
+              onChange={(event) => setNickname(event.target.value)}
+              autoComplete="username"
+              required
+              minLength={2}
+              maxLength={80}
+            />
+          </Field>
+          <PasswordFields state={state} />
+        </>
+      ) : null}
       <FormFeedback state={state} />
-      <SubmitButton pendingLabel="Открываем Telegram…" className="w-full">
-        <Icon name="telegram" />
-        Войти через Telegram
+      <SubmitButton
+        pendingLabel={method === "password" ? "Входим…" : "Открываем Telegram…"}
+        className="w-full"
+      >
+        {method === "telegram" ? <Icon name="telegram" /> : null}
+        {method === "password" ? "Войти по паролю" : "Войти через Telegram"}
       </SubmitButton>
     </form>
+  );
+}
+
+function AuthMethod({
+  method,
+  onChange,
+}: {
+  method: "telegram" | "password";
+  onChange: (method: "telegram" | "password") => void;
+}) {
+  return (
+    <div role="group" aria-label="Способ входа" className="flex flex-wrap gap-2">
+      {(["telegram", "password"] as const).map((value) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={method === value}
+          onClick={() => onChange(value)}
+          className={`min-h-11 rounded-control border px-4 py-2 text-sm ${method === value ? "border-accent bg-accent-soft text-accent" : "border-edge bg-panel text-ink-muted"}`}
+        >
+          {value === "telegram" ? "Через Telegram" : "Ник и пароль"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PasswordFields({
+  state,
+  registration = false,
+}: {
+  state: typeof idle;
+  registration?: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <Field
+        label="Пароль"
+        htmlFor="password"
+        error={state.fieldErrors?.password}
+        hint={
+          registration
+            ? "Минимум 10 символов. Сохраните пароль для следующего входа."
+            : undefined
+        }
+      >
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          required
+          minLength={registration ? 10 : 1}
+          maxLength={128}
+          autoComplete={registration ? "new-password" : "current-password"}
+        />
+      </Field>
+      {registration ? (
+        <Field
+          label="Повторите пароль"
+          htmlFor="password_confirmation"
+          error={state.fieldErrors?.password_confirmation}
+        >
+          <Input
+            id="password_confirmation"
+            name="password_confirmation"
+            type="password"
+            required
+            maxLength={128}
+            autoComplete="new-password"
+          />
+        </Field>
+      ) : null}
+    </div>
   );
 }
 export function CompleteAuthForm() {

@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import { ProfileForm } from "@/components/player/AccountForms";
 import { DiscordUnlinkForm } from "@/components/player/DiscordForms";
 import { ButtonLink } from "@/components/ui/Button";
@@ -16,11 +17,19 @@ const notices: Record<string, { tone: "ok" | "error"; text: string }> = {
   error: { tone: "error", text: "Не удалось привязать Discord, попробуйте позже" },
 };
 
-export default async function ProfilePage({
-  searchParams,
-}: {
+type ProfilePageProps = {
   searchParams: Promise<{ discord?: string }>;
-}) {
+};
+
+export default function ProfilePage(props: ProfilePageProps) {
+  return (
+    <AccountPageBoundary>
+      <ProfilePageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function ProfilePageContent({ searchParams }: ProfilePageProps) {
   const player = await requirePlayer();
   const verified = player.telegram_contact_verified;
   const configured = discordConfigured();
@@ -169,11 +178,15 @@ export default async function ProfilePage({
               <div>
                 <span className="dot" aria-hidden="true" />
                 <div>
-                  <b>Вход через Telegram</b>
+                  <b>
+                    {player.login_nickname ? "Вход по паролю" : "Вход через Telegram"}
+                  </b>
                   <span>
-                    {verified
-                      ? "контакт совпадает с подтверждённым"
-                      : "контакт указан вручную"}
+                    {player.login_nickname
+                      ? `Логин: ${player.login_nickname}. Telegram указан для связи`
+                      : verified
+                        ? "контакт совпадает с подтверждённым"
+                        : "контакт указан вручную"}
                   </span>
                 </div>
               </div>

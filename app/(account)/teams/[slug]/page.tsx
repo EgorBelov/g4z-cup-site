@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/PageHeader";
@@ -50,11 +51,21 @@ function CaptainCard({ role, captain }: { role: string; captain: Captain }) {
   );
 }
 
-export default async function PublicCommunityTeamPage({
-  params,
-}: {
+type PublicCommunityTeamPageProps = {
   params: Promise<{ slug: string }>;
-}) {
+};
+
+export default function PublicCommunityTeamPage(props: PublicCommunityTeamPageProps) {
+  return (
+    <AccountPageBoundary>
+      <PublicCommunityTeamPageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function PublicCommunityTeamPageContent({
+  params,
+}: PublicCommunityTeamPageProps) {
   const team = await getPublicCommunityTeam((await params).slug);
   if (!team) notFound();
 

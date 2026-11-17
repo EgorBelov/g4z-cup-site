@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifiedTelegramSession } from "@/lib/auth/player";
+import { verifiedPlayerSession } from "@/lib/auth/player";
 import { allowedAuthOrigin } from "@/lib/auth/origin";
 import { authSecret } from "@/lib/env";
 import { discordConfigured, discordRedirectUri } from "@/lib/discord/config";
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   if (!allowedAuthOrigin(origin))
     return NextResponse.redirect(new URL("/me/profile?discord=origin", origin));
 
-  const session = await verifiedTelegramSession(true);
+  const session = await verifiedPlayerSession(true);
   if (!session)
     return NextResponse.redirect(new URL("/login?next=/me/profile", origin));
 

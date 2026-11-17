@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import { notFound } from "next/navigation";
 import {
   CommunityTeamForm,
@@ -27,11 +28,21 @@ function plural(count: number, one: string, few: string, many: string): string {
   return many;
 }
 
-export default async function ManageCommunityTeamPage({
-  params,
-}: {
+type ManageCommunityTeamPageProps = {
   params: Promise<{ id: string }>;
-}) {
+};
+
+export default function ManageCommunityTeamPage(props: ManageCommunityTeamPageProps) {
+  return (
+    <AccountPageBoundary>
+      <ManageCommunityTeamPageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function ManageCommunityTeamPageContent({
+  params,
+}: ManageCommunityTeamPageProps) {
   const id = Number((await params).id);
   if (!Number.isSafeInteger(id) || id < 1) notFound();
   const { team, player, applications, requests, members, invitations } =

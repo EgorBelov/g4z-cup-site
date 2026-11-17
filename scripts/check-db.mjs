@@ -231,6 +231,24 @@ if (env.SUPABASE_SERVICE_ROLE_KEY) {
     });
     console.log("✗ community_member_command: функция или права не готовы");
   } else console.log("✓ community_member_command доступна только серверу");
+  const passwordInput = { p_user: null, p_login: null, p_profile: {}, p_ip: null };
+  const [passwordService, passwordPublic, loginColumn] = await Promise.all([
+    service.rpc("register_password_player", passwordInput),
+    client.rpc("register_password_player", passwordInput),
+    service.from("player_profiles").select("login_nickname").limit(0),
+  ]);
+  if (
+    passwordService.error?.message !== "Invalid login nickname" ||
+    !["42501", "PGRST202"].includes(passwordPublic.error?.code ?? "") ||
+    loginColumn.error
+  ) {
+    problems.push({
+      relation: "password registration",
+      migration: "0020_password_registration.sql",
+      message: "Не подтверждены регистрация по паролю и её приватные права",
+    });
+    console.log("✗ password registration: миграция или права не готовы");
+  } else console.log("✓ password registration доступна только серверу");
   if (versionError)
     problems.push({
       relation: "teams.roster_version",

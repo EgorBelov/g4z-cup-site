@@ -42,8 +42,84 @@ test("the archive page is reachable from the footer", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Архив/);
 });
 
+test("home artwork keeps its full proportions on phones and monitors", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/");
+  const image = page.locator(".orbit-home-image");
+  await expect(image).toBeVisible();
+  const sizes: [number, number][] = isMobile
+    ? [
+        [320, 740],
+        [390, 844],
+        [768, 1024],
+      ]
+    : [
+        [1280, 720],
+        [1440, 1000],
+        [2560, 1440],
+      ];
+  for (const [width, height] of sizes) {
+    await page.setViewportSize({ width, height });
+    const layout = await image.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const copy = document.querySelector(".orbit-home-copy")!.getBoundingClientRect();
+      return {
+        ratio: rect.width / rect.height,
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        copyTop: copy.top,
+        copyBottom: copy.bottom,
+        heroHeight: document.querySelector(".orbit-home-hero")!.getBoundingClientRect()
+          .height,
+        copyHeight: copy.height,
+        viewport: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      };
+    });
+    expect(layout.ratio, `artwork proportions at ${width}px`).toBeCloseTo(
+      1659 / 948,
+      2,
+    );
+    expect(layout.left).toBeGreaterThanOrEqual(-1);
+    expect(layout.right).toBeLessThanOrEqual(layout.viewport + 1);
+    expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewport + 1);
+    if (isMobile) {
+      expect(layout.top).toBeLessThan(layout.copyBottom);
+      expect(layout.bottom).toBeGreaterThan(layout.copyTop);
+      expect(layout.heroHeight).toBeLessThanOrEqual(layout.copyHeight + 1);
+    }
+  }
+});
+
+test("guest account redirects and sibling auth navigations preserve the return path", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/me");
+  await expect(page).toHaveURL(/\/login\?next=(?:%2F|\/)me$/);
+  await page.getByRole("link", { name: "Создать аккаунт", exact: true }).click();
+  await expect(page).toHaveURL(/\/register\?next=%2Fme$/);
+  await page.getByRole("link", { name: "Войти", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fme$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("the regulations page is reachable from the footer", async ({ page }) => {
   await page.goto("/");
+  // On mobile, horizontal overflow can enlarge innerWidth itself and distort
+  // hit testing. Compare against the CSS viewport, not innerWidth.
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    ),
+    "the home page must fit the viewport before clicking footer links",
+  ).toBeLessThanOrEqual(1);
   await page.getByRole("contentinfo").getByRole("link", { name: "Регламент" }).click();
   await expect(page).toHaveURL(/\/rules$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Регламент");

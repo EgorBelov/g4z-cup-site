@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -15,11 +16,19 @@ export const metadata: Metadata = {
 
 const flowNotices = ["exchange", "expired", "provider", "missing-code"];
 
-export default async function RegisterPage({
-  searchParams,
-}: {
+type RegisterPageProps = {
   searchParams: Promise<{ next?: string; notice?: string }>;
-}) {
+};
+
+export default function RegisterPage(props: RegisterPageProps) {
+  return (
+    <AccountPageBoundary>
+      <RegisterPageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function RegisterPageContent({ searchParams }: RegisterPageProps) {
   const params = await searchParams;
   const flow = openAuthFlow(
     (await cookies()).get(AUTH_FLOW_COOKIE)?.value,
@@ -40,7 +49,7 @@ export default async function RegisterPage({
         <h1>Твой аккаунт. Твоя команда.</h1>
         <p>
           Аккаунт нужен, чтобы собирать состав, принимать приглашения и подавать заявки
-          на кубки. Пароль и телефон не понадобятся.
+          на кубки. Выберите вход через Telegram или по нику и паролю.
         </p>
         <ol className="orbit-auth-steps">
           <li>
@@ -58,8 +67,8 @@ export default async function RegisterPage({
       <section className="orbit-auth-card orbit-frame">
         <h2>Создать аккаунт</h2>
         <p className="lead">
-          Telegram подтверждает аккаунт — отдельного пароля нет. Ник и контакты можно
-          поменять позже в профиле.
+          Зарегистрируйтесь через Telegram или создайте аккаунт по паролю. Telegram
+          username в форме нужен для связи с организаторами.
         </p>
 
         {params.notice ? (

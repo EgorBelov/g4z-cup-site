@@ -134,6 +134,10 @@ const rpcDefinitions = {
     ["p_user", "p_telegram_id", "p_verified_username", "p_profile", "p_ip"],
     ["uuid", "text", "text", "jsonb", "text"],
   ],
+  register_password_player: [
+    ["p_user", "p_login", "p_profile", "p_ip"],
+    ["uuid", "text", "jsonb", "text"],
+  ],
   community_member_command: [
     ["p_actor", "p_admin", "p_action", "p_input", "p_ip"],
     ["uuid", "boolean", "text", "jsonb", "text"],
@@ -455,6 +459,7 @@ const data = {
 const authCodes = new Map();
 const authSessions = new Map();
 const authRefreshTokens = new Map();
+const passwordUsers = new Map();
 const authUser = {
   id: "a1000000-0000-4000-8000-000000000001",
   aud: "authenticated",
@@ -610,6 +615,10 @@ createServer(async (req, res) => {
         if (valid) user = expected.user;
         // A mismatched browser must not consume another browser's code.
         if (valid) authCodes.delete(input.auth_code);
+      } else if (grant === "password") {
+        const account = passwordUsers.get(input.email);
+        valid = Boolean(account && account.password === input.password);
+        if (valid) user = account.user;
       } else if (grant === "refresh_token") {
         const old = authRefreshTokens.get(input.refresh_token);
         valid = Boolean(old);
@@ -627,6 +636,45 @@ createServer(async (req, res) => {
           : { code: "bad_code_verifier", msg: "Invalid fixture exchange" },
       );
     });
+    return;
+  }
+  if (req.method === "POST" && url.pathname === "/auth/v1/admin/users") {
+    if (req.headers.authorization !== "Bearer fixture-service-key") {
+      json(res, 403, { message: "Service role required" });
+      return;
+    }
+    let raw = "";
+    for await (const chunk of req) raw += chunk;
+    const input = JSON.parse(raw);
+    if (passwordUsers.has(input.email)) {
+      json(res, 422, { error_code: "email_exists", msg: "Email exists" });
+      return;
+    }
+    const user = {
+      ...structuredClone(authUser),
+      id: randomUUID(),
+      email: input.email,
+      app_metadata: { provider: "email", providers: ["email"] },
+      user_metadata: {},
+      identities: [],
+      email_confirmed_at: stamp,
+    };
+    await registrationDb.query("insert into auth.users(id) values($1)", [user.id]);
+    passwordUsers.set(input.email, { user, password: input.password });
+    json(res, 200, user);
+    return;
+  }
+  if (req.method === "DELETE" && url.pathname.startsWith("/auth/v1/admin/users/")) {
+    if (req.headers.authorization !== "Bearer fixture-service-key") {
+      json(res, 403, { message: "Service role required" });
+      return;
+    }
+    const id = url.pathname.split("/").at(-1);
+    await registrationDb.query("delete from auth.users where id=$1", [id]);
+    for (const [email, account] of passwordUsers) {
+      if (account.user.id === id) passwordUsers.delete(email);
+    }
+    json(res, 200, {});
     return;
   }
   if (url.pathname === "/auth/v1/user" || url.pathname === "/auth/v1/logout") {

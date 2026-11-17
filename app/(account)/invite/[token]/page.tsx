@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import { createHash } from "node:crypto";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/Card";
@@ -6,11 +7,19 @@ import { CommandForm } from "@/components/player/TeamForms";
 import { invitePreview, currentPlayer } from "@/lib/queries/player";
 import { getTournament } from "@/lib/queries/public";
 import { writeClient } from "@/lib/supabase/write";
-export default async function InvitePage({
-  params,
-}: {
+type InvitePageProps = {
   params: Promise<{ token: string }>;
-}) {
+};
+
+export default function InvitePage(props: InvitePageProps) {
+  return (
+    <AccountPageBoundary>
+      <InvitePageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function InvitePageContent({ params }: InvitePageProps) {
   const { token } = await params;
   if (!/^[A-Za-z0-9_-]{43}$/.test(token)) notFound();
   const preview = await invitePreview(createHash("sha256").update(token).digest("hex"));

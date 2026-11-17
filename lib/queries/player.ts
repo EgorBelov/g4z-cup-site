@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { verifiedTelegramSession } from "@/lib/auth/player";
+import { verifiedPlayerSession } from "@/lib/auth/player";
 import { writeClient } from "@/lib/supabase/write";
 import type {
   Profile,
@@ -17,10 +17,10 @@ import type {
 // Discord tokens are deliberately not selected: this object reaches client
 // components through `ProfileForm`.
 const profileColumns =
-  "id,code,telegram_id,nickname,telegram_username,telegram_contact_verified,steam_url,faceit_url,dotabuff_url,version,discord_id,discord_username,discord_linked_at,discord_in_guild";
+  "id,code,telegram_id,login_nickname,nickname,telegram_username,telegram_contact_verified,steam_url,faceit_url,dotabuff_url,version,discord_id,discord_username,discord_linked_at,discord_in_guild";
 
 export const currentPlayer = cache(async (): Promise<ProfileWithRatings | null> => {
-  const session = await verifiedTelegramSession();
+  const session = await verifiedPlayerSession();
   if (!session) return null;
   const client = writeClient();
   const { data, error } = await client

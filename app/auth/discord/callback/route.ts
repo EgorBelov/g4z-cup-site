@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifiedTelegramSession } from "@/lib/auth/player";
+import { verifiedPlayerSession } from "@/lib/auth/player";
 import { allowedAuthOrigin } from "@/lib/auth/origin";
 import { authSecret } from "@/lib/env";
 import { discordConfigured, discordRedirectUri } from "@/lib/discord/config";
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const code = params.get("code");
   if (!code) return close("/me/profile?discord=code");
 
-  const session = await verifiedTelegramSession(true);
+  const session = await verifiedPlayerSession(true);
   if (!session || session.user.id !== state.profile)
     return close("/me/profile?discord=session");
 

@@ -1,8 +1,17 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import { CommunityTeamForm } from "@/components/player/TeamForms";
 import { ButtonLink } from "@/components/ui/Button";
 import { requirePlayer } from "@/lib/queries/player";
 
-export default async function NewCommunityTeamPage() {
+export default function NewCommunityTeamPage() {
+  return (
+    <AccountPageBoundary>
+      <NewCommunityTeamPageContent />
+    </AccountPageBoundary>
+  );
+}
+
+async function NewCommunityTeamPageContent() {
   await requirePlayer();
 
   return (

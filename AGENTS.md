@@ -29,7 +29,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - Административные server actions начинаются с `assertAdmin()`. Действия игроков
   начинают с `assertPlayer()` (проверенные Supabase Auth + профиль + лимит частоты),
-  завершение регистрации — с `assertTelegramSession()`. Начало входа/регистрации
+  завершение Telegram-регистрации — с `assertTelegramSession()`. Регистрация
+  и вход по паролю начинаются с `assertAuthEntry()`; пароль хранит только
+  Supabase Auth. Для обоих способов кабинет проверяет `assertPlayer()`. Начало входа/регистрации
   публично, но проверяет origin и лимит IP через `assertAuthEntry()`. Все проверки
   выполняются внутри action: прямой POST не защищён `proxy.ts`. Telegram-сессия
   никогда не даёт права организатора.

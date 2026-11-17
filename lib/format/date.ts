@@ -51,14 +51,21 @@ export function formatDateRange(
 ): string | null {
   if (!from) return null;
 
-  const short = formatter({ day: "numeric", month: "long" }, timeZone);
-  const withYear = formatter(
+  const dateFormat = formatter(
     { day: "numeric", month: "long", year: "numeric" },
     timeZone,
   );
 
-  if (!to) return withYear.format(new Date(from));
-  return `${short.format(new Date(from))} — ${withYear.format(new Date(to))}`;
+  // ICU versions in Node and browsers can use different whitespace/year
+  // suffixes. Own the literals so the first client render matches SSR.
+  const render = (value: string, year: boolean) => {
+    const parts = dateFormat.formatToParts(new Date(value));
+    const part = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((p) => p.type === type)?.value ?? "";
+    return `${part("day")} ${part("month")}${year ? ` ${part("year")} г.` : ""}`;
+  };
+  if (!to) return render(from, true);
+  return `${render(from, false)} — ${render(to, true)}`;
 }
 
 /**

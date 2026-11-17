@@ -833,4 +833,42 @@ begin
 end $$;
 rollback;
 
+-- Password identities have no verified Telegram subject/contact and cannot
+-- claim an existing login or overwrite a profile.
+begin;
+do $$
+declare
+  a uuid := 'e1000000-0000-4000-8000-000000000001';
+  b uuid := 'e1000000-0000-4000-8000-000000000002';
+  profile jsonb := '{"nickname":"Password player","telegram_username":"contact_password","steam_url":"https://steamcommunity.com/id/password_player","dota_mmr":1500}';
+  role_name text;
+begin
+  insert into auth.users values(a),(b);
+  perform register_password_player(a,'password player',profile);
+  perform assert_equals(null::text,(select telegram_id from public.player_profiles where id=a),'no forged Telegram subject');
+  perform assert_equals(false,(select telegram_contact_verified from public.player_profiles where id=a),'manual contact stays unverified');
+  perform assert_equals(1500,(select value from public.player_ratings where profile_id=a and discipline='dota2'),'password registration saves ratings');
+  update public.player_profiles set nickname='Changed display' where id=a;
+  perform assert_equals('password player'::text,(select login_nickname from public.player_profiles where id=a),'display rename keeps login');
+  begin
+    perform register_password_player(b,'password player',profile);
+    raise exception 'FAIL duplicate login was accepted';
+  exception when unique_violation then null; end;
+  begin
+    perform register_password_player(a,'other login',profile);
+    raise exception 'FAIL existing profile was overwritten';
+  exception when unique_violation then null; end;
+  begin
+    perform register_password_player(b,'UPPERCASE',profile);
+    raise exception 'FAIL unnormalized login was accepted';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  foreach role_name in array array['anon','authenticated'] loop
+    perform assert_equals(false,has_function_privilege(role_name,'public.register_password_player(uuid,text,jsonb,text)','EXECUTE'),'no public password profile RPC');
+    perform assert_equals(false,has_table_privilege(role_name,'public.player_profiles','SELECT'),'no public private-profile access');
+  end loop;
+end $$;
+rollback;
+
 drop function assert_equals(anyelement, anyelement, text);

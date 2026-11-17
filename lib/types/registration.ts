@@ -2,7 +2,8 @@ export type Discipline = "dota2" | "cs2" | "other";
 export type Profile = {
   id: string;
   code: number;
-  telegram_id: string;
+  telegram_id: string | null;
+  login_nickname: string | null;
   nickname: string;
   telegram_username: string;
   telegram_contact_verified: boolean;

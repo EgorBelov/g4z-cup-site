@@ -133,6 +133,20 @@ export const updateProfileSchema = profileSchema.extend({
 export const playerLoginSchema = z.object({
   next: z.string().optional().transform(safePlayerReturn),
 });
+const playerPassword = z.string().min(10, "Минимум 10 символов").max(128);
+export const passwordRegistrationSchema = registerPlayerSchema
+  .extend({
+    password: playerPassword,
+    password_confirmation: z.string(),
+  })
+  .refine((v) => v.password === v.password_confirmation, {
+    path: ["password_confirmation"],
+    message: "Пароли не совпадают",
+  });
+export const passwordLoginSchema = playerLoginSchema.extend({
+  nickname: trimmed.min(2).max(80),
+  password: z.string().min(1).max(128),
+});
 export const communityTeamSchema = z.object({
   name: trimmed.min(2).max(80),
   slug: z.union([z.literal(""), slug]).optional(),

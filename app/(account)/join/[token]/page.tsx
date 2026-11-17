@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import { createHash } from "node:crypto";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/Button";
@@ -12,11 +13,19 @@ import { currentPlayer, isTeamMember, teamInviteByToken } from "@/lib/queries/pl
  * до конца приёма, а эта — в саму команду. Турнирный состав капитан собирает
  * уже из участников команды на странице заявки.
  */
-export default async function JoinTeamPage({
-  params,
-}: {
+type JoinTeamPageProps = {
   params: Promise<{ token: string }>;
-}) {
+};
+
+export default function JoinTeamPage(props: JoinTeamPageProps) {
+  return (
+    <AccountPageBoundary>
+      <JoinTeamPageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function JoinTeamPageContent({ params }: JoinTeamPageProps) {
   const { token } = await params;
   if (!/^[A-Za-z0-9_-]{43}$/.test(token)) notFound();
 

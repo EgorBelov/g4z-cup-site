@@ -1,14 +1,23 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import { notFound } from "next/navigation";
 import { ApplicationPanel } from "@/components/player/ApplicationPanel";
 import { ButtonLink } from "@/components/ui/Button";
 import { applicationDetail } from "@/lib/queries/registration";
 import { applicationLabels } from "@/lib/types/registration";
 
-export default async function ApplicationPage({
-  params,
-}: {
+type ApplicationPageProps = {
   params: Promise<{ id: string }>;
-}) {
+};
+
+export default function ApplicationPage(props: ApplicationPageProps) {
+  return (
+    <AccountPageBoundary>
+      <ApplicationPageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function ApplicationPageContent({ params }: ApplicationPageProps) {
   const id = Number((await params).id);
   if (!Number.isSafeInteger(id) || id < 1) notFound();
   const data = await applicationDetail(id);

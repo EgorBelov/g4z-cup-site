@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { CommandForm } from "@/components/player/TeamForms";
@@ -29,7 +30,15 @@ function plural(count: number, one: string, few: string, many: string): string {
   return many;
 }
 
-export default async function MyAccountPage() {
+export default function MyAccountPage() {
+  return (
+    <AccountPageBoundary>
+      <MyAccountPageContent />
+    </AccountPageBoundary>
+  );
+}
+
+async function MyAccountPageContent() {
   const player = await requirePlayer();
   const teams = await playerTeams(player.id, true);
   const [applications, incoming, tournaments] = await Promise.all([

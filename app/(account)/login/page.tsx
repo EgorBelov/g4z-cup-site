@@ -1,3 +1,4 @@
+import { AccountPageBoundary } from "@/components/player/AccountPageBoundary";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -11,11 +12,19 @@ export const metadata: Metadata = {
   title: "Вход",
   robots: { index: false, follow: false },
 };
-export default async function PlayerLoginPage({
-  searchParams,
-}: {
+type PlayerLoginPageProps = {
   searchParams: Promise<{ next?: string; notice?: string }>;
-}) {
+};
+
+export default function PlayerLoginPage(props: PlayerLoginPageProps) {
+  return (
+    <AccountPageBoundary>
+      <PlayerLoginPageContent {...props} />
+    </AccountPageBoundary>
+  );
+}
+
+async function PlayerLoginPageContent({ searchParams }: PlayerLoginPageProps) {
   const params = await searchParams;
   const flow = openAuthFlow(
     (await cookies()).get(AUTH_FLOW_COOKIE)?.value,
@@ -30,23 +39,28 @@ export default async function PlayerLoginPage({
         <p className="label">G4Z CUP</p>
         <h1>Снова на орбите.</h1>
         <p>
-          Один аккаунт на игрока: состав, заявки и история турниров. Вход — через тот
-          Telegram, с которым регистрировались.
+          Один аккаунт на игрока: состав, заявки и история турниров. Войдите способом,
+          который выбрали при регистрации.
         </p>
       </section>
 
       <section className="orbit-auth-card orbit-frame">
         <h2>Вход</h2>
         <p className="lead">
-          Войдите тем же Telegram-аккаунтом, с которым регистрировались. Пароль не нужен
-          — подтверждение придёт в Telegram.
+          Используйте свой Telegram-аккаунт или первоначальный ник и пароль.
         </p>
 
         {params.notice ? (
           <p role="status" className="orbit-auth-note">
-            Подтверждение входа не завершилось. Повторите его в том же браузере, где
-            открыли сайт. После перехода в Telegram дождитесь возврата по кнопке
-            авторизации.
+            {params.notice === "created" ? (
+              "Аккаунт создан. Войдите по нику и паролю."
+            ) : (
+              <>
+                Подтверждение входа не завершилось. Повторите его в том же браузере, где
+                открыли сайт. После перехода в Telegram дождитесь возврата по кнопке
+                авторизации.
+              </>
+            )}
           </p>
         ) : null}
 

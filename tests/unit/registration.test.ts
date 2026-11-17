@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { sealAuthFlow, openAuthFlow, AUTH_FLOW_TTL } from "@/lib/auth/flow";
-import { profileSchema, registrationCommandSchema } from "@/lib/validation/schemas";
+import {
+  profileSchema,
+  registrationCommandSchema,
+  passwordRegistrationSchema,
+  passwordLoginSchema,
+} from "@/lib/validation/schemas";
+import { playerPasswordEmail } from "@/lib/auth/player-password";
 import { normalizeProfileUrl, safePlayerReturn } from "@/lib/validation/profile";
 
 const secret = "unit-test-flow-secret-01234567890123456789";
@@ -9,6 +15,37 @@ const profile = {
   telegram_username: "@contact_player",
   steam_url: "https://steamcommunity.com/id/Player_Name/?tracking=yes",
 };
+describe("password accounts", () => {
+  it("uses the same login for case, padding and canonically equivalent Unicode", () => {
+    expect(playerPasswordEmail("  ИГРОК  ")).toBe(playerPasswordEmail("игрок"));
+    expect(playerPasswordEmail("ёPlayer")).toBe(playerPasswordEmail("е\u0308player"));
+    expect(playerPasswordEmail("игрок")).not.toBe(playerPasswordEmail("другой"));
+  });
+  it("requires a strong enough password and matching confirmation", () => {
+    const input = {
+      ...profile,
+      password: "valid-pass-1234",
+      password_confirmation: "valid-pass-1234",
+    };
+    expect(passwordRegistrationSchema.safeParse(input).success).toBe(true);
+    expect(
+      passwordRegistrationSchema.safeParse({ ...input, password: "short" }).success,
+    ).toBe(false);
+    expect(
+      passwordRegistrationSchema.safeParse({
+        ...input,
+        password_confirmation: "different",
+      }).success,
+    ).toBe(false);
+    const login = passwordLoginSchema.parse({
+      nickname: "Игрок",
+      password: "  literal pass  ",
+      next: "https://evil.example",
+    });
+    expect(login.password).toBe("  literal pass  ");
+    expect(login.next).toBe("/me");
+  });
+});
 describe("registration input and privacy", () => {
   it("requires nickname, contact and Steam, while ratings remain optional", () => {
     const p = profileSchema.parse(profile);

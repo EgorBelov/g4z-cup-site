@@ -1,12 +1,41 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   dayKey,
   formatDateTime,
+  formatDateRange,
   formatDayRange,
   formatDuration,
   fromDateTimeLocal,
   toDateTimeLocal,
 } from "@/lib/format/date";
+
+describe("formatDateRange hydration", () => {
+  it("owns separators even when ICU returns non-breaking whitespace", () => {
+    const original = Intl.DateTimeFormat.prototype.formatToParts;
+    const spy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "formatToParts")
+      .mockImplementation(function (this: Intl.DateTimeFormat, value) {
+        return original
+          .call(this, value)
+          .map((part) =>
+            part.type === "literal"
+              ? { ...part, value: part.value.replace(/ /g, "\u00a0") }
+              : part,
+          );
+      });
+    try {
+      expect(formatDateRange("2026-11-23T00:00:00Z", "2026-11-29T00:00:00Z")).toBe(
+        "23 ноября — 29 ноября 2026 г.",
+      );
+      expect(formatDateRange("2026-12-31T22:00:00Z", null, "Europe/Moscow")).toBe(
+        "1 января 2027 г.",
+      );
+      expect(formatDateRange(null, null)).toBeNull();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
 
 describe("timezone handling", () => {
   it("reads a datetime-local value as Moscow wall clock", () => {

@@ -1,9 +1,11 @@
 "use server";
+import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authSecret } from "@/lib/env";
 import {
   assertAuthEntry,
+  assertPlayerSession,
   assertTelegramSession,
   verifiedTelegramSession,
 } from "@/lib/auth/player";
@@ -19,7 +21,17 @@ import { writeClient } from "@/lib/supabase/write";
 import { TELEGRAM_PROVIDER } from "@/lib/auth/telegram";
 import { requestIp } from "@/lib/auth/guard";
 import { fail, parseForm, type ActionState } from "@/lib/actions/state";
-import { playerLoginSchema, registerPlayerSchema } from "@/lib/validation/schemas";
+import {
+  playerLoginSchema,
+  registerPlayerSchema,
+  passwordRegistrationSchema,
+  passwordLoginSchema,
+} from "@/lib/validation/schemas";
+import {
+  normalizeLoginNickname,
+  playerPasswordEmail,
+} from "@/lib/auth/player-password";
+import { invalidate } from "@/lib/actions/revalidate";
 
 export async function beginRegistrationAction(
   _state: ActionState,
@@ -106,9 +118,74 @@ export async function completePlayerAuthAction(
   redirect(flow.next);
 }
 export async function playerLogoutAction() {
-  await assertTelegramSession();
+  await assertPlayerSession();
   const client = await sessionClient(true);
   await client.auth.signOut({ scope: "local" });
   (await cookies()).delete(AUTH_FLOW_COOKIE);
   redirect("/login");
+}
+
+export async function registerWithPasswordAction(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await assertAuthEntry();
+  const parsed = parseForm(passwordRegistrationSchema, formData);
+  if (parsed.state) return parsed.state;
+  const {
+    password,
+    password_confirmation: _confirmation,
+    next,
+    ...profile
+  } = parsed.data;
+  const email = playerPasswordEmail(profile.nickname);
+  const client = writeClient();
+  const { data, error } = await client.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (error || !data.user) {
+    return fail(
+      error?.code === "email_exists" || error?.code === "email_conflict"
+        ? "Этот ник уже занят для входа. Выберите другой или войдите"
+        : "Не удалось создать аккаунт. Возможно, ник занят или пароль слишком простой",
+    );
+  }
+  const result = await client.rpc("register_password_player", {
+    p_user: data.user.id,
+    p_login: normalizeLoginNickname(profile.nickname),
+    p_profile: profile,
+    p_ip: await requestIp(),
+  });
+  if (result.error) {
+    // Only remove the Auth user created by this request, never an existing user.
+    await client.auth.admin.deleteUser(data.user.id);
+    return fail("Не удалось сохранить профиль. Попробуйте ещё раз");
+  }
+  const session = await sessionClient(true);
+  const signedIn = await session.auth.signInWithPassword({ email, password });
+  (await cookies()).delete(AUTH_FLOW_COOKIE);
+  invalidate();
+  if (signedIn.error)
+    redirect(`/login?notice=created&next=${encodeURIComponent(next)}`);
+  redirect(next);
+}
+
+export async function loginWithPasswordAction(
+  _state: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await assertAuthEntry();
+  const parsed = parseForm(passwordLoginSchema, formData);
+  if (parsed.state) return parsed.state;
+  const { nickname, password, next } = parsed.data;
+  const client = await sessionClient(true);
+  const { error } = await client.auth.signInWithPassword({
+    email: playerPasswordEmail(nickname),
+    password,
+  });
+  if (error) return fail("Неверный ник или пароль");
+  (await cookies()).delete(AUTH_FLOW_COOKIE);
+  redirect(next);
 }

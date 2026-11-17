@@ -136,37 +136,47 @@
 .orbit-home-hero {
   position: relative;
   isolation: isolate;
-  display: flex;
+  display: grid;
   align-items: center;
-  /* Картинка 1659×948 растягивается на всю ширину: держим пропорции кадра,
-     иначе cover на широком экране зумит фон и обрезает орбиту сверху и снизу. */
-  aspect-ratio: 1659 / 948;
-  min-height: 640px;
-  overflow: hidden;
+  width: 100%;
+  min-width: 0;
 }
-.orbit-home-hero:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: url("/brand/orbit-stone.webp") center/cover;
-  animation: orbit-drift 26s ease-in-out infinite alternate;
+.orbit-home-art {
+  grid-area: 1 / 1;
+  position: relative;
+  justify-self: center;
+  width: min(100%, calc(78svh * 1659 / 948), 1659px);
+  min-width: 0;
 }
-.orbit-home-hero:after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
+.orbit-home-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Fade the frame into the page without zooming or cropping the artwork. */
+  mask-image:
     linear-gradient(
       90deg,
-      color-mix(in srgb, var(--color-surface) 65%, transparent),
-      transparent 64%
+      transparent,
+      var(--color-ink) 5%,
+      var(--color-ink) 95%,
+      transparent
     ),
-    linear-gradient(0deg, var(--color-surface), transparent 18%);
+    linear-gradient(
+      180deg,
+      transparent,
+      var(--color-ink) 7%,
+      var(--color-ink) 86%,
+      transparent
+    );
+  mask-composite: intersect;
+}
+.orbit-home-content {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 1;
 }
 .orbit-home-copy {
-  padding-block: 60px;
+  padding-block: 120px 72px;
   max-width: 640px;
 }
 .orbit-home-title {
@@ -989,18 +999,7 @@
 .orbit-tournament .orbit-bracket-page {
   padding-top: 34px;
 }
-@keyframes orbit-drift {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.025);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .orbit-home-hero:before {
-    animation: none;
-  }
   .orbit-editorial-card {
     transition: none;
   }
@@ -1095,7 +1094,32 @@
 }
 @media (max-width: 859px) {
   .orbit-home-hero {
-    min-height: 620px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .orbit-home-content {
+    grid-area: 1 / 1;
+  }
+  .orbit-home-hero .orbit-home-copy {
+    max-width: 100%;
+    padding-block: 120px 56px;
+  }
+  .orbit-home-art {
+    grid-area: 1 / 1;
+    width: min(100%, 760px);
+    pointer-events: none;
+  }
+  .orbit-home-art:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-surface) 75%, transparent),
+      color-mix(in srgb, var(--color-surface) 25%, transparent)
+    );
+  }
+  .orbit-home-art .orbit-hero-caption {
+    display: none;
   }
   .orbit-home-title {
     font-size: clamp(62px, 9vw, 80px);
@@ -1143,23 +1167,8 @@
   }
 }
 @media (max-width: 639px) {
-  .orbit-home-hero {
-    min-height: 575px;
-  }
-  .orbit-home-hero:before {
-    background-position: 60% center;
-  }
-  .orbit-home-hero:after {
-    background:
-      linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--color-surface) 90%, transparent),
-        color-mix(in srgb, var(--color-surface) 30%, transparent)
-      ),
-      linear-gradient(0deg, var(--color-surface), transparent 35%);
-  }
-  .orbit-home-copy {
-    padding: 65px 0;
+  .orbit-home-hero .orbit-home-copy {
+    padding-block: 112px 48px;
   }
   .orbit-home-title {
     font-size: clamp(52px, 13vw, 74px);
@@ -1442,20 +1451,6 @@
   }
 }
 @media (min-width: 860px) and (max-width: 1199px) {
-  .orbit-home-hero {
-    min-height: 556px;
-  }
-  .orbit-home-copy {
-    padding-top: 50px;
-    padding-bottom: 78px;
-  }
-  .orbit-home-hero > div {
-    padding-inline: 4.65vw;
-  }
-  .orbit-home-title {
-    transform: scaleX(0.86);
-    transform-origin: left center;
-  }
   .orbit-community #tournaments {
     margin-top: 44px;
   }

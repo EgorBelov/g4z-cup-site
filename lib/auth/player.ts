@@ -15,6 +15,17 @@ export async function verifiedTelegramSession(canSetCookies = false) {
   const identity = error ? null : telegramIdentity(data.user);
   return identity && data.user ? { user: data.user, identity } : null;
 }
+export async function verifiedPlayerSession(canSetCookies = false) {
+  const client = await sessionClient(canSetCookies);
+  const { data, error } = await client.auth.getUser();
+  if (error || !data.user || data.user.is_anonymous) return null;
+  return { user: data.user, identity: telegramIdentity(data.user) };
+}
+export async function assertPlayerSession() {
+  const session = await verifiedPlayerSession(true);
+  if (!session) redirect("/login?notice=session");
+  return session;
+}
 export async function assertTelegramSession() {
   const session = await verifiedTelegramSession(true);
   if (!session) redirect("/login?notice=session");
@@ -40,11 +51,11 @@ export async function assertAuthEntry() {
   return origin;
 }
 export async function assertPlayer() {
-  const session = await assertTelegramSession();
+  const session = await assertPlayerSession();
   const { data, error } = await writeClient()
     .from("player_profiles")
     .select(
-      "id,code,telegram_id,nickname,telegram_username,telegram_contact_verified,steam_url,faceit_url,dotabuff_url,version,discord_id,discord_username,discord_linked_at,discord_in_guild",
+      "id,code,telegram_id,login_nickname,nickname,telegram_username,telegram_contact_verified,steam_url,faceit_url,dotabuff_url,version,discord_id,discord_username,discord_linked_at,discord_in_guild",
     )
     .eq("id", session.user.id)
     .maybeSingle();
