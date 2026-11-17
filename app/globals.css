@@ -39,6 +39,7 @@
   --font-orbit-text: "Orbit Text", Arial, sans-serif;
   --radius-orbit: 0.25rem 1.35rem 0.25rem 1.35rem;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --ease-orbit: cubic-bezier(0.22, 1, 0.36, 1);
 }
 :root {
   color-scheme: dark;
@@ -150,9 +151,10 @@ textarea:focus-visible {
   }
   .interactive-card {
     transition:
-      transform 200ms,
-      border-color 200ms,
-      box-shadow 200ms;
+      transform 200ms var(--ease-orbit),
+      border-color 200ms var(--ease-orbit),
+      box-shadow 200ms var(--ease-orbit),
+      background-color 200ms var(--ease-orbit);
   }
   .interactive-card:focus-visible {
     border-color: var(--color-accent);
@@ -243,6 +245,9 @@ textarea:focus-visible {
   *::after {
     animation: none !important;
     transition-duration: 0.01ms !important;
+  }
+  .interactive-card:hover {
+    transform: none;
   }
 }
 @utility scrollbar-none {

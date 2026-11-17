@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Reveal } from "@/components/layout/Reveal";
 import { TournamentStatusBadge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { formatDateRange } from "@/lib/format/date";
@@ -7,15 +8,22 @@ import type { TournamentSummary } from "@/lib/types/database";
 export function TournamentList({
   tournaments,
   featured = false,
+  reveal = false,
 }: {
   tournaments: TournamentSummary[];
   featured?: boolean;
+  reveal?: boolean;
 }) {
+  const Item = reveal ? Reveal : "li";
   return (
     <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {tournaments.map((tournament, index) =>
         featured && index === 0 ? (
-          <li key={tournament.id} className="min-w-0 md:col-span-2 xl:col-span-3">
+          <Item
+            {...(reveal ? { as: "li" as const, direction: "card" as const } : {})}
+            key={tournament.id}
+            className="min-w-0 md:col-span-2 xl:col-span-3"
+          >
             <Link
               href={`/t/${tournament.slug}`}
               className="orbit-featured-tournament orbit-frame interactive-card"
@@ -59,9 +67,13 @@ export function TournamentList({
                 </span>
               ) : null}
             </Link>
-          </li>
+          </Item>
         ) : (
-          <li key={tournament.id} className="min-w-0">
+          <Item
+            {...(reveal ? { as: "li" as const, direction: "card" as const } : {})}
+            key={tournament.id}
+            className="min-w-0"
+          >
             <Link
               href={`/t/${tournament.slug}`}
               className="interactive-card group flex h-full flex-col overflow-hidden rounded-card border border-edge bg-panel"
@@ -137,7 +149,7 @@ export function TournamentList({
                 </div>
               </div>
             </Link>
-          </li>
+          </Item>
         ),
       )}
     </ul>

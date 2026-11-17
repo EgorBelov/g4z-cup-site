@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { Reveal } from "@/components/layout/Reveal";
 import { TournamentList } from "@/components/layout/TournamentList";
 import { TournamentExplorer } from "@/components/layout/TournamentExplorer";
 import { ButtonLink } from "@/components/ui/Button";
@@ -53,9 +54,11 @@ export default function HomePage() {
           <Suspense fallback={<Skeleton className="mt-10 h-60" />}>
             <CommunityTournaments />
           </Suspense>
-          <section
+          <Reveal
+            as="section"
+            direction="right"
             id="community"
-            className="orbit-community-band orbit-frame orbit-reveal-right"
+            className="orbit-community-band orbit-frame"
           >
             <div>
               <p className="orbit-eyebrow">Место встречи — G4Z</p>
@@ -80,7 +83,7 @@ export default function HomePage() {
                 </ButtonLink>
               ) : null}
             </div>
-          </section>
+          </Reveal>
         </Container>
       </main>
       <SiteFooter />
@@ -98,16 +101,14 @@ async function CommunityTournaments() {
   return (
     <>
       <section id="tournaments" className="orbit-home-section">
-        <div className="orbit-section-heading orbit-reveal-left">
+        <Reveal direction="left" className="orbit-section-heading">
           <h2 className="orbit-section-title">На нашей орбите</h2>
           <span className="eyebrow">{active.length} активных турниров</span>
-        </div>
+        </Reveal>
         {active.length ? (
-          <div className="orbit-reveal">
-            <TournamentExplorer tournaments={active} featured />
-          </div>
+          <TournamentExplorer tournaments={active} featured reveal />
         ) : (
-          <div className="orbit-surface orbit-reveal flex flex-wrap items-center justify-between gap-6 p-8">
+          <Reveal className="orbit-surface flex flex-wrap items-center justify-between gap-6 p-8">
             <div>
               <h3 className="section-title">Свои никуда не пропадают.</h3>
               <p className="mt-3 max-w-lg text-sm text-ink-muted">
@@ -118,13 +119,13 @@ async function CommunityTournaments() {
             <ButtonLink href="/archive" variant="secondary">
               Заглянуть в архив ↗
             </ButtonLink>
-          </div>
+          </Reveal>
         )}
       </section>
       <section className="orbit-home-section">
-        <div className="orbit-section-heading orbit-reveal-left">
+        <Reveal direction="left" className="orbit-section-heading">
           <h2 className="orbit-section-title">Турнир ближе, чем кажется</h2>
-        </div>
+        </Reveal>
         <div className="orbit-editorial-grid">
           {(
             [
@@ -148,9 +149,9 @@ async function CommunityTournaments() {
               },
             ] as const
           ).map((item, index) => (
-            <div className="orbit-editorial-slot" key={item.title}>
+            <Reveal direction="card" className="orbit-editorial-slot" key={item.title}>
               <Link
-                className="orbit-editorial-card orbit-frame orbit-reveal-card"
+                className="orbit-editorial-card orbit-frame interactive-card"
                 href={item.href}
               >
                 <span className="eyebrow">0{index + 1}</span>
@@ -159,12 +160,12 @@ async function CommunityTournaments() {
                 <p>{item.text}</p>
                 <Icon name="arrow" className="orbit-card-arrow size-5" />
               </Link>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
       {finished.length ? (
-        <details className="orbit-home-archive orbit-reveal">
+        <details className="orbit-home-archive">
           <summary>Прошлые кубки ↗</summary>
           <div className="orbit-section-heading">
             <h2 className="orbit-section-title">Последнее GG</h2>
@@ -172,7 +173,7 @@ async function CommunityTournaments() {
               Вся история ↗
             </ButtonLink>
           </div>
-          <TournamentList tournaments={finished} />
+          <TournamentList tournaments={finished} reveal />
         </details>
       ) : null}
     </>
