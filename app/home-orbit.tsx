@@ -23,7 +23,7 @@ export default function HomePage() {
               alt=""
               width={1659}
               height={948}
-              sizes="(max-width: 859px) 100vw, (max-width: 1659px) 100vw, 1659px"
+              sizes="(min-width: 1600px) 1260px, 100vw"
               preload
               className="orbit-home-image"
             />

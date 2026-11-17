@@ -147,6 +147,18 @@
   justify-self: center;
   width: min(100%, calc(78svh * 1659 / 948), 1659px);
   min-width: 0;
+  pointer-events: none;
+}
+.orbit-home-art:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface),
+    color-mix(in srgb, var(--color-surface) 60%, transparent) 35%,
+    transparent 60%
+  );
 }
 .orbit-home-image {
   display: block;
@@ -174,6 +186,13 @@
   grid-area: 1 / 1;
   position: relative;
   z-index: 1;
+}
+@media (min-width: 1600px) {
+  .orbit-home-art {
+    width: min(calc(68svh * 1659 / 948), 1260px);
+    /* Align the orbit with the right half of the content column. */
+    translate: min(180px, calc((100vw - 1260px) / 2)) 0;
+  }
 }
 .orbit-home-copy {
   padding-block: 120px 72px;
@@ -1106,12 +1125,8 @@
   .orbit-home-art {
     grid-area: 1 / 1;
     width: min(100%, 760px);
-    pointer-events: none;
   }
   .orbit-home-art:after {
-    content: "";
-    position: absolute;
-    inset: 0;
     background: linear-gradient(
       90deg,
       color-mix(in srgb, var(--color-surface) 75%, transparent),

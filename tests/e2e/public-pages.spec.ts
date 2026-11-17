@@ -58,15 +58,27 @@ test("home artwork keeps its full proportions on phones and monitors", async ({
     : [
         [1280, 720],
         [1440, 1000],
+        [1920, 1080],
         [2560, 1440],
+        [3440, 1440],
       ];
   for (const [width, height] of sizes) {
     await page.setViewportSize({ width, height });
+    await expect
+      .poll(() =>
+        image.evaluate(
+          (element) =>
+            (element as HTMLImageElement).complete &&
+            (element as HTMLImageElement).naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
     const layout = await image.evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const copy = document.querySelector(".orbit-home-copy")!.getBoundingClientRect();
       return {
         ratio: rect.width / rect.height,
+        imageHeight: rect.height,
         left: rect.left,
         right: rect.right,
         top: rect.top,
@@ -87,6 +99,7 @@ test("home artwork keeps its full proportions on phones and monitors", async ({
     expect(layout.left).toBeGreaterThanOrEqual(-1);
     expect(layout.right).toBeLessThanOrEqual(layout.viewport + 1);
     expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewport + 1);
+    if (width >= 1600) expect(layout.imageHeight).toBeLessThanOrEqual(721);
     if (isMobile) {
       expect(layout.top).toBeLessThan(layout.copyBottom);
       expect(layout.bottom).toBeGreaterThan(layout.copyTop);
