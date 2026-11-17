@@ -26,7 +26,12 @@ async function sql(query, read_only = true) {
     body: JSON.stringify({ query, read_only }),
     signal: AbortSignal.timeout(45000),
   });
-  if (!r.ok) throw new Error(`Supabase database API: HTTP ${r.status}`);
+  if (!r.ok) {
+    const detail = await r.json().catch(() => null);
+    throw new Error(
+      `Supabase database API: HTTP ${r.status}${detail?.message ? ` — ${detail.message}` : ""}`,
+    );
+  }
   return r.json();
 }
 const literal = (s) => "'" + s.replaceAll("'", "''") + "'";
@@ -39,8 +44,7 @@ try {
   const pending = readdirSync("supabase/migrations")
     .filter(
       (f) =>
-        /^001[1-5]_.*\.sql$/.test(f) &&
-        !history.some((r) => r.version === f.slice(0, 4)),
+        /^\d{4}_.*\.sql$/.test(f) && !history.some((r) => r.version === f.slice(0, 4)),
     )
     .sort();
   console.log("Project:", ref, "Pending migrations:", pending.join(", ") || "none");

@@ -98,6 +98,25 @@ for (const [relation, migration] of required) {
   }
 }
 
+// Later columns must be checked explicitly: select("*") cannot detect them.
+for (const [columns, migration] of [
+  ["rating_team,rating_player", "0017_tournament_rating.sql"],
+  ["entry_fee", "0019_tournament_entry_fee.sql"],
+]) {
+  const checks = await Promise.all(
+    ["tournaments", "tournament_summaries"].map(async (relation) => ({
+      relation,
+      ...(await client.from(relation).select(columns, { head: true })),
+    })),
+  );
+  for (const { relation, error } of checks) {
+    if (error) {
+      problems.push({ relation, migration, message: error.message });
+      console.log(`✗ ${relation}.${columns}: ${error.message}`);
+    } else console.log(`✓ ${relation}.${columns}`);
+  }
+}
+
 // A denied query proves more than an empty table. Include private columns of
 // published snapshots: hiding them only in the UI would leave REST readable.
 for (const [relation, columns, migration] of [

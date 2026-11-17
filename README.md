@@ -264,8 +264,20 @@ production-приложение и запускает его на `127.0.0.1:300
 
 1. **Применить миграции** к проекту Supabase. Проще всего — открыть
    `supabase/setup.sql` (это все миграции одним файлом), вставить целиком
-   в Supabase → SQL Editor и выполнить. Через CLI то же самое делает
-   `supabase db push`.
+   в Supabase → SQL Editor и выполнить **для новой базы**. Существующую базу
+   обновлять через `supabase db push` или проектный скрипт, который выбирает
+   все ещё не применённые миграции по истории Supabase:
+
+   ```bash
+   node scripts/release-registration.mjs --inspect
+   node scripts/release-registration.mjs --validate # проверка с откатом
+   node scripts/release-registration.mjs --apply
+   ```
+
+   Скрипту нужны `SUPABASE_ACCESS_TOKEN` и `NEXT_PUBLIC_SUPABASE_URL` из
+   локального окружения. После обновления обязательно выполнить `npm run db:check`:
+   он проверяет в том числе регистрацию по паролю и поля кабинета.
+
 2. **Залить архив** (по желанию, но иначе сайт будет пустым):
    `supabase/data/g4z-cup-10.sql`.
 3. **Проверить готовность** перед деплоем:
