@@ -171,7 +171,8 @@ async function ManageCommunityTeamPageContent({
                 </div>
                 <p className="orbit-app-note">
                   Постоянный состав команды. Участники не получают права капитана. На
-                  каждый турнир собирается отдельная заявка.
+                  каждый турнир собирается отдельная заявка: при создании она
+                  заполняется этими игроками, дальше состав правится в самой заявке.
                 </p>
                 {members.map((member) => (
                   <div className="orbit-tm-row" key={member.profile_id}>

@@ -15,6 +15,8 @@ const eventNames: Record<string, string> = {
   member_slot: "Изменён тип игрового слота",
   member_remove: "Игрок исключён из состава",
   member_leave: "Игрок вышел из состава",
+  roster_fill: "Состав дополнен участниками команды",
+  roster_seed: "Игрок добавлен из состава команды",
   admin_member: "Организатор изменил состав",
   admin_move: "Организатор переместил игрока",
   submit: "Заявка подана на рассмотрение",
@@ -156,7 +158,8 @@ export function ApplicationPanel({
               ))
             ) : (
               <p className="orbit-app-note">
-                Пока никого. Пригласите игроков или займите слот сами.
+                Пока никого. Нажмите «Добавить участников команды», пригласите
+                игроков или займите слот сами.
               </p>
             )}
 
@@ -170,6 +173,24 @@ export function ApplicationPanel({
                 </span>
               </div>
             ) : null}
+
+            {captain && !locked && members.length < t.roster_size + t.max_substitutes ? (
+              <div className="orbit-app-slot-actions">
+                <span className="orbit-app-mini">
+                  <CommandForm
+                    label="Добавить участников команды"
+                    fields={{ ...fields, action: "roster_fill" }}
+                  />
+                </span>
+              </div>
+            ) : null}
+
+            <p className="orbit-app-note">
+              Состав заявки отдельный от постоянной команды: при создании он
+              заполняется её участниками, а свободные места позже добираются этой
+              кнопкой. Игроки из команды, уже занятые в другой заявке этого турнира,
+              не добавляются.
+            </p>
 
             {!locked && selfInRoster ? (
               <div className="orbit-app-slot-actions">

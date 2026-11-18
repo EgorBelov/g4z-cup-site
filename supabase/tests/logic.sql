@@ -640,7 +640,8 @@ begin
   v:=registration_command(p[1],false,'application_create',jsonb_build_object('team_id',c1,'tournament_id',cup));a1:=(v->>'application_id')::bigint;
   v:=registration_command(p[2],false,'application_create',jsonb_build_object('team_id',c2,'tournament_id',cup));a2:=(v->>'application_id')::bigint;
   v:=registration_command(p[1],false,'application_create',jsonb_build_object('team_id',c1,'tournament_id',cup2));a3:=(v->>'application_id')::bigint;
-  perform assert_equals(0::bigint,(select count(*) from team_members where registration_team_id=a1),'captain role does not consume a slot');
+  perform assert_equals(1::bigint,(select count(*) from team_members where registration_team_id=a1 and active),'application starts with the captain from the team');
+  perform assert_equals('main'::text,(select slot from team_members where registration_team_id=a1 and profile_id=p[1]),'team captain starts as a main player');
   perform registration_command(p[1],false,'self_join',jsonb_build_object('application_id',a1));
   v:=registration_command(p[1],false,'invite_create',jsonb_build_object('application_id',a1,'token_hash',repeat('a',64)));inv:=(v->>'invite_id')::bigint;
   perform assert_equals(1::bigint,(select count(*) from team_members where registration_team_id=a1),'invite reserves no slot');
@@ -654,6 +655,9 @@ begin
   perform registration_command(p[2],false,'invite_create',jsonb_build_object('application_id',a2,'token_hash',repeat('b',64)));
   begin perform registration_command(p[3],false,'invite_accept',jsonb_build_object('token_hash',repeat('b',64)));raise exception 'FAIL two teams in one tournament';
   exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  -- Команда c1 уже заняла единственное место в cup2 (roster_size=1), поэтому
+  -- капитан освобождает его перед проверкой участия за другую команду в другом кубке.
+  perform registration_command(p[1],false,'member_leave',jsonb_build_object('application_id',a3));
   perform registration_command(p[1],false,'invite_create',jsonb_build_object('application_id',a3,'token_hash',repeat('c',64)));
   perform registration_command(p[3],false,'invite_accept',jsonb_build_object('token_hash',repeat('c',64)));
   perform assert_equals(2::bigint,(select count(*) from team_members where profile_id=p[3] and active),'different tournaments allow different memberships');
@@ -729,6 +733,72 @@ begin
   begin insert into team_members(registration_team_id,tournament_id,profile_id)values(a1,cup2,p[6]);raise exception 'FAIL wrong tournament membership';
   exception when check_violation then null;end;
 end $$;
+
+-- Create the application, then fill its roster from the persistent team.
+do $$
+declare
+  cap uuid := '00000000-0000-4000-8000-000000000921';
+  m1 uuid := '00000000-0000-4000-8000-000000000922';
+  m2 uuid := '00000000-0000-4000-8000-000000000923';
+  m3 uuid := '00000000-0000-4000-8000-000000000924';
+  stranger uuid := '00000000-0000-4000-8000-000000000925';
+  uid uuid; team bigint; cup bigint; tight bigint; app bigint; tightapp bigint; ver bigint;
+begin
+  foreach uid in array array[cap,m1,m2,m3,stranger] loop
+    insert into auth.users values(uid);
+    perform register_player(uid,uid::text,'seed_contact',jsonb_build_object('nickname','Seed '||right(uid::text,3),'telegram_username','seed_contact','steam_url','https://steamcommunity.com/id/seed_'||right(uid::text,3)));
+  end loop;
+  insert into tournaments(slug,name,status,registration_open,roster_size,max_substitutes) values('roster-seed-test','Roster seed test','upcoming',true,2,1) returning id into cup;
+  insert into tournaments(slug,name,status,registration_open,roster_size,max_substitutes) values('roster-seed-tight','Roster seed tight','upcoming',true,2,0) returning id into tight;
+  team := (registration_command(cap,false,'team_create',jsonb_build_object('name','Seed team','slug','seed-team'))->>'team_id')::bigint;
+  insert into community_members(community_team_id,profile_id) values(team,m1),(team,m2);
+
+  app := (registration_command(cap,false,'application_create',jsonb_build_object('team_id',team,'tournament_id',cup))->>'application_id')::bigint;
+  perform assert_equals(3::bigint,(select count(*) from team_members where registration_team_id=app and active),'application_create fills the roster from the team');
+  perform assert_equals(2::bigint,(select count(*) from team_members where registration_team_id=app and active and slot='main'),'the first roster_size players are main');
+  perform assert_equals('substitute'::text,(select slot from team_members where registration_team_id=app and profile_id=m2),'the remaining team member becomes a substitute');
+  perform assert_equals(0::bigint,(select count(*) from team_members where registration_team_id=app and profile_id=stranger),'players outside the team are not added');
+  perform assert_equals(3::bigint,(select count(*) from registration_events where registration_team_id=app and action='roster_seed'),'seeding shows up in the application history');
+
+  -- A tight tournament seeds only its own capacity, even with a bigger team.
+  tightapp := (registration_command(cap,false,'application_create',jsonb_build_object('team_id',team,'tournament_id',tight))->>'application_id')::bigint;
+  perform assert_equals(2::bigint,(select count(*) from team_members where registration_team_id=tightapp and active),'seeding stops at the tournament limit');
+  perform assert_equals(0::bigint,(select count(*) from team_members where registration_team_id=tightapp and profile_id=m2),'players above the limit stay out of the roster');
+
+  -- Repeat creation must not undo a deliberate removal or duplicate members.
+  perform registration_command(cap,false,'member_remove',jsonb_build_object('application_id',app,'version',0,'profile_id',m1));
+  perform registration_command(cap,false,'application_create',jsonb_build_object('team_id',team,'tournament_id',cup));
+  perform assert_equals(2::bigint,(select count(*) from team_members where registration_team_id=app and active),'an existing roster is not reseeded on repeat creation');
+  perform assert_equals(0::bigint,(select count(*) from team_members where registration_team_id=app and profile_id=m1 and active),'the removed player stays out of the roster');
+
+  -- roster_fill tops up free seats of an existing draft.
+  select version into ver from registration_teams where id=app;
+  perform registration_command(cap,false,'roster_fill',jsonb_build_object('application_id',app,'version',ver));
+  perform assert_equals(3::bigint,(select count(*) from team_members where registration_team_id=app and active),'roster_fill tops up free seats');
+  perform assert_equals('main'::text,(select slot from team_members where registration_team_id=app and profile_id=m1),'filling uses the free main seats first');
+
+  select version into ver from registration_teams where id=app;
+  begin perform registration_command(m1,false,'roster_fill',jsonb_build_object('application_id',app,'version',ver));raise exception 'FAIL ordinary member filled the roster';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  update tournaments set registration_open=false where id=cup;
+  begin perform registration_command(cap,false,'roster_fill',jsonb_build_object('application_id',app,'version',ver));raise exception 'FAIL closed registration accepted roster_fill';
+  exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; end;
+  update tournaments set registration_open=true where id=cup;
+
+  -- A new member joins the team: fill adds them only when a seat is free.
+  insert into community_members(community_team_id,profile_id) values(team,m3);
+  select version into ver from registration_teams where id=app;
+  perform registration_command(cap,false,'roster_fill',jsonb_build_object('application_id',app,'version',ver));
+  perform assert_equals(3::bigint,(select count(*) from team_members where registration_team_id=app and active),'roster_fill never exceeds the tournament limit');
+
+  -- Re-opening a withdrawn application seeds the current team again.
+  perform registration_command(cap,false,'withdraw',jsonb_build_object('application_id',tightapp));
+  perform assert_equals(0::bigint,(select count(*) from team_members where registration_team_id=tightapp and active),'withdrawal releases the tournament roster');
+  perform registration_command(cap,false,'application_create',jsonb_build_object('team_id',team,'tournament_id',tight));
+  perform assert_equals(2::bigint,(select count(*) from team_members where registration_team_id=tightapp and active),'a reopened application is seeded again');
+  perform assert_equals(false,has_function_privilege('authenticated','public.fill_registration_roster(bigint,boolean,text)','EXECUTE'),'roster filling stays service-only');
+end $$;
+
 do $$ declare role_name text;n text;begin
   foreach role_name in array array['anon','authenticated'] loop
     foreach n in array array['player_profiles','player_ratings','community_teams','registration_teams','team_members','team_invites','captain_requests','participation_interests','registration_revisions','registration_events','registration_limits'] loop
