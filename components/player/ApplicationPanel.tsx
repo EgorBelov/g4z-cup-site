@@ -158,8 +158,8 @@ export function ApplicationPanel({
               ))
             ) : (
               <p className="orbit-app-note">
-                Пока никого. Нажмите «Добавить участников команды», пригласите
-                игроков или займите слот сами.
+                Пока никого. Нажмите «Добавить участников команды», пригласите игроков
+                или займите слот сами.
               </p>
             )}
 
@@ -174,7 +174,9 @@ export function ApplicationPanel({
               </div>
             ) : null}
 
-            {captain && !locked && members.length < t.roster_size + t.max_substitutes ? (
+            {captain &&
+            !locked &&
+            members.length < t.roster_size + t.max_substitutes ? (
               <div className="orbit-app-slot-actions">
                 <span className="orbit-app-mini">
                   <CommandForm
@@ -186,10 +188,9 @@ export function ApplicationPanel({
             ) : null}
 
             <p className="orbit-app-note">
-              Состав заявки отдельный от постоянной команды: при создании он
-              заполняется её участниками, а свободные места позже добираются этой
-              кнопкой. Игроки из команды, уже занятые в другой заявке этого турнира,
-              не добавляются.
+              Состав заявки отдельный от постоянной команды: при создании он заполняется
+              её участниками, а свободные места позже добираются этой кнопкой. Игроки из
+              команды, уже занятые в другой заявке этого турнира, не добавляются.
             </p>
 
             {!locked && selfInRoster ? (
