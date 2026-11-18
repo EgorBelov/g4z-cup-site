@@ -10,6 +10,14 @@ import {
 } from "@/lib/telegram/config";
 import { telegramCall } from "@/lib/telegram/api";
 
+async function reply(chatId: string, text: string): Promise<void> {
+  try {
+    await telegramCall("sendMessage", { chat_id: chatId, text });
+  } catch {
+    console.error("Telegram subscription acknowledgement failed");
+  }
+}
+
 export async function processTelegramUpdateAction(input: unknown): Promise<number> {
   if (
     !validTelegramWebhookSecret(
@@ -30,7 +38,7 @@ export async function processTelegramUpdateAction(input: unknown): Promise<numbe
     message.chat.id !== sender.id
   )
     return 200;
-  const command = message.text?.trim().split(/\s+/)[0]?.toLowerCase();
+  const command = message.text?.trim().split(/\s+/)[0]?.split("@")[0]?.toLowerCase();
   if (command !== "/start" && command !== "/stop") return 200;
   const client = writeClient();
   const botId = telegramBotId();
@@ -44,7 +52,29 @@ export async function processTelegramUpdateAction(input: unknown): Promise<numbe
     if (error) throw new Error("Could not stop Telegram notifications");
   } else {
     const username = sender.username?.toLowerCase();
-    if (!username || !telegramAdminUsernames().includes(username)) return 200;
+    const allowed = telegramAdminUsernames();
+    if (!allowed.length) {
+      console.error("Telegram subscriptions: Production recipient list is empty");
+      await reply(
+        chatId,
+        "Уведомления пока не настроены на сайте. Сообщите организатору G4Z CUP.",
+      );
+      return 200;
+    }
+    if (!username) {
+      await reply(
+        chatId,
+        "Для подключения уведомлений добавьте username в настройках Telegram и снова отправьте /start.",
+      );
+      return 200;
+    }
+    if (!allowed.includes(username)) {
+      await reply(
+        chatId,
+        `Ваш Telegram-аккаунт @${sender.username} не включён в список получателей уведомлений. Попросите организатора добавить этот username и повторите /start.`,
+      );
+      return 200;
+    }
     // Pin the first chat ID: reassignment of a username cannot silently redirect
     // existing subscriptions. Rebinding requires explicit database maintenance.
     const { error: insertError } = await client
@@ -62,19 +92,20 @@ export async function processTelegramUpdateAction(input: unknown): Promise<numbe
       .eq("chat_id", chatId)
       .select("chat_id");
     if (error) throw new Error("Could not enable Telegram notifications");
-    if (!data?.length) return 200;
+    if (!data?.length) {
+      await reply(
+        chatId,
+        "Этот username уже связан с другим Telegram-аккаунтом. Обратитесь к организатору для обновления подписки.",
+      );
+      return 200;
+    }
   }
   // A failed acknowledgement must not roll back the persisted subscription.
-  try {
-    await telegramCall("sendMessage", {
-      chat_id: chatId,
-      text:
-        command === "/stop"
-          ? "Уведомления о заявках отключены. Чтобы включить снова, отправьте /start."
-          : "Уведомления G4Z CUP подключены. Новые заявки команд будут приходить сюда со ссылкой на рассмотрение. Отключить: /stop.",
-    });
-  } catch {
-    console.error("Telegram subscription acknowledgement failed");
-  }
+  await reply(
+    chatId,
+    command === "/stop"
+      ? "Уведомления о заявках отключены. Чтобы включить снова, отправьте /start."
+      : "Уведомления G4Z CUP подключены. Новые заявки команд будут приходить сюда со ссылкой на рассмотрение. Отключить: /stop.",
+  );
   return 200;
 }

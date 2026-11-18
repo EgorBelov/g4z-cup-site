@@ -6,7 +6,14 @@ export function telegramAdminUsernames(): string[] {
     ...new Set(
       (process.env.TELEGRAM_ADMIN_USERNAME ?? "")
         .split(",")
-        .map((name) => name.trim().replace(/^@/, "").toLowerCase())
+        .map((name) =>
+          name
+            .trim()
+            .replace(/^["']+|["']+$/g, "")
+            .trim()
+            .replace(/^@/, "")
+            .toLowerCase(),
+        )
         .filter((name) => /^[a-z0-9_]{5,32}$/.test(name)),
     ),
   ];

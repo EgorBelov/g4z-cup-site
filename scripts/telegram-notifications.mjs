@@ -14,7 +14,14 @@ const names = [
   ...new Set(
     (process.env.TELEGRAM_ADMIN_USERNAME ?? "")
       .split(",")
-      .map((name) => name.trim().replace(/^@/, "").toLowerCase())
+      .map((name) =>
+        name
+          .trim()
+          .replace(/^["']+|["']+$/g, "")
+          .trim()
+          .replace(/^@/, "")
+          .toLowerCase(),
+      )
       .filter(Boolean),
   ),
 ];
@@ -64,7 +71,7 @@ try {
     console.log(
       `@${name}: ${subscriptions.some((row) => row.username === name && row.active) ? "subscribed" : "send /start to the bot"}`,
     );
-  if (setup) {
+  if (setup || siteArgument) {
     if (!siteArgument)
       throw new Error(
         "Provide the deployed origin explicitly: --site-url=https://g4z-cup.ru",
@@ -110,19 +117,45 @@ try {
       throw new Error(
         `Webhook secret/configuration does not match (HTTP ${authenticatedProbe.status})`,
       );
-    const current = await call("getWebhookInfo");
-    if (current.url && current.url !== url)
-      throw new Error(
-        "The bot already has a different webhook; use a dedicated bot or explicitly remove the previous integration first",
-      );
-    await call("setWebhook", {
-      url,
-      secret_token: secret,
-      allowed_updates: ["message"],
-      max_connections: 1,
-      drop_pending_updates: false,
+    const runtimeProbe = await fetch(url, {
+      headers: { "X-Telegram-Bot-Api-Secret-Token": secret },
+      redirect: "manual",
+      signal: AbortSignal.timeout(15000),
+      cache: "no-store",
     });
-    console.log(`Webhook configured: ${url}`);
+    if (runtimeProbe.status !== 200)
+      throw new Error(
+        `Production diagnostics are not ready (HTTP ${runtimeProbe.status}); wait for the latest deployment`,
+      );
+    const runtime = await runtimeProbe.json();
+    const runtimeNames = Array.isArray(runtime.adminUsernames)
+      ? runtime.adminUsernames
+      : [];
+    console.log(
+      `Production recipients: ${runtimeNames.map((name) => `@${name}`).join(", ") || "EMPTY"}`,
+    );
+    if (runtime.botId !== String(bot.id) || !runtime.writeConfigured)
+      throw new Error("Production bot or database configuration is incomplete");
+    const missing = names.filter((name) => !runtimeNames.includes(name));
+    if (missing.length)
+      throw new Error(
+        `TELEGRAM_ADMIN_USERNAME in Production is missing: ${missing.map((name) => `@${name}`).join(", ")}. Set the variable and redeploy`,
+      );
+    if (setup) {
+      const current = await call("getWebhookInfo");
+      if (current.url && current.url !== url)
+        throw new Error(
+          "The bot already has a different webhook; use a dedicated bot or explicitly remove the previous integration first",
+        );
+      await call("setWebhook", {
+        url,
+        secret_token: secret,
+        allowed_updates: ["message"],
+        max_connections: 1,
+        drop_pending_updates: false,
+      });
+      console.log(`Webhook configured: ${url}`);
+    }
   }
   const webhook = await call("getWebhookInfo");
   console.log(

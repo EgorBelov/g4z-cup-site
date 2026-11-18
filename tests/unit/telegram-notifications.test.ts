@@ -7,10 +7,13 @@ import {
 import { telegramCall } from "@/lib/telegram/api";
 import { notifyApplicationSubmitted } from "@/lib/telegram/notifications";
 import { processTelegramUpdateAction } from "@/lib/actions/telegram-notifications";
-import { POST } from "@/app/api/telegram/webhook/route";
+import { GET, POST } from "@/app/api/telegram/webhook/route";
 
 const mocks = vi.hoisted(() => ({ from: vi.fn(), headers: vi.fn(), context: vi.fn() }));
-vi.mock("@/lib/supabase/write", () => ({ writeClient: () => ({ from: mocks.from }) }));
+vi.mock("@/lib/supabase/write", () => ({
+  writeClient: () => ({ from: mocks.from }),
+  isWriteConfigured: () => true,
+}));
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
 vi.mock("@/lib/queries/registration", () => ({
   applicationNotificationContext: mocks.context,
@@ -84,6 +87,12 @@ describe("Telegram config and API", () => {
     vi.stubEnv("TELEGRAM_BOT_TOKEN", "12345:replacement");
     expect(validTelegramWebhookSecret(secret)).toBe(false);
   });
+  it("accepts usernames pasted with quotes from an env file", () => {
+    vi.stubEnv("TELEGRAM_ADMIN_USERNAME", '"g4zgforce,Hisoka_Egorka_Be"');
+    expect(telegramAdminUsernames()).toEqual(["g4zgforce", "hisoka_egorka_be"]);
+    vi.stubEnv("TELEGRAM_ADMIN_USERNAME", "\"@g4zgforce\", 'Hisoka_Egorka_Be'");
+    expect(telegramAdminUsernames()).toEqual(["g4zgforce", "hisoka_egorka_be"]);
+  });
   it("uses uncached POST requests and a timeout", async () => {
     await telegramCall("sendMessage", { chat_id: "777", text: "hello" });
     expect(fetch).toHaveBeenCalledWith(
@@ -115,6 +124,26 @@ describe("Telegram config and API", () => {
 });
 
 describe("Telegram webhook subscriptions", () => {
+  it("protects runtime diagnostics from unauthenticated requests", async () => {
+    const result = await GET(new Request("https://example.test/api/telegram/webhook"));
+    expect(result.status).toBe(403);
+    expect(await result.text()).toBe("");
+    expect(result.headers.get("cache-control")).toContain("no-store");
+  });
+  it("reports the actual runtime recipient list only with the secret", async () => {
+    const result = await GET(
+      new Request("https://example.test/api/telegram/webhook", {
+        headers: { "x-telegram-bot-api-secret-token": telegramWebhookSecret() },
+      }),
+    );
+    expect(await result.json()).toEqual({
+      version: "telegram-notifications-v2",
+      botId: "12345",
+      adminUsernames: ["g4zgforce", "hisoka_egorka_be"],
+      writeConfigured: true,
+    });
+    expect(result.headers.get("cache-control")).toContain("no-store");
+  });
   it("checks authentication inside the action before accessing the database", async () => {
     mocks.headers.mockResolvedValue(new Headers());
     expect(await processTelegramUpdateAction(update())).toBe(403);
@@ -141,10 +170,34 @@ describe("Telegram webhook subscriptions", () => {
     expect(await processTelegramUpdateAction({ update_id: 0 })).toBe(200);
     expect(mocks.from).not.toHaveBeenCalled();
   });
-  it("ignores users outside the configured list", async () => {
+  it("explains refusal to users outside the configured list without subscribing", async () => {
     expect(await processTelegramUpdateAction(update("outsider"))).toBe(200);
     expect(mocks.from).not.toHaveBeenCalled();
-    expect(fetch).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string).text,
+    ).toContain("@outsider не включён");
+  });
+  it("explains missing Production recipients instead of silently ignoring start", async () => {
+    vi.stubEnv("TELEGRAM_ADMIN_USERNAME", "");
+    expect(await processTelegramUpdateAction(update())).toBe(200);
+    expect(mocks.from).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string).text,
+    ).toContain("пока не настроены");
+  });
+  it("explains missing Telegram usernames", async () => {
+    const input = update();
+    const { username: _username, ...sender } = input.message.from;
+    expect(
+      await processTelegramUpdateAction({
+        ...input,
+        message: { ...input.message, from: sender },
+      }),
+    ).toBe(200);
+    expect(mocks.from).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string).text,
+    ).toContain("добавьте username");
   });
   it.each(["group", "supergroup", "channel"])("ignores %s chats", async (type) => {
     const input = update();
@@ -161,24 +214,29 @@ describe("Telegram webhook subscriptions", () => {
     await processTelegramUpdateAction(input);
     expect(mocks.from).not.toHaveBeenCalled();
   });
-  it("pins allowed usernames to their chat and confirms subscription", async () => {
-    const insert = query();
-    const enable = query([{ chat_id: "777" }]);
-    mocks.from.mockReturnValueOnce(insert).mockReturnValueOnce(enable);
-    expect(await processTelegramUpdateAction(update())).toBe(200);
-    expect(insert.upsert).toHaveBeenCalledWith(
-      { bot_id: "12345", username: "g4zgforce", chat_id: "777" },
-      { onConflict: "bot_id,username", ignoreDuplicates: true },
-    );
-    expect(enable.eq).toHaveBeenCalledWith("chat_id", "777");
-    expect(
-      JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string).text,
-    ).toContain("подключены");
-  });
+  it.each(["/start", "/start payload", "/start@g4z_cup_bot"])(
+    "pins allowed usernames and confirms %s",
+    async (command) => {
+      const insert = query();
+      const enable = query([{ chat_id: "777" }]);
+      mocks.from.mockReturnValueOnce(insert).mockReturnValueOnce(enable);
+      expect(await processTelegramUpdateAction(update("G4ZGforce", command))).toBe(200);
+      expect(insert.upsert).toHaveBeenCalledWith(
+        { bot_id: "12345", username: "g4zgforce", chat_id: "777" },
+        { onConflict: "bot_id,username", ignoreDuplicates: true },
+      );
+      expect(enable.eq).toHaveBeenCalledWith("chat_id", "777");
+      expect(
+        JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string).text,
+      ).toContain("подключены");
+    },
+  );
   it("does not confirm a subscription pinned to another chat", async () => {
     mocks.from.mockReturnValue(query());
     expect(await processTelegramUpdateAction(update())).toBe(200);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string).text,
+    ).toContain("с другим Telegram-аккаунтом");
   });
   it("allows stopping even after removal from the allowlist", async () => {
     const stop = query();

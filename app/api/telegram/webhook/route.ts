@@ -1,5 +1,28 @@
 import { processTelegramUpdateAction } from "@/lib/actions/telegram-notifications";
-import { validTelegramWebhookSecret } from "@/lib/telegram/config";
+import {
+  telegramAdminUsernames,
+  telegramBotId,
+  validTelegramWebhookSecret,
+} from "@/lib/telegram/config";
+import { isWriteConfigured } from "@/lib/supabase/write";
+
+/** Operator diagnostics require the same secret as Telegram deliveries. */
+export async function GET(request: Request) {
+  const headers = { "Cache-Control": "private, no-store" };
+  if (
+    !validTelegramWebhookSecret(request.headers.get("x-telegram-bot-api-secret-token"))
+  )
+    return new Response(null, { status: 403, headers });
+  return Response.json(
+    {
+      version: "telegram-notifications-v2",
+      botId: telegramBotId(),
+      adminUsernames: telegramAdminUsernames(),
+      writeConfigured: isWriteConfigured(),
+    },
+    { headers },
+  );
+}
 
 export async function POST(request: Request) {
   if (
