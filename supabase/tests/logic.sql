@@ -869,6 +869,28 @@ begin
     perform assert_equals(false,has_table_privilege(role_name,'public.player_profiles','SELECT'),'no public private-profile access');
   end loop;
 end $$;
+-- Bot subscriptions contain private chat identifiers and must never be public.
+do $$
+declare role_name text;
+begin
+  perform assert_equals(true,(select relrowsecurity from pg_class where oid='public.telegram_admin_chats'::regclass),'telegram subscriptions RLS');
+  foreach role_name in array array['anon','authenticated'] loop
+    perform assert_equals(false,has_table_privilege(role_name,'public.telegram_admin_chats','SELECT'),'no public telegram subscriptions read');
+    perform assert_equals(false,has_table_privilege(role_name,'public.telegram_admin_chats','INSERT'),'no public telegram subscriptions write');
+    perform assert_equals(false,has_table_privilege(role_name,'public.telegram_admin_chats','UPDATE'),'no public telegram subscriptions update');
+    perform assert_equals(false,has_table_privilege(role_name,'public.telegram_admin_chats','DELETE'),'no public telegram subscriptions delete');
+  end loop;
+  perform assert_equals(true,has_table_privilege('service_role','public.telegram_admin_chats','INSERT'),'service role may subscribe');
+  insert into public.telegram_admin_chats(bot_id,username,chat_id) values('12345','test_admin','99999');
+  begin
+    insert into public.telegram_admin_chats(bot_id,username,chat_id) values('12345','test_admin','88888');
+    raise exception 'FAIL duplicate Telegram username accepted';
+  exception when unique_violation then null; end;
+  begin
+    insert into public.telegram_admin_chats(bot_id,username,chat_id) values('12345','other_admin','99999');
+    raise exception 'FAIL duplicate Telegram chat accepted';
+  exception when unique_violation then null; end;
+end $$;
 rollback;
 
 drop function assert_equals(anyelement, anyelement, text);

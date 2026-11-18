@@ -19,6 +19,8 @@ import { invalidate } from "@/lib/actions/revalidate";
 import { tags } from "@/lib/cache/tags";
 import { discordConfigured } from "@/lib/discord/config";
 import { syncTeam } from "@/lib/discord/provision";
+import { telegramNotificationsConfigured } from "@/lib/telegram/config";
+import { notifyApplicationSubmitted } from "@/lib/telegram/notifications";
 import type { PublicRegistrant } from "@/lib/types/registration";
 
 /** Actions after which Discord roles or the team channel can change. */
@@ -90,6 +92,14 @@ async function execute(
   if (result.team_id && discordActions.has(action) && discordConfigured()) {
     const teamId = result.team_id;
     after(() => syncTeam(teamId));
+  }
+  if (
+    action === "submit" &&
+    result.application_id &&
+    telegramNotificationsConfigured()
+  ) {
+    const applicationId = result.application_id;
+    after(() => notifyApplicationSubmitted(applicationId));
   }
   return { result };
 }

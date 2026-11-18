@@ -37,6 +37,14 @@ export function SiteFooter() {
             >
               Регламент
             </Link>
+            <a
+              href="https://g4z-cup.online"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center hover:text-ink"
+            >
+              Спонсорам ↗
+            </a>
           </nav>
           <span className="orbit-footer-motto">На одной орбите</span>
         </div>

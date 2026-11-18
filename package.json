@@ -24,6 +24,8 @@
     "test:db": "node scripts/test-db.mjs",
     "auth:telegram:check": "node scripts/telegram-auth.mjs",
     "auth:telegram:setup": "node scripts/telegram-auth.mjs --setup",
+    "telegram:notifications:check": "node scripts/telegram-notifications.mjs",
+    "telegram:notifications:setup": "node scripts/telegram-notifications.mjs --setup",
     "db:bundle": "node scripts/build-setup-sql.mjs"
   },
   "dependencies": {

@@ -607,3 +607,24 @@ export const deleteEntitySchema = z.object({
 
 // ─── Discord ─────────────────────────────────────────────────────────────────
 export const discordSyncSchema = z.object({ team_id: optionalId });
+
+// Telegram identity is trusted only after checking the webhook secret.
+export const telegramUpdateSchema = z.object({
+  update_id: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  message: z
+    .object({
+      text: z.string().max(4096).optional(),
+      from: z
+        .object({
+          id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+          is_bot: z.boolean(),
+          username: z.string().max(32).optional(),
+        })
+        .optional(),
+      chat: z.object({
+        id: z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER),
+        type: z.string(),
+      }),
+    })
+    .optional(),
+});

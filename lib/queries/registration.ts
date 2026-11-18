@@ -7,6 +7,36 @@ import { personalInviteRecipients, personalInvites } from "@/lib/utils/invites";
 import type { CommunityTeam, RegistrationTeam } from "@/lib/types/registration";
 import type { Tournament } from "@/lib/types/database";
 
+/** Internal notification context, called only after an authorised submit RPC. */
+export async function applicationNotificationContext(id: number) {
+  const client = writeClient();
+  const { data: application, error } = await client
+    .from("registration_teams")
+    .select("community_team_id,tournament_id")
+    .eq("id", id)
+    .single();
+  if (error) throw new Error("Could not load Telegram application context");
+  const [team, tournament] = await Promise.all([
+    client
+      .from("community_teams")
+      .select("name")
+      .eq("id", application.community_team_id)
+      .single(),
+    client
+      .from("tournaments")
+      .select("name,slug")
+      .eq("id", application.tournament_id)
+      .single(),
+  ]);
+  if (team.error || tournament.error)
+    throw new Error("Could not load Telegram notification names");
+  return {
+    teamName: team.data.name as string,
+    tournamentName: tournament.data.name as string,
+    tournamentSlug: tournament.data.slug as string,
+  };
+}
+
 export async function applicationDetail(id: number, admin = false) {
   if (admin) await requireAdmin();
   const player = admin ? null : await requirePlayer();
